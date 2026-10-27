@@ -1,0 +1,20 @@
+{
+  "appId": "co.com.lefacturamos.app",
+  "appName": "LEFACTURAMOS - Plataforma de Administración de Propiedad Horizontal",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#020617",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#020617"
+    }
+  }
+}

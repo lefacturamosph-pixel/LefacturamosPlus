@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+venv/
+.venv/
+
+# Binarios y temporales
+cloudflared.exe
+*.apk
+*.idsig
+scratch/
+
+# Android build cache
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+
+# OS files
+Thumbs.db
+.DS_Store

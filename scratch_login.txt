@@ -1,0 +1,142 @@
+function loginPantallaEntrada() {
+  const inputEdif = document.getElementById("login-edificio-codigo");
+  let codigoEdificio = inputEdif?.value.trim() || "";
+  const inputCodUsuario = document.getElementById("login-codigo-usuario");
+  let codigoUsuario = inputCodUsuario?.value.trim() || "";
+  const inputPass = document.getElementById("login-password");
+  let password = inputPass?.value.trim() || "";
+
+  // Si está vacío el edificio, solicitar que se ingrese
+  if (!codigoEdificio || codigoEdificio === "0" || codigoEdificio === "0000") {
+    if (typeof mostrarToast === "function") {
+      mostrarToast("⚠️ Por favor escribe el código del edificio para ingresar.", "warning");
+    }
+    if (inputEdif) inputEdif.focus();
+    return;
+  }
+
+  // Si está vacío el código de usuario según el rol, autocompletar de inmediato
+  if (!codigoUsuario) {
+    if (rolSeleccionadoLogin === "admin") {
+      codigoUsuario = `ADM-${codigoEdificio}`;
+      if (inputCodUsuario) inputCodUsuario.value = codigoUsuario;
+    } else if (rolSeleccionadoLogin === "porteria") {
+      codigoUsuario = `PORTERIA-${codigoEdificio}`;
+      if (inputCodUsuario) inputCodUsuario.value = codigoUsuario;
+    } else if (rolSeleccionadoLogin === "residente") {
+      codigoUsuario = AppState.aptoNumero || "0301";
+      if (inputCodUsuario) inputCodUsuario.value = codigoUsuario;
+    } else {
+      codigoUsuario = "ADMIN";
+      if (inputCodUsuario) inputCodUsuario.value = codigoUsuario;
+    }
+  }
+
+  // Si contraseña está vacía, demo default
+  if (!password) {
+    if (rolSeleccionadoLogin === "admin") password = "Admin123*";
+    else if (rolSeleccionadoLogin === "porteria") password = "Porteria123*";
+    else if (rolSeleccionadoLogin === "residente") password = "Residente123*";
+    else password = "Admin123*";
+    if (inputPass) inputPass.value = password;
+  }
+
+  // Buscar datos de la copropiedad
+  const copropiedad = obtenerDatosCopropiedad(codigoEdificio);
+  const conjuntoId = copropiedad ? copropiedad.id : ("cj_" + codigoEdificio);
+  const nombreCopropiedad = copropiedad ? copropiedad.nombre : `Copropiedad #${codigoEdificio}`;
+
+  AppState.codigoEdificio = codigoEdificio;
+  AppState.conjuntoId = conjuntoId;
+
+  // Actualizar inmediatamente toda la aplicación con la copropiedad ingresada
+  try {
+    actualizarTodosLosSelectsDeCopropiedad(codigoEdificio);
+    cambiarConjuntoActivo(conjuntoId);
+  } catch (errConjunto) {
+    console.warn("Aviso cambiarConjuntoActivo:", errConjunto);
+  }
+
+  // Actualizar rol según pestaña activa en el login
+  if (rolSeleccionadoLogin === "residente") {
+    // Validar aceptación obligatoria de Política de Tratamiento de Datos Personales
+    const checkHabeas = document.getElementById("check-habeas-data-login");
+    if (checkHabeas && !checkHabeas.checked) {
+      mostrarToast("⚠️ Debe marcar la casilla de aceptación de la Política de Tratamiento de Datos Personales para ingresar.", true);
+      const details = document.getElementById("details-politica-datos");
+      if (details) details.open = true;
+      checkHabeas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      checkHabeas.focus();
+      return;
+    }
+
+    // Registrar timestamp legal en almacenamiento local
+    try {
+      const ts = new Date().toISOString();
+      localStorage.setItem(`habeas_data_aceptado_${codigoEdificio}_${codigoUsuario}`, JSON.stringify({
+        aceptado: true,
+        fechaHora: ts,
+        edificio: codigoEdificio,
+        usuario: codigoUsuario,
+        norma: "Ley 1581 de 2012 / Decreto 1377 de 2013"
+      }));
+    } catch (e) {}
+    AppState.aptoNumero = codigoUsuario;
+    try {
+      cambiarRolActivo("residente");
+    } catch (e) {
+      console.warn("Aviso cambiarRolActivo residente:", e);
+    }
+  } else if (rolSeleccionadoLogin === "admin") {
+    try {
+      cambiarRolActivo("admin");
+      sincronizarAdministradorEdificio(codigoEdificio);
+    } catch (e) {
+      console.warn("Aviso cambiarRolActivo admin:", e);
+    }
+  } else if (rolSeleccionadoLogin === "porteria") {
+    try {
+      cambiarRolActivo("porteria");
+    } catch (e) {
+      console.warn("Aviso cambiarRolActivo porteria:", e);
+    }
+  } else if (rolSeleccionadoLogin === "superadmin") {
+    try {
+      cambiarRolActivo("superadmin");
+      cambiarPestana("superadmin");
+    } catch (e) {
+      console.warn("Aviso cambiarPestana superadmin:", e);
+    }
+  }
+
+  // Ocultar pantalla de entrada y mostrar app principal SIEMPRE
+  try {
+    const pantallaEntrada = document.getElementById("pantalla-entrada");
+    const appPrincipal = document.getElementById("app-principal");
+    if (pantallaEntrada) {
+      pantallaEntrada.classList.add("hidden");
+      pantallaEntrada.style.display = "none";
+    }
+    if (appPrincipal) {
+      appPrincipal.classList.remove("hidden");
+      appPrincipal.style.display = "flex";
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    safeCreateIcons();
+
+    // Mostrar tutorial correspondiente al perfil al entrar
+    if (rolSeleccionadoLogin === "admin") {
+      abrirTutorial("admin");
+    } else if (rolSeleccionadoLogin === "residente") {
+      abrirTutorial("residente");
+    }
+  } catch (e) {
+    console.warn("Aviso alternando vista principal:", e);
+  }
+
+  const nombreRol = rolSeleccionadoLogin === "admin" ? "Administrador" :
+                    rolSeleccionadoLogin === "residente" ? `Residente (${AppState.aptoNumero})` :
+                    rolSeleccionadoLogin === "porteria" ? "Seguridad & Portería" : "SuperAdmin";
+  mostrarToast(`Acceso exitoso como ${nombreRol} - ${nombreCopropiedad} (${codigoEdificio})`);
+}
+

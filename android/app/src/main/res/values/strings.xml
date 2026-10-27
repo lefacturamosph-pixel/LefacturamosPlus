@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LEFACTURAMOS</string>
+    <string name="title_activity_main">LEFACTURAMOS - Plataforma de Administración de Propiedad Horizontal</string>
+    <string name="package_name">co.com.lefacturamos.app</string>
+    <string name="custom_url_scheme">co.com.lefacturamos.app</string>
+</resources>

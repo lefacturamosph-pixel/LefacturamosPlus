@@ -1,0 +1,67 @@
+C:\Lefacturamos 
+para abrir la ventana nos vamos a la parte de abajo del computador donde dice buscar y escribimos CMD enter
+Nos abre una ventana y escogemos simbolo del sistema al abrir la ventana pegamos esto 
+Me abre una ventana y en esa ventana pegamos  cd C:\Users\CARLOS\LefacturamosApp y enter al estar ya ahi  le damos  python organizador_historico.py y enter
+
+python organizador_historico.py  ESTE ES PARA SUBIR ARCHIVOS DESDE D: IMPRESAS
+
+python subir_a_drive.py y enter   ESTE ES PARA SUBIR ARCHVOS DESDE DBPLUS
+Al hacerlo, si te pide el código del edificio (ej: 0127), el año y el mes, el programa intentará conectarse. Si te abre la ventana del navegador web para iniciar sesión en tu cuenta de Google (LefacturamosPH@lefacturamos.com), inicia sesión y dale Permitir. ¡Eso creará el archivo automáticamente y solucionará todo!
+
+2.Ejecutar compilación limpia en la terminal:Abre tu terminal en la carpeta principal del proyecto (C:\Users\CARLOS\LefacturamosApp) y ejecuta los siguientes comandos:
+
+set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
+set PATH=%JAVA_HOME%\bin;%PATH%
+npx cap sync android
+cd android
+gradlew clean assembleDebug
+
+https://drive.google.com/drive/folders/1-yY_fmN65Qc7bpFwYouKksE4r8fSOLjR?usp=drive_link
+G:\Mi unidad\Lefacturamos (1)\*.*
+http://www.secretariasenado.gov.co/senado/basedoc/ley_0675_2001.html
+
+Ya creo el nuevo APK
+Puedes abrir directamente el panel de Superadministrador con cualquiera de los siguientes enlaces:
+
+1. Enlace directo en el servidor local (FastAPI - Puerto 8000)
+Acceso directo automático:
+
+Perfil / Pantalla	
+Enlace Público Mundial (Cualquier Ciudad / País)
+
+Página Principal / Login General
+              https://protein-mirror-genius-champion.trycloudflare.com
+Superadministrador (Acceso Directo)	
+               https://protein-mirror-genius-champion.trycloudflare.com/?rol=superadmin
+Administración de Copropiedad (Roble Alto #4901)	
+               https://protein-mirror-genius-champion.trycloudflare.com/?rol=admin&edificio=4901
+Portería y Control de Acceso (#4901)	
+               https://protein-mirror-genius-champion.trycloudflare.com/?rol=porteria&edificio=4901
+
+TIP
+
+Requisito para que siempre abra: El computador donde tiene el programa instalado debe permanecer encendido y con conexión a internet para que las personas de otras ciudades puedan consultar la información en tiempo real.
+
+La Solución Inmediata para iPhone (¡100% Funcional y sin costo!)
+
+Para que cualquier usuario de iPhone o iPad pueda tener y usar LEFACTURAMOS en su celular exactamente como una aplicación nativa, acabamos de habilitar el soporte oficial PWA (Progressive Web App):
+
+Pasos para instalar en un iPhone:
+Abra el navegador Safari en el iPhone.
+Ingrese al enlace del programa (por ejemplo: https://boxing-directories-rugby-cooking.trycloudflare.com).
+Toque el botón Compartir en la barra inferior (el ícono del cuadrito con la flecha hacia arriba ⬆️).
+Deslice hacia abajo y seleccione «Agregar a pantalla de inicio» (Add to Home Screen).
+Toque en «Agregar».
+¿Cómo queda en el iPhone?
+Se crea el ícono oficial de LEFACTURAMOS en la pantalla de inicio del iPhone.
+Al tocarlo, se abre a pantalla completa (sin la barra de direcciones de Safari ni marcos de navegador).
+Se comporta, se ve y responde como una aplicación nativa de iOS.
+No requiere cuenta de Apple, ni pagar suscripciones anuales, ni esperar aprobaciones de la tienda.
+
+Menú y Navegación: Se retiró el acceso a PQR & Atención del menú lateral (sidebar) y de la barra móvil inferior del rol de portería en MENUS_POR_ROL.porteria.
+Pestaña de Portería: Se removió la sub-pestaña PQR & Novedades (#subtab-btn-pqr) y su contenedor completo (#subtab-view-pqr) en www/index.html.
+Lógica de Sub-pestañas: Se actualizó cambiarSubtabPorteria para gestionar exclusivamente las 3 áreas operativas de vigilancia.
+
+
+Menú desplegable (Dropdown menu o simplemente Dropdown): Es el nombre más común y universal.
+menú lateral (sidebar)
