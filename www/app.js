@@ -4628,7 +4628,7 @@ function safeCreateIcons() {
 
 // Función para resolver la URL base del backend local (FastAPI / SQLite / DBPLUS)
 
-const DEFAULT_BACKEND_TUNNEL_URL = "https://lauren-spencer-may-strength.trycloudflare.com";
+const DEFAULT_BACKEND_TUNNEL_URL = "https://lefacturamos.onrender.com";
 const DEFAULT_BACKEND_LAN_URL = "http://192.168.1.24:8000";
 
 function getApiBaseUrl() {
@@ -47154,7 +47154,7 @@ function generarQRAnticipado() {
   // Despachar a backend para sincronización multi-dispositivo y portería (LAN, Túnel y Local)
   const candidatosPost = [
     (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
-    "https://lauren-spencer-may-strength.trycloudflare.com",
+    "https://lefacturamos.onrender.com",
     "http://192.168.1.24:8000",
     (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "",
     "http://127.0.0.1:8000",
@@ -49986,7 +49986,7 @@ async function validarQRPorteria() {
   let backendData = null;
   const candidatosUrl = [
     (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
-    "https://lauren-spencer-may-strength.trycloudflare.com",
+    "https://lefacturamos.onrender.com",
     "http://192.168.1.24:8000",
     (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "",
     "http://127.0.0.1:8000",
@@ -64613,7 +64613,7 @@ async function cargarTokensDinamicosPorteria() {
   const cod = AppState.codigoEdificio || "4901";
   const baseUrlList = [
     (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
-    "https://lauren-spencer-may-strength.trycloudflare.com",
+    "https://lefacturamos.onrender.com",
     "http://192.168.1.24:8000",
     "http://127.0.0.1:8000",
     ""
