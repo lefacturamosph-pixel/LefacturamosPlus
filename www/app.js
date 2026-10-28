@@ -22972,6 +22972,22 @@ function actualizarVisibilidadPorRol(rol) {
 
   }
 
+  // 4.3 Navegador de Documentos / Facturas (Copropietario vs Administrador)
+  const btnSubtabInformes = document.getElementById("btn-subtab-drive-informes");
+  const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
+  if (btnSubtabInformes) {
+    if (rol === "residente") {
+      btnSubtabInformes.classList.add("hidden");
+      btnSubtabInformes.style.display = "none";
+    } else {
+      btnSubtabInformes.classList.remove("hidden");
+      btnSubtabInformes.style.display = "flex";
+    }
+  }
+  if (tituloDrivePdf) {
+    tituloDrivePdf.innerText = (rol === "residente") ? "Factura y Recibos en PDF" : "Todos los Listados en PDF";
+  }
+
 
 
   // 5. Módulo de Comunicados Oficiales y Circulares (EXCLUSIVO ADMINISTRADOR PARA EMITIR, COPROPIETARIOS SOLO LEEN)
@@ -62442,10 +62458,23 @@ async function actualizarDocumentosDrive() {
 
   if (btnInf) {
 
-    if (esResidente) btnInf.classList.add("hidden");
+    if (esResidente) {
+      btnInf.classList.add("hidden");
+      btnInf.style.display = "none";
+    } else {
+      btnInf.classList.remove("hidden");
+      btnInf.style.display = "flex";
+    }
 
-    else btnInf.classList.remove("hidden");
+  }
 
+  const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
+  if (tituloDrivePdf) {
+    tituloDrivePdf.innerText = esResidente ? "Factura y Recibos en PDF" : "Todos los Listados en PDF";
+  }
+
+  if (esResidente) {
+    cambiarSubtabDrive("inmuebles");
   }
 
 
@@ -63564,6 +63593,11 @@ function filtrarDocumentosInmueblesDrive() {
 
 function cambiarSubtabDrive(subtab) {
 
+  const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
+  if (esResidente && subtab === "informes") {
+    subtab = "inmuebles";
+  }
+
   driveSubtabActual = subtab;
 
 
@@ -63580,19 +63614,25 @@ function cambiarSubtabDrive(subtab) {
 
 
 
-  if (tabInformes) tabInformes.classList.toggle("hidden", subtab !== "informes");
+  if (tabInformes) tabInformes.classList.toggle("hidden", subtab !== "informes" || esResidente);
 
-  if (tabInmuebles) tabInmuebles.classList.toggle("hidden", subtab !== "inmuebles");
+  if (tabInmuebles) tabInmuebles.classList.toggle("hidden", subtab !== "inmuebles" && !esResidente);
 
 
 
   if (btnInformes) {
 
-    btnInformes.className = subtab === "informes"
+    if (esResidente) {
+      btnInformes.classList.add("hidden");
+      btnInformes.style.display = "none";
+    } else {
+      btnInformes.style.display = "flex";
+      btnInformes.className = subtab === "informes"
 
-      ? "px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+        ? "px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
 
-      : "px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer";
+        : "px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer";
+    }
 
   }
 

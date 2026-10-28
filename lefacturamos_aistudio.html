@@ -6925,7 +6925,7 @@
 
                   <h4 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">
 
-                    <span>Todos los Listados en PDF</span>
+                    <span id="drive-titulo-listados-pdf">Factura y Recibos en PDF</span>
 
                     <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">Oficial</span>
 
@@ -6947,7 +6947,7 @@
 
               <div class="flex items-center gap-2">
 
-                <button type="button" id="btn-subtab-drive-informes" onclick="cambiarSubtabDrive('informes')" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                <button type="button" id="btn-subtab-drive-informes" onclick="cambiarSubtabDrive('informes')" class="hidden px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" style="display: none;">
 
                   <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
 
@@ -16608,35 +16608,19 @@
 
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
 
-          <div>
+          <label class="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
 
-            <label class="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
 
-              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Ubicación o Lugar del Hecho</span>
 
-              <span>Ubicación o Lugar del Hecho</span>
+          </label>
 
-            </label>
+          <input type="text" id="rad-pqr-ubicacion" placeholder="Ej: Torre 2 Apto 502 / Parqueadero #14" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
 
-            <input type="text" id="rad-pqr-ubicacion" placeholder="Ej: Torre 2 Apto 502 / Parqueadero #14" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
-
-          </div>
-
-          <div>
-
-            <label class="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-
-              <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
-
-              <span>Celular / WhatsApp de Contacto</span>
-
-            </label>
-
-            <input type="tel" id="rad-pqr-telefono" placeholder="Ej: 310 123 4567" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
-
-          </div>
+          <input type="hidden" id="rad-pqr-telefono" value="">
 
         </div>
 
@@ -41315,6 +41299,22 @@ function actualizarVisibilidadPorRol(rol) {
 
     }
 
+  }
+
+  // 4.3 Navegador de Documentos / Facturas (Copropietario vs Administrador)
+  const btnSubtabInformes = document.getElementById("btn-subtab-drive-informes");
+  const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
+  if (btnSubtabInformes) {
+    if (rol === "residente") {
+      btnSubtabInformes.classList.add("hidden");
+      btnSubtabInformes.style.display = "none";
+    } else {
+      btnSubtabInformes.classList.remove("hidden");
+      btnSubtabInformes.style.display = "flex";
+    }
+  }
+  if (tituloDrivePdf) {
+    tituloDrivePdf.innerText = (rol === "residente") ? "Factura y Recibos en PDF" : "Todos los Listados en PDF";
   }
 
 
@@ -80787,10 +80787,23 @@ async function actualizarDocumentosDrive() {
 
   if (btnInf) {
 
-    if (esResidente) btnInf.classList.add("hidden");
+    if (esResidente) {
+      btnInf.classList.add("hidden");
+      btnInf.style.display = "none";
+    } else {
+      btnInf.classList.remove("hidden");
+      btnInf.style.display = "flex";
+    }
 
-    else btnInf.classList.remove("hidden");
+  }
 
+  const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
+  if (tituloDrivePdf) {
+    tituloDrivePdf.innerText = esResidente ? "Factura y Recibos en PDF" : "Todos los Listados en PDF";
+  }
+
+  if (esResidente) {
+    cambiarSubtabDrive("inmuebles");
   }
 
 
@@ -81909,6 +81922,11 @@ function filtrarDocumentosInmueblesDrive() {
 
 function cambiarSubtabDrive(subtab) {
 
+  const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
+  if (esResidente && subtab === "informes") {
+    subtab = "inmuebles";
+  }
+
   driveSubtabActual = subtab;
 
 
@@ -81925,19 +81943,25 @@ function cambiarSubtabDrive(subtab) {
 
 
 
-  if (tabInformes) tabInformes.classList.toggle("hidden", subtab !== "informes");
+  if (tabInformes) tabInformes.classList.toggle("hidden", subtab !== "informes" || esResidente);
 
-  if (tabInmuebles) tabInmuebles.classList.toggle("hidden", subtab !== "inmuebles");
+  if (tabInmuebles) tabInmuebles.classList.toggle("hidden", subtab !== "inmuebles" && !esResidente);
 
 
 
   if (btnInformes) {
 
-    btnInformes.className = subtab === "informes"
+    if (esResidente) {
+      btnInformes.classList.add("hidden");
+      btnInformes.style.display = "none";
+    } else {
+      btnInformes.style.display = "flex";
+      btnInformes.className = subtab === "informes"
 
-      ? "px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+        ? "px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
 
-      : "px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer";
+        : "px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer";
+    }
 
   }
 

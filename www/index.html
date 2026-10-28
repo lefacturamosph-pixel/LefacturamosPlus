@@ -6925,7 +6925,7 @@
 
                   <h4 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">
 
-                    <span>Todos los Listados en PDF</span>
+                    <span id="drive-titulo-listados-pdf">Factura y Recibos en PDF</span>
 
                     <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">Oficial</span>
 
@@ -6947,7 +6947,7 @@
 
               <div class="flex items-center gap-2">
 
-                <button type="button" id="btn-subtab-drive-informes" onclick="cambiarSubtabDrive('informes')" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                <button type="button" id="btn-subtab-drive-informes" onclick="cambiarSubtabDrive('informes')" class="hidden px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" style="display: none;">
 
                   <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
 
@@ -16608,35 +16608,19 @@
 
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
 
-          <div>
+          <label class="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
 
-            <label class="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
 
-              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Ubicación o Lugar del Hecho</span>
 
-              <span>Ubicación o Lugar del Hecho</span>
+          </label>
 
-            </label>
+          <input type="text" id="rad-pqr-ubicacion" placeholder="Ej: Torre 2 Apto 502 / Parqueadero #14" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
 
-            <input type="text" id="rad-pqr-ubicacion" placeholder="Ej: Torre 2 Apto 502 / Parqueadero #14" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
-
-          </div>
-
-          <div>
-
-            <label class="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-
-              <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
-
-              <span>Celular / WhatsApp de Contacto</span>
-
-            </label>
-
-            <input type="tel" id="rad-pqr-telefono" placeholder="Ej: 310 123 4567" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
-
-          </div>
+          <input type="hidden" id="rad-pqr-telefono" value="">
 
         </div>
 
@@ -18342,7 +18326,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="app.js?v=20261028_1520"></script>
+  <script src="app.js?v=20261028_1540"></script>
 
 
   <!-- MODAL: VISOR DE FOTO / EVIDENCIA EN TAMAÑO COMPLETO -->
