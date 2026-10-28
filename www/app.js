@@ -45720,12 +45720,28 @@ function cargarZonasEdificioStorage() {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) {
         listaZonasComunesGestion = arr;
+        // Restaurar zonas personalizadas al catalogo maestro
+        listaZonasComunesGestion.forEach(item => {
+          const yaEnCat = CATALOGO_MAESTRO_ZONAS_DEFAULT.some(c => c.clave === item.clave || c.nombre.toLowerCase().trim() === item.nombre.toLowerCase().trim());
+          if (!yaEnCat) {
+            CATALOGO_MAESTRO_ZONAS_DEFAULT.push({
+              clave: item.clave || item.id.replace(/^z_/, ''),
+              nombre: item.nombre,
+              categoria: item.categoria || "Social",
+              descripcion: item.descripcion || "",
+              aforoDefault: item.aforo || 10,
+              esGratisDefault: item.esGratis !== undefined ? item.esGratis : true,
+              precioDefault: item.precio || 0,
+              horarioDefault: item.horario || "08:00 - 21:00",
+              maxHorasDefault: item.maxHoras || "2h"
+            });
+          }
+        });
         sincronizarCatalogoReservas();
         return;
       }
     } catch (e) {}
   }
-  // "Entregar esto vacio": Por defecto no aparecen todas las zonas sino que arranca vacío
   listaZonasComunesGestion = [];
   sincronizarCatalogoReservas();
 }
@@ -45999,22 +46015,42 @@ function eliminarZonaComunDesdeModal() {
 
 function abrirModalNuevaZonaComun() {
   const m = document.getElementById("modal-nueva-zona-comun");
-  if (!m) return;
+  if (!m) {
+    console.error("modal-nueva-zona-comun no encontrado");
+    return;
+  }
 
-  const selCat = document.getElementById("modal-nz-catalogo-sel");
-  if (selCat) selCat.value = "";
-
-  const form = m.querySelector("form");
-  if (form) form.reset();
+  const elNom = document.getElementById("modal-nz-nombre");
+  if (elNom) elNom.value = "";
+  const elDesc = document.getElementById("modal-nz-descripcion");
+  if (elDesc) elDesc.value = "";
+  const elAforo = document.getElementById("modal-nz-aforo");
+  if (elAforo) elAforo.value = 10;
+  const elTipo = document.getElementById("modal-nz-tipo-tarifa");
+  if (elTipo) elTipo.value = "gratis";
+  const elPrecio = document.getElementById("modal-nz-precio");
+  if (elPrecio) elPrecio.value = "";
+  const elHorario = document.getElementById("modal-nz-horario");
+  if (elHorario) elHorario.value = "08:00 - 21:00";
+  const elMax = document.getElementById("modal-nz-maxhoras");
+  if (elMax) elMax.value = "2h";
 
   actualizarVisibilidadPrecioNuevaZona();
+
   m.classList.remove("hidden");
+  m.style.display = "flex";
+  m.style.zIndex = "99999";
   safeCreateIcons();
+
+  if (elNom) setTimeout(() => elNom.focus(), 100);
 }
 
 function cerrarModalNuevaZonaComun() {
   const m = document.getElementById("modal-nueva-zona-comun");
-  if (m) m.classList.add("hidden");
+  if (m) {
+    m.classList.add("hidden");
+    m.style.display = "none";
+  }
 }
 
 function actualizarVisibilidadPrecioNuevaZona() {
@@ -46023,63 +46059,17 @@ function actualizarVisibilidadPrecioNuevaZona() {
   if (!cont) return;
   if (tipo === "pago") {
     cont.classList.remove("hidden");
+    cont.style.display = "block";
   } else {
     cont.classList.add("hidden");
+    cont.style.display = "none";
   }
-}
-
-function alSeleccionarZonaCatalogo(clave) {
-  if (!clave) return;
-
-  if (clave === "custom") {
-    const elNom = document.getElementById("modal-nz-nombre");
-    if (elNom) { elNom.value = ""; elNom.focus(); }
-    const elDesc = document.getElementById("modal-nz-descripcion");
-    if (elDesc) elDesc.value = "";
-    const elAforo = document.getElementById("modal-nz-aforo");
-    if (elAforo) elAforo.value = 10;
-    const elTipo = document.getElementById("modal-nz-tipo-tarifa");
-    if (elTipo) elTipo.value = "gratis";
-    const elPrecio = document.getElementById("modal-nz-precio");
-    if (elPrecio) elPrecio.value = 0;
-    const elHorario = document.getElementById("modal-nz-horario");
-    if (elHorario) elHorario.value = "08:00 - 21:00";
-    const elMax = document.getElementById("modal-nz-maxhoras");
-    if (elMax) elMax.value = "2h";
-    actualizarVisibilidadPrecioNuevaZona();
-    return;
-  }
-
-  const plantilla = CATALOGO_MAESTRO_ZONAS_DEFAULT.find(c => c.clave === clave);
-  if (!plantilla) return;
-
-  const elNom = document.getElementById("modal-nz-nombre");
-  if (elNom) elNom.value = plantilla.nombre;
-
-  const elDesc = document.getElementById("modal-nz-descripcion");
-  if (elDesc) elDesc.value = plantilla.descripcion;
-
-  const elAforo = document.getElementById("modal-nz-aforo");
-  if (elAforo) elAforo.value = plantilla.aforoDefault;
-
-  const elTipo = document.getElementById("modal-nz-tipo-tarifa");
-  if (elTipo) elTipo.value = plantilla.esGratisDefault ? "gratis" : "pago";
-
-  const elPrecio = document.getElementById("modal-nz-precio");
-  if (elPrecio) elPrecio.value = plantilla.precioDefault || 0;
-
-  const elHorario = document.getElementById("modal-nz-horario");
-  if (elHorario) elHorario.value = plantilla.horarioDefault;
-
-  const elMax = document.getElementById("modal-nz-maxhoras");
-  if (elMax) elMax.value = plantilla.maxHorasDefault;
-
-  actualizarVisibilidadPrecioNuevaZona();
 }
 
 function guardarNuevaZonaComunModal(event) {
   if (event) event.preventDefault();
   const nombre = document.getElementById("modal-nz-nombre")?.value.trim();
+  const categoria = document.getElementById("modal-nz-categoria")?.value || "Social";
   const desc = document.getElementById("modal-nz-descripcion")?.value.trim();
   const aforo = parseInt(document.getElementById("modal-nz-aforo")?.value, 10) || 10;
   const tipo = document.getElementById("modal-nz-tipo-tarifa")?.value;
@@ -46088,22 +46078,24 @@ function guardarNuevaZonaComunModal(event) {
   const maxHoras = document.getElementById("modal-nz-maxhoras")?.value.trim() || "2h";
 
   if (!nombre) {
-    mostrarToast("Escriba o seleccione el nombre de la zona común.", true);
+    mostrarToast("Escriba el nombre de la zona común personalizada.", true);
     return;
   }
 
-  const yaExiste = listaZonasComunesGestion.find(z => z.nombre.toLowerCase() === nombre.toLowerCase());
+  const yaExiste = listaZonasComunesGestion.find(z => z.nombre.toLowerCase().trim() === nombre.toLowerCase().trim());
   if (yaExiste) {
     mostrarToast(`La zona común "${nombre}" ya está registrada en este edificio.`, true);
     return;
   }
 
+  const claveCustom = `custom_${Date.now()}`;
   const esGratis = (tipo === "gratis" || precio === 0);
   const nuevaZona = {
-    id: `z_${Date.now()}`,
+    id: `z_${claveCustom}`,
+    clave: claveCustom,
     nombre: nombre,
-    categoria: "Social",
-    descripcion: desc || `Uso para residentes. Aforo: ${aforo} personas.`,
+    categoria: categoria,
+    descripcion: desc || `Espacio común de copropiedad. Aforo: ${aforo} personas.`,
     aforo: aforo,
     esGratis: esGratis,
     precio: precio,
@@ -46114,19 +46106,32 @@ function guardarNuevaZonaComunModal(event) {
     maxHoras: maxHoras
   };
 
+  // Agregar al catálogo maestro para que se renderice como tarjeta en Zonas Comunes
+  CATALOGO_MAESTRO_ZONAS_DEFAULT.push({
+    clave: claveCustom,
+    nombre: nombre,
+    categoria: categoria,
+    descripcion: nuevaZona.descripcion,
+    aforoDefault: aforo,
+    esGratisDefault: esGratis,
+    precioDefault: precio,
+    horarioDefault: horario,
+    maxHorasDefault: maxHoras
+  });
+
   listaZonasComunesGestion.push(nuevaZona);
   guardarZonasEdificioStorage();
 
-  const form = event ? event.target : document.querySelector("#modal-nueva-zona-comun form");
-  if (form) form.reset();
-
   cerrarModalNuevaZonaComun();
   renderizarModuloZonasComunes();
-  mostrarToast(`Zona común "${nombre}" agregada al edificio exitosamente.`);
+  cargarOpcionesZonasSelect();
+  mostrarToast(`✓ Zona personalizada "${nombre}" creada y agregada al edificio.`);
 }
 
+window.abrirModalNuevaZonaComun = abrirModalNuevaZonaComun;
+window.cerrarModalNuevaZonaComun = cerrarModalNuevaZonaComun;
+window.guardarNuevaZonaComunModal = guardarNuevaZonaComunModal;
 
-// ==============================================================================
 
 // 3. RESERVAS DE ZONAS COMUNES CON GESTIÓN DE TARIFAS Y CONTROL ANTI-SOLAPAMIENTO
 
