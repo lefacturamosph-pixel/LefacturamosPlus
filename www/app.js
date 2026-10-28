@@ -22927,21 +22927,27 @@ function actualizarVisibilidadPorRol(rol) {
 
 
   // 4.1 Vista de Solicitudes de Reservas del Administrador (EXCLUSIVO ADMINISTRADOR)
-
   const seccionAdminReservas = document.getElementById("seccion-admin-solicitudes-reservas");
-
   if (seccionAdminReservas) {
-
     if (esAdmin) {
-
       seccionAdminReservas.classList.remove("hidden");
-
+      seccionAdminReservas.style.display = "block";
     } else {
-
       seccionAdminReservas.classList.add("hidden");
-
+      seccionAdminReservas.style.display = "none";
     }
+  }
 
+  // Cuadro de Solicitud y Formulario de Nueva Reserva (EXCLUSIVO RESIDENTES/COPROPIETARIOS - OCULTO EN ADMINISTRACION)
+  const seccionFormularioReserva = document.getElementById("seccion-gestion-reservas-completo");
+  if (seccionFormularioReserva) {
+    if (esAdmin) {
+      seccionFormularioReserva.classList.add("hidden");
+      seccionFormularioReserva.style.display = "none";
+    } else {
+      seccionFormularioReserva.classList.remove("hidden");
+      seccionFormularioReserva.style.display = "block";
+    }
   }
 
 
@@ -46216,6 +46222,30 @@ function alternarPanelTarifasAdmin() {
 }
 
 function inicializarModuloReservas() {
+  const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin"));
+  const seccionAdminReservas = document.getElementById("seccion-admin-solicitudes-reservas");
+  const seccionFormularioReserva = document.getElementById("seccion-gestion-reservas-completo");
+
+  if (seccionAdminReservas) {
+    if (esAdmin) {
+      seccionAdminReservas.classList.remove("hidden");
+      seccionAdminReservas.style.display = "block";
+    } else {
+      seccionAdminReservas.classList.add("hidden");
+      seccionAdminReservas.style.display = "none";
+    }
+  }
+
+  if (seccionFormularioReserva) {
+    if (esAdmin) {
+      seccionFormularioReserva.classList.add("hidden");
+      seccionFormularioReserva.style.display = "none";
+    } else {
+      seccionFormularioReserva.classList.remove("hidden");
+      seccionFormularioReserva.style.display = "block";
+    }
+  }
+
   const inputFecha = document.getElementById("reserva-fecha");
   if (inputFecha) {
     const hoy = new Date().toISOString().split("T")[0];
@@ -46266,7 +46296,7 @@ function renderizarReservasCopropietarios() {
           <i data-lucide="calendar-x" class="w-5 h-5"></i>
         </div>
         <p class="font-bold text-slate-300">No hay reservas de copropietarios ${filtroFecha ? 'para la fecha ' + filtroFecha : 'registradas'}</p>
-        <p class="text-[11px] text-slate-500">Usa el formulario de abajo para registrar una nueva reserva en las zonas comunes activas.</p>
+        <p class="text-[11px] text-slate-500">${esAdmin ? 'Las nuevas reservas de los copropietarios aparecerán aquí automáticamente en tiempo real.' : 'Usa el formulario de abajo para registrar una nueva reserva en las zonas comunes activas.'}</p>
       </div>
     `;
     safeCreateIcons();
