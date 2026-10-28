@@ -5732,7 +5732,7 @@
 
                 <span>Gestión de Aforos y Precios de Zonas Comunes</span>
 
-                <span id="badge-contador-zonas" class="text-slate-800 font-extrabold">(11)</span>
+                <span id="badge-contador-zonas" class="text-slate-800 font-extrabold">(0)</span>
 
               </h2>
 
@@ -5754,7 +5754,7 @@
 
               <i data-lucide="plus" class="w-4 h-4"></i>
 
-              <span>Nueva Zona Común</span>
+              <span>+ Escoger / Añadir Zona Común</span>
 
             </button>
 
@@ -17653,7 +17653,10 @@
 
         <input type="hidden" id="modal-cfg-zona-id">
 
-        <input type="hidden" id="modal-cfg-nombre">
+        <div>
+          <label class="block font-bold text-slate-800 text-xs mb-1">Nombre de la Zona Común:</label>
+          <input type="text" id="modal-cfg-nombre" required class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
 
 
 
@@ -17797,21 +17800,22 @@
 
         <!-- Botones de Acción Cancelar y Guardar Cambios de Administración -->
 
-        <div class="pt-2 flex items-center justify-end gap-2.5">
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2.5">
 
-          <button type="button" onclick="cerrarModalConfigurarZona()" class="px-5 py-2.5 rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-all cursor-pointer">
-
-            Cancelar
-
+          <button type="button" onclick="eliminarZonaComunDesdeModal()" class="px-4 py-2.5 rounded-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5" title="Eliminar esta zona común de este edificio">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Eliminar Zona</span>
           </button>
 
-          <button type="submit" class="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
-
-            <span>Guardar Cambios de Administración</span>
-
-          </button>
-
-        </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="cerrarModalConfigurarZona()" class="px-4 py-2.5 rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
+              <span>Guardar Cambios</span>
+            </button>
+          </div>
+        
 
       </form>
 
@@ -17862,6 +17866,39 @@
 
 
       <form onsubmit="guardarNuevaZonaComunModal(event)" class="space-y-3.5 text-xs">
+
+        <!-- Selector Rápido del Catálogo de Zonas Comunes -->
+        <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-1.5">
+          <label class="block font-black text-emerald-900 text-xs flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Escoger qué zona común tiene el edificio:</span>
+            </span>
+            <span class="text-[10px] text-emerald-700 font-semibold">(Autocompleta los datos)</span>
+          </label>
+          <select id="modal-nz-catalogo-sel" onchange="alSeleccionarZonaCatalogo(this.value)" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+            <option value="">-- Seleccionar del catálogo oficial --</option>
+            <option value="salon_social">Salón Social Principal</option>
+            <option value="bbq">BBQ y Pérgola</option>
+            <option value="piscina">Piscina</option>
+            <option value="gimnasio">Gimnasio & Zona Cardio</option>
+            <option value="zonas_humedas">Zonas Húmedas: Sauna, Jacuzzi, Turco</option>
+            <option value="cancha_multiple">Cancha Múltiple</option>
+            <option value="cancha_futbol">Cancha de Fútbol</option>
+            <option value="cancha_tenis">Cancha de Tenis</option>
+            <option value="cancha_squash">Cancha de Squash</option>
+            <option value="juegos">Salón de Juegos (Billar, Ping-Pong, Futbolito)</option>
+            <option value="cine">Sala de Cine / Teatrino</option>
+            <option value="coworking">Sala Coworking & Sala de Juntas</option>
+            <option value="parque_infantil">Parque Infantil & Zona Kids</option>
+            <option value="pet_park">Pet Park & Zona de Mascotas</option>
+            <option value="terraza">Terraza Mirador / Sky Lounge</option>
+            <option value="custom">✏️ Otra zona común personalizada...</option>
+          </select>
+          <p class="text-[10px] text-emerald-700/80 leading-normal">
+            Al seleccionar una zona se completan su nombre, descripción, aforo y horario sugeridos. Podrás modificar su precio y configuración antes de guardar.
+          </p>
+        </div>
 
         <div>
 
@@ -40612,8 +40649,10 @@ if (tabId && tabId.startsWith("manual-")) {
 
     else if (tabId === "votaciones") renderizarModuloAsambleaVotaciones();
 
-    else if (tabId === "zonas") renderizarModuloZonasComunes();
+    else if (tabId === "zonas") { cargarZonasEdificioStorage(); renderizarModuloZonasComunes(); }
     else if (tabId === "reservas") {
+      cargarZonasEdificioStorage();
+      cargarOpcionesZonasSelect();
       actualizarHorariosOcupados();
       cargarMisReservas();
     }
@@ -64041,797 +64080,596 @@ function descargarDocumentoDrive(tipo) {
 // GESTIÓN DE AFOROS Y PRECIOS DE ZONAS COMUNES (EXACTO A MEDIA_1792187988267)
 
 // ==============================================================================
+// 2. GESTIÓN DE AFOROS Y PRECIOS DE ZONAS COMUNES POR EDIFICIO (LEY 675 / LEY 1581)
+// ==============================================================================
 
-
-
-const listaZonasComunesGestion = [
-
+// Catálogo Maestro de Referencia para que la Administración escoja las zonas que tiene el edificio
+const CATALOGO_MAESTRO_ZONAS_DEFAULT = [
   {
-
-    id: "z_humedas",
-
-    nombre: "Zonas Húmedas: Sauna, Jacuzzi, Turco",
-
-    descripcion: "Circuito húmedo de relajación y bienestar: Sauna seco finlandés, Jacuzzi de hidromasaje a 38°C y Baño Turco con vapor aromático.",
-
-    aforo: 12,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "08:00 - 21:00",
-
-    maxHoras: "2h"
-
-  },
-
-  {
-
-    id: "z_salon",
-
-    nombre: "Salón Social",
-
+    clave: "salon_social",
+    nombre: "Salón Social Principal",
+    categoria: "Social",
     descripcion: "Espacio climatizado para recepciones, cumpleaños y reuniones familiares. Incluye cocineta y silletería para 60 personas.",
-
-    aforo: 60,
-
-    esGratis: false,
-
-    precio: 120000,
-
-    precioTexto: "$120.000 COP",
-
-    badgeTexto: "$120.000 COP",
-
-    badgeClase: "bg-amber-50 text-amber-800 border-amber-200",
-
-    horario: "10:00 - 23:00",
-
-    maxHoras: "6h"
-
+    aforoDefault: 60,
+    esGratisDefault: false,
+    precioDefault: 120000,
+    horarioDefault: "10:00 - 23:00",
+    maxHorasDefault: "6h"
   },
-
   {
-
-    id: "z_tenis",
-
-    nombre: "Cancha de Tenis",
-
-    descripcion: "Superficie de tenis reglamentaria con piso antideslizante, malla profesional e iluminación LED.",
-
-    aforo: 4,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "06:00 - 21:00",
-
-    maxHoras: "2h"
-
-  },
-
-  {
-
-    id: "z_multiple",
-
-    nombre: "Cancha Múltiple",
-
-    descripcion: "Cancha polideportiva demarcada para baloncesto, voleibol y microfútbol con iluminación nocturna.",
-
-    aforo: 12,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "07:00 - 21:00",
-
-    maxHoras: "2h"
-
-  },
-
-  {
-
-    id: "z_futbol",
-
-    nombre: "Cancha de Fútbol",
-
-    descripcion: "Cancha sintética de fútbol 5 con cerramiento perimetral, mallas reglamentarias e iluminación nocturna LED.",
-
-    aforo: 14,
-
-    esGratis: false,
-
-    precio: 20000,
-
-    precioTexto: "$20.000 COP",
-
-    badgeTexto: "$20.000 COP",
-
-    badgeClase: "bg-amber-50 text-amber-800 border-amber-200",
-
-    horario: "07:00 - 22:00",
-
-    maxHoras: "2h"
-
-  },
-
-  {
-
-    id: "z_gym",
-
-    nombre: "Gimnasio & Zona Cardio",
-
-    descripcion: "Máquinas multifuerza, trotadoras, elípticas y zona de mancuernas.",
-
-    aforo: 15,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "05:00 - 22:00",
-
-    maxHoras: "1.5h"
-
-  },
-
-  {
-
-    id: "z_bbq",
-
+    clave: "bbq",
     nombre: "BBQ y Pérgola",
-
+    categoria: "Social",
     descripcion: "Asador a gas y carbón con barra auxiliar, mesas exteriores y vista panorámica a los cerros.",
-
-    aforo: 20,
-
-    esGratis: false,
-
-    precio: 40000,
-
-    precioTexto: "$40.000 COP",
-
-    badgeTexto: "$40.000 COP",
-
-    badgeClase: "bg-amber-50 text-amber-800 border-amber-200",
-
-    horario: "11:00 - 21:00",
-
-    maxHoras: "4h"
-
+    aforoDefault: 20,
+    esGratisDefault: false,
+    precioDefault: 40000,
+    horarioDefault: "11:00 - 21:00",
+    maxHorasDefault: "4h"
   },
-
   {
-
-    id: "z_piscina",
-
+    clave: "piscina",
     nombre: "Piscina",
-
-    descripcion: "Piscina semiolímpica climatizada para natación libre y recreación familiar, con carriles de nado, zona infantil y solárium.",
-
-    aforo: 30,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "06:00 - 21:00",
-
-    maxHoras: "3h"
-
+    categoria: "Acuática",
+    descripcion: "Piscina semiolímpica climatizada para natación libre y recreación familiar, con carriles de nado.",
+    aforoDefault: 25,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "06:00 - 20:00",
+    maxHorasDefault: "2h"
   },
-
   {
-
-    id: "z_juegos",
-
+    clave: "gimnasio",
+    nombre: "Gimnasio & Zona Cardio",
+    categoria: "Fitness",
+    descripcion: "Máquinas multifuerza, trotadoras, elípticas y zona de mancuernas para acondicionamiento físico.",
+    aforoDefault: 15,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "05:00 - 22:00",
+    maxHorasDefault: "1.5h"
+  },
+  {
+    clave: "zonas_humedas",
+    nombre: "Zonas Húmedas: Sauna, Jacuzzi, Turco",
+    categoria: "Zonas Húmedas",
+    descripcion: "Circuito húmedo de relajación y bienestar: Sauna seco finlandés, Jacuzzi de hidromasaje a 38°C y Baño Turco con vapor aromático.",
+    aforoDefault: 12,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "08:00 - 21:00",
+    maxHorasDefault: "2h"
+  },
+  {
+    clave: "cancha_multiple",
+    nombre: "Cancha Múltiple",
+    categoria: "Deportes",
+    descripcion: "Cancha polideportiva demarcada para baloncesto, voleibol y microfútbol con iluminación nocturna.",
+    aforoDefault: 12,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "07:00 - 21:00",
+    maxHorasDefault: "2h"
+  },
+  {
+    clave: "cancha_futbol",
+    nombre: "Cancha de Fútbol",
+    categoria: "Deportes",
+    descripcion: "Cancha sintética de fútbol 5 con cerramiento perimetral, mallas reglamentarias e iluminación nocturna LED.",
+    aforoDefault: 14,
+    esGratisDefault: false,
+    precioDefault: 20000,
+    horarioDefault: "07:00 - 22:00",
+    maxHorasDefault: "2h"
+  },
+  {
+    clave: "cancha_tenis",
+    nombre: "Cancha de Tenis",
+    categoria: "Deportes",
+    descripcion: "Superficie de tenis reglamentaria con piso antideslizante, malla profesional e iluminación LED.",
+    aforoDefault: 4,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "06:00 - 21:00",
+    maxHorasDefault: "2h"
+  },
+  {
+    clave: "cancha_squash",
+    nombre: "Cancha de Squash",
+    categoria: "Deportes",
+    descripcion: "Cancha reglamentaria climatizada con muro de vidrio templado y piso en madera amortiguada.",
+    aforoDefault: 2,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "06:00 - 21:00",
+    maxHorasDefault: "1h"
+  },
+  {
+    clave: "juegos",
     nombre: "Salón de Juegos",
-
-    descripcion: "Mesa de billar pool profesional, mesa de ping-pong (tenis de mesa), futbolín y mesas de juegos de mesa y ajedrez.",
-
-    aforo: 16,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "09:00 - 22:00",
-
-    maxHoras: "2h"
-
+    categoria: "Recreación",
+    descripcion: "Mesa de billar pool profesional, mesa de ping-pong (tenis de mesa), futbolín y mesas de juegos.",
+    aforoDefault: 16,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "10:00 - 22:00",
+    maxHorasDefault: "2h"
   },
-
   {
-
-    id: "z_cine",
-
-    nombre: "Cine / Sala Multimedia",
-
-    descripcion: "Sala acústica climatizada con proyector 4K láser, sonido envolvente 7.1 y butacas tipo cine reclinables para 25 personas.",
-
-    aforo: 25,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "14:00 - 22:00",
-
-    maxHoras: "3h"
-
+    clave: "cine",
+    nombre: "Sala de Cine / Teatrino",
+    categoria: "Entretenimiento",
+    descripcion: "Sala de proyección privada con pantalla gigante, proyector láser 4K, sonido envolvente 7.1 y butacas reclinables.",
+    aforoDefault: 18,
+    esGratisDefault: false,
+    precioDefault: 30000,
+    horarioDefault: "14:00 - 23:00",
+    maxHorasDefault: "3h"
   },
-
   {
-
-    id: "z_coworking",
-
+    clave: "coworking",
     nombre: "Sala Coworking & Sala de Juntas",
-
+    categoria: "Social",
     descripcion: "Espacio de trabajo compartido con internet de fibra óptica de alta velocidad, tomas de energía y pantalla para videoconferencias.",
-
-    aforo: 15,
-
-    esGratis: true,
-
-    precio: 0,
-
-    precioTexto: "Gratuito ($0)",
-
-    badgeTexto: "✓ Gratis ($0)",
-
-    badgeClase: "bg-emerald-50 text-emerald-700 border-emerald-200",
-
-    horario: "07:00 - 22:00",
-
-    maxHoras: "4h"
-
+    aforoDefault: 15,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "07:00 - 22:00",
+    maxHorasDefault: "4h"
+  },
+  {
+    clave: "parque_infantil",
+    nombre: "Parque Infantil & Zona Kids",
+    categoria: "Recreación",
+    descripcion: "Área de juegos infantiles con piso de caucho amortiguador, columpios, toboganes y módulos interactivos.",
+    aforoDefault: 20,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "08:00 - 19:00",
+    maxHorasDefault: "3h"
+  },
+  {
+    clave: "pet_park",
+    nombre: "Pet Park & Zona de Mascotas",
+    categoria: "Social",
+    descripcion: "Zona canina con cerramiento de seguridad, circuito de agilidad y bebederos para mascotas.",
+    aforoDefault: 10,
+    esGratisDefault: true,
+    precioDefault: 0,
+    horarioDefault: "06:00 - 21:00",
+    maxHorasDefault: "1.5h"
+  },
+  {
+    clave: "terraza",
+    nombre: "Terraza Mirador / Sky Lounge",
+    categoria: "Social",
+    descripcion: "Espacio social al aire libre en piso alto con mobiliario exterior, vista panorámica y ambientación.",
+    aforoDefault: 30,
+    esGratisDefault: false,
+    precioDefault: 80000,
+    horarioDefault: "11:00 - 22:00",
+    maxHorasDefault: "4h"
   }
-
 ];
 
+// Lista de zonas comunes del edificio activo (Entregar VACÍO por defecto para cada edificio)
+let listaZonasComunesGestion = [];
 
+function obtenerCodigoEdificioZonas() {
+  return String(
+    (typeof AppState !== "undefined" && AppState.codigoEdificio) ||
+    (typeof driveEdificioSeleccionado !== "undefined" && driveEdificioSeleccionado) ||
+    localStorage.getItem("lefacturamos_active_building") ||
+    "4901"
+  ).replace(/^cj_/, "").trim();
+}
+
+function cargarZonasEdificioStorage() {
+  const cod = obtenerCodigoEdificioZonas();
+  const raw = localStorage.getItem(`lefacturamos_zonas_edificio_${cod}`);
+  if (raw !== null) {
+    try {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        listaZonasComunesGestion = arr;
+        sincronizarCatalogoReservas();
+        return;
+      }
+    } catch (e) {}
+  }
+  // "Entregar esto vacio": Por defecto no aparecen todas las zonas sino que arranca vacío
+  listaZonasComunesGestion = [];
+  sincronizarCatalogoReservas();
+}
+
+function guardarZonasEdificioStorage() {
+  const cod = obtenerCodigoEdificioZonas();
+  localStorage.setItem(`lefacturamos_zonas_edificio_${cod}`, JSON.stringify(listaZonasComunesGestion));
+  sincronizarCatalogoReservas();
+}
+
+function sincronizarCatalogoReservas() {
+  if (typeof ZONAS_COMUNES_CATALOGO !== "undefined") {
+    ZONAS_COMUNES_CATALOGO.length = 0;
+    listaZonasComunesGestion.forEach(z => {
+      ZONAS_COMUNES_CATALOGO.push({
+        id: z.id,
+        nombre: z.nombre,
+        categoria: z.categoria || "Social",
+        costoAlquiler: z.precio || 0,
+        reglas: z.descripcion || `Aforo máximo: ${z.aforo || 10} personas. Horario: ${z.horario || "08:00 - 21:00"}`
+      });
+    });
+  }
+}
 
 function renderizarModuloZonasComunes() {
+  cargarZonasEdificioStorage();
 
   const badgeCont = document.getElementById("badge-contador-zonas");
-
   if (badgeCont) {
-
     badgeCont.textContent = `(${listaZonasComunesGestion.length})`;
-
   }
-
-
 
   const contenedor = document.getElementById("grid-zonas-comunes-admin");
-
   if (!contenedor) return;
 
-
+  if (listaZonasComunesGestion.length === 0) {
+    contenedor.innerHTML = `
+      <div class="col-span-full py-12 px-6 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-center space-y-4">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="layers" class="w-8 h-8"></i>
+        </div>
+        <div class="max-w-md mx-auto space-y-1">
+          <h3 class="text-base font-bold text-slate-800">No hay zonas comunes configuradas en este edificio</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Este edificio aún no tiene zonas comunes asignadas. Escoge las zonas que tiene la copropiedad para definir sus aforos y precios oficiales de alquiler.
+          </p>
+        </div>
+        <button type="button" onclick="abrirModalNuevaZonaComun()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>+ Escoger Zonas Comunes del Edificio</span>
+        </button>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
 
   contenedor.innerHTML = listaZonasComunesGestion.map(z => `
-
     <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-emerald-300 transition-all">
-
       <div>
-
         <div class="flex items-center justify-between gap-2">
-
           <h3 class="font-bold text-slate-900 text-sm">${z.nombre}</h3>
-
-          <span class="px-2.5 py-0.5 rounded-md border text-[11px] font-bold shrink-0 ${z.badgeClase}">
-
-            ${z.badgeTexto}
-
+          <span class="px-2.5 py-0.5 rounded-md border text-[11px] font-bold shrink-0 ${z.badgeClase || (z.esGratis ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200')}">
+            ${z.badgeTexto || (z.esGratis ? '✓ Gratis ($0)' : `$${(z.precio||0).toLocaleString('es-CO')} COP`)}
           </span>
-
         </div>
-
         <p class="text-xs text-slate-500 leading-relaxed mt-2">
-
           ${z.descripcion}
-
         </p>
-
       </div>
-
-
 
       <div>
-
         <div class="bg-slate-50/80 rounded-xl p-3 border border-slate-100 space-y-1.5 mt-4 text-xs">
-
           <div class="flex items-center justify-between">
-
             <span class="text-slate-500 text-[11px]">Aforo fijado por Admin:</span>
-
             <span class="font-black text-emerald-700 text-xs">${z.aforo} personas</span>
-
           </div>
-
           <div class="flex items-center justify-between">
-
             <span class="text-slate-500 text-[11px]">Precio fijado por Admin:</span>
-
-            <span class="font-bold text-slate-800 text-xs">${z.precioTexto}</span>
-
+            <span class="font-bold text-slate-800 text-xs">${z.precioTexto || (z.esGratis ? 'Gratuito ($0)' : `$${(z.precio||0).toLocaleString('es-CO')} COP`)}</span>
           </div>
-
           <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400 font-medium">
-
             <span>Horario: ${z.horario}</span>
-
             <span>Máx: ${z.maxHoras}</span>
-
           </div>
-
         </div>
 
-
-
-        <button type="button" onclick="abrirModalConfigurarZona('${z.id}')" class="mt-4 w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-
-          <i data-lucide="edit-3" class="w-3.5 h-3.5 text-emerald-600"></i>
-
-          <span>Configurar Aforo y Precio</span>
-
-        </button>
-
+        <div class="mt-4 flex items-center gap-2">
+          <button type="button" onclick="abrirModalConfigurarZona('${z.id}')" class="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Modificar</span>
+          </button>
+          <button type="button" onclick="eliminarZonaComun('${z.id}')" class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer" title="Eliminar zona común de este edificio">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+            <span>Eliminar</span>
+          </button>
+        </div>
       </div>
-
     </div>
-
   `).join("");
 
-
-
   safeCreateIcons();
-
 }
-
-
 
 function abrirModalConfigurarZona(zonaId) {
-
   const z = listaZonasComunesGestion.find(item => item.id === zonaId);
-
   if (!z) return;
 
-
-
   const m = document.getElementById("modal-configurar-zona");
-
   if (!m) return;
 
+  const elId = document.getElementById("modal-cfg-zona-id");
+  if (elId) elId.value = z.id;
 
+  const elNom = document.getElementById("modal-cfg-nombre");
+  if (elNom) elNom.value = z.nombre;
 
-  document.getElementById("modal-cfg-zona-id").value = z.id;
+  const elDesc = document.getElementById("modal-cfg-descripcion");
+  if (elDesc) elDesc.value = z.descripcion;
 
-  document.getElementById("modal-cfg-nombre").value = z.nombre;
+  const elAforo = document.getElementById("modal-cfg-aforo");
+  if (elAforo) elAforo.value = z.aforo;
 
-  document.getElementById("modal-cfg-descripcion").value = z.descripcion;
-
-  document.getElementById("modal-cfg-aforo").value = z.aforo;
-
-  document.getElementById("modal-cfg-precio").value = z.precio || 0;
-
-
+  const elPrecio = document.getElementById("modal-cfg-precio");
+  if (elPrecio) elPrecio.value = z.precio || 0;
 
   // Formato de horas ej: "07:00 a. m." y "10:00 p. m."
-
   let horaIni = "07:00 a. m.";
-
   let horaFin = "10:00 p. m.";
-
   if (z.horario && z.horario.includes("-")) {
-
     const parts = z.horario.split("-");
-
     const h1Raw = parts[0].trim();
-
     const h2Raw = parts[1].trim();
-
     const h1Num = parseInt(h1Raw.split(":")[0], 10);
-
     const h2Num = parseInt(h2Raw.split(":")[0], 10);
-
     horaIni = h1Raw.includes("m.") ? h1Raw : (h1Num < 12 ? `${h1Raw} a. m.` : `${(h1Num === 12 ? 12 : h1Num - 12).toString().padStart(2, '0')}:${h1Raw.split(":")[1] || '00'} p. m.`);
-
     horaFin = h2Raw.includes("m.") ? h2Raw : (h2Num < 12 ? `${h2Raw} a. m.` : `${(h2Num === 12 ? 12 : h2Num - 12).toString().padStart(2, '0')}:${h2Raw.split(":")[1] || '00'} p. m.`);
-
   }
+  const elIni = document.getElementById("modal-cfg-hora-ini");
+  if (elIni) elIni.value = horaIni;
 
-  document.getElementById("modal-cfg-hora-ini").value = horaIni;
-
-  document.getElementById("modal-cfg-hora-fin").value = horaFin;
-
-
+  const elFin = document.getElementById("modal-cfg-hora-fin");
+  if (elFin) elFin.value = horaFin;
 
   const numDuracion = parseInt(z.maxHoras, 10) || 2;
-
-  document.getElementById("modal-cfg-duracion").value = numDuracion;
-
-
+  const elDur = document.getElementById("modal-cfg-duracion");
+  if (elDur) elDur.value = numDuracion;
 
   const header = document.getElementById("modal-cfg-titulo-header");
-
   if (header) header.textContent = z.nombre;
 
-
-
   actualizarPreviewAforo(z.aforo);
-
   actualizarHelperPrecio(z.precio);
 
-
-
   m.classList.remove("hidden");
-
   safeCreateIcons();
-
 }
-
-
 
 function actualizarPreviewAforo(val) {
-
   const preview = document.getElementById("modal-cfg-aforo-preview");
-
   if (preview) {
-
     const num = parseInt(val, 10) || 0;
-
     preview.textContent = `${num} personas`;
-
   }
-
 }
 
-
-
 function actualizarHelperPrecio(val) {
-
   const num = parseFloat(val) || 0;
-
   const helper = document.getElementById("modal-cfg-helper-precio");
-
   const btnToggle = document.getElementById("btn-toggle-gratuito");
 
   if (helper) {
-
     if (num > 0) {
-
       helper.textContent = `La administración facturará $${num.toLocaleString("es-CO")} COP en la cuenta de cobro del residente.`;
-
     } else {
-
       helper.textContent = "El uso de esta zona no genera cobro en la cuenta de administración del residente.";
-
     }
-
   }
 
   if (btnToggle) {
-
     if (num > 0) {
-
       btnToggle.textContent = "Poner Gratuito ($0)";
-
     } else {
-
       btnToggle.textContent = "Fijar Tarifa ($)";
-
     }
-
   }
-
 }
-
-
 
 function alternarGratuitoZona() {
-
   const inputPrecio = document.getElementById("modal-cfg-precio");
-
   if (!inputPrecio) return;
-
   const actual = parseFloat(inputPrecio.value) || 0;
-
   if (actual > 0) {
-
     inputPrecio.value = 0;
-
     actualizarHelperPrecio(0);
-
   } else {
-
     inputPrecio.value = 20000;
-
     actualizarHelperPrecio(20000);
-
   }
-
 }
-
-
 
 function cerrarModalConfigurarZona() {
-
   const m = document.getElementById("modal-configurar-zona");
-
   if (m) m.classList.add("hidden");
-
 }
-
-
 
 function guardarConfiguracionZonaModal(event) {
-
   if (event) event.preventDefault();
-
   const id = document.getElementById("modal-cfg-zona-id")?.value;
-
   const z = listaZonasComunesGestion.find(item => item.id === id);
-
   if (!z) return;
 
-
-
+  const nuevoNombre = document.getElementById("modal-cfg-nombre")?.value.trim();
   const desc = document.getElementById("modal-cfg-descripcion")?.value.trim();
-
   const aforo = parseInt(document.getElementById("modal-cfg-aforo")?.value, 10) || z.aforo;
-
   const precio = parseFloat(document.getElementById("modal-cfg-precio")?.value) || 0;
-
   const horaIni = document.getElementById("modal-cfg-hora-ini")?.value.trim() || "07:00 a. m.";
-
   const horaFin = document.getElementById("modal-cfg-hora-fin")?.value.trim() || "10:00 p. m.";
-
   const duracion = parseInt(document.getElementById("modal-cfg-duracion")?.value, 10) || 2;
 
-
-
+  if (nuevoNombre) z.nombre = nuevoNombre;
   z.descripcion = desc || z.descripcion;
-
   z.aforo = aforo;
-
   z.esGratis = (precio === 0);
-
   z.precio = precio;
-
   z.horario = `${horaIni.replace(/\s*[ap]\.\s*m\./i, '').trim()} - ${horaFin.replace(/\s*[ap]\.\s*m\./i, '').trim()}`;
-
   z.maxHoras = `${duracion}h`;
 
-
-
   if (z.esGratis) {
-
     z.precioTexto = "Gratuito ($0)";
-
     z.badgeTexto = "✓ Gratis ($0)";
-
     z.badgeClase = "bg-emerald-50 text-emerald-700 border-emerald-200";
-
   } else {
-
     z.precioTexto = `$${precio.toLocaleString("es-CO")} COP`;
-
     z.badgeTexto = `$${precio.toLocaleString("es-CO")} COP`;
-
     z.badgeClase = "bg-amber-50 text-amber-800 border-amber-200";
-
   }
 
-
-
-  // Sincronizar catálogo general si existe
-
-  const enCat = ZONAS_COMUNES_CATALOGO.find(c => c.id === id || c.nombre.includes(z.nombre));
-
-  if (enCat) {
-
-    enCat.costoAlquiler = precio;
-
-    enCat.reglas = `Aforo máximo: ${aforo} personas. Horario: ${z.horario}. ${desc}`;
-
-  }
-
-
-
+  guardarZonasEdificioStorage();
   cerrarModalConfigurarZona();
-
   renderizarModuloZonasComunes();
-
-  mostrarToast(`Aforo y precio de "${z.nombre}" actualizados exitosamente.`);
-
+  mostrarToast(`Zona común "${z.nombre}" actualizada exitosamente.`);
 }
 
+function eliminarZonaComun(zonaId) {
+  const z = listaZonasComunesGestion.find(item => item.id === zonaId);
+  if (!z) return;
 
+  const confirmar = confirm(`¿Está seguro de eliminar "${z.nombre}" de las zonas comunes de este edificio?\n\nLos residentes ya no podrán reservarla.`);
+  if (!confirmar) return;
+
+  listaZonasComunesGestion = listaZonasComunesGestion.filter(item => item.id !== zonaId);
+  guardarZonasEdificioStorage();
+  renderizarModuloZonasComunes();
+  mostrarToast(`Zona común "${z.nombre}" eliminada de este edificio.`);
+}
+
+function eliminarZonaComunDesdeModal() {
+  const id = document.getElementById("modal-cfg-zona-id")?.value;
+  if (!id) return;
+  cerrarModalConfigurarZona();
+  eliminarZonaComun(id);
+}
 
 function abrirModalNuevaZonaComun() {
-
   const m = document.getElementById("modal-nueva-zona-comun");
+  if (!m) return;
 
-  if (m) {
+  const selCat = document.getElementById("modal-nz-catalogo-sel");
+  if (selCat) selCat.value = "";
 
-    m.classList.remove("hidden");
+  const form = m.querySelector("form");
+  if (form) form.reset();
 
-    actualizarVisibilidadPrecioNuevaZona();
-
-  }
-
+  actualizarVisibilidadPrecioNuevaZona();
+  m.classList.remove("hidden");
+  safeCreateIcons();
 }
-
-
 
 function cerrarModalNuevaZonaComun() {
-
   const m = document.getElementById("modal-nueva-zona-comun");
-
   if (m) m.classList.add("hidden");
-
 }
-
-
 
 function actualizarVisibilidadPrecioNuevaZona() {
-
   const tipo = document.getElementById("modal-nz-tipo-tarifa")?.value;
-
   const cont = document.getElementById("modal-nz-contenedor-precio");
-
   if (!cont) return;
-
   if (tipo === "pago") {
-
     cont.classList.remove("hidden");
-
   } else {
-
     cont.classList.add("hidden");
-
   }
-
 }
 
+function alSeleccionarZonaCatalogo(clave) {
+  if (!clave) return;
 
-
-function guardarNuevaZonaComunModal(event) {
-
-  if (event) event.preventDefault();
-
-  const nombre = document.getElementById("modal-nz-nombre")?.value.trim();
-
-  const desc = document.getElementById("modal-nz-descripcion")?.value.trim();
-
-  const aforo = parseInt(document.getElementById("modal-nz-aforo")?.value, 10) || 10;
-
-  const tipo = document.getElementById("modal-nz-tipo-tarifa")?.value;
-
-  const precio = tipo === "pago" ? (parseFloat(document.getElementById("modal-nz-precio")?.value) || 0) : 0;
-
-  const horario = document.getElementById("modal-nz-horario")?.value.trim() || "08:00 - 21:00";
-
-  const maxHoras = document.getElementById("modal-nz-maxhoras")?.value.trim() || "2h";
-
-
-
-  if (!nombre || !desc) {
-
-    mostrarToast("Complete el nombre y la descripción de la nueva zona común.", true);
-
+  if (clave === "custom") {
+    const elNom = document.getElementById("modal-nz-nombre");
+    if (elNom) { elNom.value = ""; elNom.focus(); }
+    const elDesc = document.getElementById("modal-nz-descripcion");
+    if (elDesc) elDesc.value = "";
+    const elAforo = document.getElementById("modal-nz-aforo");
+    if (elAforo) elAforo.value = 10;
+    const elTipo = document.getElementById("modal-nz-tipo-tarifa");
+    if (elTipo) elTipo.value = "gratis";
+    const elPrecio = document.getElementById("modal-nz-precio");
+    if (elPrecio) elPrecio.value = 0;
+    const elHorario = document.getElementById("modal-nz-horario");
+    if (elHorario) elHorario.value = "08:00 - 21:00";
+    const elMax = document.getElementById("modal-nz-maxhoras");
+    if (elMax) elMax.value = "2h";
+    actualizarVisibilidadPrecioNuevaZona();
     return;
-
   }
 
+  const plantilla = CATALOGO_MAESTRO_ZONAS_DEFAULT.find(c => c.clave === clave);
+  if (!plantilla) return;
 
+  const elNom = document.getElementById("modal-nz-nombre");
+  if (elNom) elNom.value = plantilla.nombre;
+
+  const elDesc = document.getElementById("modal-nz-descripcion");
+  if (elDesc) elDesc.value = plantilla.descripcion;
+
+  const elAforo = document.getElementById("modal-nz-aforo");
+  if (elAforo) elAforo.value = plantilla.aforoDefault;
+
+  const elTipo = document.getElementById("modal-nz-tipo-tarifa");
+  if (elTipo) elTipo.value = plantilla.esGratisDefault ? "gratis" : "pago";
+
+  const elPrecio = document.getElementById("modal-nz-precio");
+  if (elPrecio) elPrecio.value = plantilla.precioDefault || 0;
+
+  const elHorario = document.getElementById("modal-nz-horario");
+  if (elHorario) elHorario.value = plantilla.horarioDefault;
+
+  const elMax = document.getElementById("modal-nz-maxhoras");
+  if (elMax) elMax.value = plantilla.maxHorasDefault;
+
+  actualizarVisibilidadPrecioNuevaZona();
+}
+
+function guardarNuevaZonaComunModal(event) {
+  if (event) event.preventDefault();
+  const nombre = document.getElementById("modal-nz-nombre")?.value.trim();
+  const desc = document.getElementById("modal-nz-descripcion")?.value.trim();
+  const aforo = parseInt(document.getElementById("modal-nz-aforo")?.value, 10) || 10;
+  const tipo = document.getElementById("modal-nz-tipo-tarifa")?.value;
+  const precio = tipo === "pago" ? (parseFloat(document.getElementById("modal-nz-precio")?.value) || 0) : 0;
+  const horario = document.getElementById("modal-nz-horario")?.value.trim() || "08:00 - 21:00";
+  const maxHoras = document.getElementById("modal-nz-maxhoras")?.value.trim() || "2h";
+
+  if (!nombre) {
+    mostrarToast("Escriba o seleccione el nombre de la zona común.", true);
+    return;
+  }
+
+  const yaExiste = listaZonasComunesGestion.find(z => z.nombre.toLowerCase() === nombre.toLowerCase());
+  if (yaExiste) {
+    mostrarToast(`La zona común "${nombre}" ya está registrada en este edificio.`, true);
+    return;
+  }
 
   const esGratis = (tipo === "gratis" || precio === 0);
-
   const nuevaZona = {
-
     id: `z_${Date.now()}`,
-
     nombre: nombre,
-
-    descripcion: desc,
-
+    categoria: "Social",
+    descripcion: desc || `Uso para residentes. Aforo: ${aforo} personas.`,
     aforo: aforo,
-
     esGratis: esGratis,
-
     precio: precio,
-
     precioTexto: esGratis ? "Gratuito ($0)" : `$${precio.toLocaleString("es-CO")} COP`,
-
     badgeTexto: esGratis ? "✓ Gratis ($0)" : `$${precio.toLocaleString("es-CO")} COP`,
-
     badgeClase: esGratis ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200",
-
     horario: horario,
-
     maxHoras: maxHoras
-
   };
 
-
-
   listaZonasComunesGestion.push(nuevaZona);
+  guardarZonasEdificioStorage();
 
-  ZONAS_COMUNES_CATALOGO.push({
-
-    id: nuevaZona.id,
-
-    nombre: nuevaZona.nombre,
-
-    categoria: "Social",
-
-    costoAlquiler: precio,
-
-    reglas: `Aforo máximo: ${aforo} personas. Horario: ${horario}. ${desc}`
-
-  });
-
-
-
-  const form = event.target;
-
+  const form = event ? event.target : document.querySelector("#modal-nueva-zona-comun form");
   if (form) form.reset();
 
   cerrarModalNuevaZonaComun();
-
   renderizarModuloZonasComunes();
-
-  mostrarToast(`Nueva zona común "${nombre}" creada y agregada al catálogo.`);
-
+  mostrarToast(`Zona común "${nombre}" agregada al edificio exitosamente.`);
 }
-
 
 
 // ==============================================================================
@@ -65026,95 +64864,71 @@ function guardarTarifasAdmin() {
 
 
 function cargarOpcionesZonasSelect() {
-
   const sel = document.getElementById("reserva-zona-sel");
-
   if (!sel) return;
 
+  if (!Array.isArray(listaZonasComunesGestion) || listaZonasComunesGestion.length === 0) {
+    sel.innerHTML = '<option value="">(No hay zonas comunes configuradas en este edificio)</option>';
+    const reglasEl = document.getElementById("reserva-reglas-txt");
+    if (reglasEl) reglasEl.innerText = "Este edificio aún no tiene zonas comunes configuradas por la administración.";
+    const tarifaDisplay = document.getElementById("reserva-tarifa-display");
+    if (tarifaDisplay) {
+      tarifaDisplay.innerText = "Sin zonas disponibles";
+      tarifaDisplay.className = "font-mono font-medium text-slate-400 text-xs";
+    }
+    return;
+  }
 
-
-  const zonaSeleccionadaPrevia = sel.value || "z_salon";
-
-
-
-  const categorias = {};
-
-  ZONAS_COMUNES_CATALOGO.forEach(z => {
-
-    if (!categorias[z.categoria]) categorias[z.categoria] = [];
-
-    categorias[z.categoria].push(z);
-
-  });
-
-
-
-  sel.innerHTML = Object.keys(categorias).map(cat => `
-
-    <optgroup label="${cat}">
-
-      ${categorias[cat].map(z => `
-
-        <option value="${z.id}" ${z.id === zonaSeleccionadaPrevia ? "selected" : ""}>
-
-          ${z.nombre} (${z.costoAlquiler === 0 ? "Gratuito" : "$" + z.costoAlquiler.toLocaleString("es-CO")})
-
-        </option>
-
-      `).join("")}
-
-    </optgroup>
-
+  const zonaSeleccionadaPrevia = sel.value;
+  sel.innerHTML = listaZonasComunesGestion.map(z => `
+    <option value="${z.id}" ${z.id === zonaSeleccionadaPrevia ? "selected" : ""}>
+      ${z.nombre} (${z.esGratis || z.precio === 0 ? "Gratuito" : "$" + (z.precio||0).toLocaleString("es-CO") + " COP"})
+    </option>
   `).join("");
 
+  cambioZonaSeleccionada();
 }
 
 
 
 function cambioZonaSeleccionada() {
-
   const sel = document.getElementById("reserva-zona-sel");
-
   if (!sel) return;
 
   const zid = sel.value;
-
-  const zona = ZONAS_COMUNES_CATALOGO.find(z => z.id === zid);
-
-  if (!zona) return;
-
-
-
-  const reglasEl = document.getElementById("reserva-reglas-txt");
-
-  if (reglasEl) reglasEl.innerText = zona.reglas;
-
-
-
-  const tarifaDisplay = document.getElementById("reserva-tarifa-display");
-
-  if (tarifaDisplay) {
-
-    if (zona.costoAlquiler === 0) {
-
-      tarifaDisplay.innerText = "Gratuito (Incluido en Administración)";
-
-      tarifaDisplay.className = "font-mono font-bold text-sky-400 text-xs";
-
-    } else {
-
-      tarifaDisplay.innerText = `$${zona.costoAlquiler.toLocaleString("es-CO")} COP`;
-
-      tarifaDisplay.className = "font-mono font-black text-emerald-400 text-sm";
-
+  if (!zid) {
+    const reglasEl = document.getElementById("reserva-reglas-txt");
+    if (reglasEl) reglasEl.innerText = "No hay zonas comunes disponibles para este edificio.";
+    const tarifaDisplay = document.getElementById("reserva-tarifa-display");
+    if (tarifaDisplay) {
+      tarifaDisplay.innerText = "Sin zonas disponibles";
+      tarifaDisplay.className = "font-mono font-medium text-slate-400 text-xs";
     }
-
+    return;
   }
 
+  const zona = (Array.isArray(listaZonasComunesGestion) ? listaZonasComunesGestion.find(z => z.id === zid) : null) || 
+               (typeof ZONAS_COMUNES_CATALOGO !== "undefined" ? ZONAS_COMUNES_CATALOGO.find(z => z.id === zid) : null);
+  if (!zona) return;
 
+  const reglasEl = document.getElementById("reserva-reglas-txt");
+  if (reglasEl) {
+    reglasEl.innerText = zona.descripcion || zona.reglas || `Aforo máximo: ${zona.aforo || 10} personas. Horario: ${zona.horario || "08:00 - 21:00"}`;
+  }
+
+  const tarifaDisplay = document.getElementById("reserva-tarifa-display");
+  if (tarifaDisplay) {
+    const costo = (typeof zona.precio !== "undefined") ? zona.precio : (zona.costoAlquiler || 0);
+    if (costo === 0 || zona.esGratis) {
+      tarifaDisplay.innerText = "Gratuito (Incluido en Administración)";
+      tarifaDisplay.className = "font-mono font-bold text-sky-400 text-xs";
+    } else {
+      tarifaDisplay.innerText = `$${costo.toLocaleString("es-CO")} COP`;
+      tarifaDisplay.className = "font-mono font-black text-emerald-400 text-sm";
+    }
+  }
 
   actualizarHorariosOcupados();
-
 }
 
 

@@ -5732,7 +5732,7 @@
 
                 <span>Gestión de Aforos y Precios de Zonas Comunes</span>
 
-                <span id="badge-contador-zonas" class="text-slate-800 font-extrabold">(11)</span>
+                <span id="badge-contador-zonas" class="text-slate-800 font-extrabold">(0)</span>
 
               </h2>
 
@@ -5754,7 +5754,7 @@
 
               <i data-lucide="plus" class="w-4 h-4"></i>
 
-              <span>Nueva Zona Común</span>
+              <span>+ Escoger / Añadir Zona Común</span>
 
             </button>
 
@@ -17653,7 +17653,10 @@
 
         <input type="hidden" id="modal-cfg-zona-id">
 
-        <input type="hidden" id="modal-cfg-nombre">
+        <div>
+          <label class="block font-bold text-slate-800 text-xs mb-1">Nombre de la Zona Común:</label>
+          <input type="text" id="modal-cfg-nombre" required class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
 
 
 
@@ -17797,21 +17800,22 @@
 
         <!-- Botones de Acción Cancelar y Guardar Cambios de Administración -->
 
-        <div class="pt-2 flex items-center justify-end gap-2.5">
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2.5">
 
-          <button type="button" onclick="cerrarModalConfigurarZona()" class="px-5 py-2.5 rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-all cursor-pointer">
-
-            Cancelar
-
+          <button type="button" onclick="eliminarZonaComunDesdeModal()" class="px-4 py-2.5 rounded-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5" title="Eliminar esta zona común de este edificio">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Eliminar Zona</span>
           </button>
 
-          <button type="submit" class="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
-
-            <span>Guardar Cambios de Administración</span>
-
-          </button>
-
-        </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="cerrarModalConfigurarZona()" class="px-4 py-2.5 rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
+              <span>Guardar Cambios</span>
+            </button>
+          </div>
+        
 
       </form>
 
@@ -17862,6 +17866,39 @@
 
 
       <form onsubmit="guardarNuevaZonaComunModal(event)" class="space-y-3.5 text-xs">
+
+        <!-- Selector Rápido del Catálogo de Zonas Comunes -->
+        <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-1.5">
+          <label class="block font-black text-emerald-900 text-xs flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Escoger qué zona común tiene el edificio:</span>
+            </span>
+            <span class="text-[10px] text-emerald-700 font-semibold">(Autocompleta los datos)</span>
+          </label>
+          <select id="modal-nz-catalogo-sel" onchange="alSeleccionarZonaCatalogo(this.value)" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+            <option value="">-- Seleccionar del catálogo oficial --</option>
+            <option value="salon_social">Salón Social Principal</option>
+            <option value="bbq">BBQ y Pérgola</option>
+            <option value="piscina">Piscina</option>
+            <option value="gimnasio">Gimnasio & Zona Cardio</option>
+            <option value="zonas_humedas">Zonas Húmedas: Sauna, Jacuzzi, Turco</option>
+            <option value="cancha_multiple">Cancha Múltiple</option>
+            <option value="cancha_futbol">Cancha de Fútbol</option>
+            <option value="cancha_tenis">Cancha de Tenis</option>
+            <option value="cancha_squash">Cancha de Squash</option>
+            <option value="juegos">Salón de Juegos (Billar, Ping-Pong, Futbolito)</option>
+            <option value="cine">Sala de Cine / Teatrino</option>
+            <option value="coworking">Sala Coworking & Sala de Juntas</option>
+            <option value="parque_infantil">Parque Infantil & Zona Kids</option>
+            <option value="pet_park">Pet Park & Zona de Mascotas</option>
+            <option value="terraza">Terraza Mirador / Sky Lounge</option>
+            <option value="custom">✏️ Otra zona común personalizada...</option>
+          </select>
+          <p class="text-[10px] text-emerald-700/80 leading-normal">
+            Al seleccionar una zona se completan su nombre, descripción, aforo y horario sugeridos. Podrás modificar su precio y configuración antes de guardar.
+          </p>
+        </div>
 
         <div>
 
@@ -18509,7 +18546,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="app.js?v=20261027_2045"></script>
+  <script src="app.js?v=20261027_2135"></script>
 
 
   <!-- MODAL: VISOR DE FOTO / EVIDENCIA EN TAMAÑO COMPLETO -->
