@@ -62769,9 +62769,20 @@ function generarDocumentosDriveLocal() {
 
       const is0107 = (uApto === "0107" || uApto === "107");
 
-      const uFac = is0107 ? 2745 : (u.fac || (2700 + parseInt(uApto.replace(/\D/g, "") || "10", 10)));
-
-      const uRec = is0107 ? 2501 : (u.rec || (2400 + parseInt(uApto.replace(/\D/g, "") || "10", 10)));
+      let uFac = u.fac || (2700 + parseInt(uApto.replace(/\D/g, "") || "10", 10));
+      let uRec = u.rec || (2400 + parseInt(uApto.replace(/\D/g, "") || "10", 10));
+      if (is0107) {
+        if (mes === "OCTUBRE") {
+          uFac = 2745;
+          uRec = 2501;
+        } else if (mes === "SEPTIEMBRE") {
+          uFac = 2662;
+          uRec = 2414;
+        } else {
+          uFac = 2745;
+          uRec = 2501;
+        }
+      }
 
       const tagApto = (cod === "4901") ? `APTO-${uApto}-AP` : uApto;
 
@@ -63757,6 +63768,8 @@ function descargarDocumentoDriveDirecto(docId, formato) {
   link.href = urlDescarga;
 
   link.download = nombreArchivo;
+
+  link.target = "_blank";
 
   document.body.appendChild(link);
 

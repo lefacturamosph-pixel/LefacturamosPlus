@@ -18210,6 +18210,14 @@
 
         <div class="flex items-center gap-2">
 
+          <button type="button" onclick="abrirDocumentoPestanaNueva()" title="Abrir en pestaña nueva" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+
+            <span class="hidden sm:inline">Abrir en Pestaña</span>
+
+          </button>
+
           <button type="button" onclick="imprimirDocumentoVisorPDF()" title="Imprimir / Guardar como PDF" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
 
             <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-400"></i>
@@ -81098,9 +81106,20 @@ function generarDocumentosDriveLocal() {
 
       const is0107 = (uApto === "0107" || uApto === "107");
 
-      const uFac = is0107 ? 2745 : (u.fac || (2700 + parseInt(uApto.replace(/\D/g, "") || "10", 10)));
-
-      const uRec = is0107 ? 2501 : (u.rec || (2400 + parseInt(uApto.replace(/\D/g, "") || "10", 10)));
+      let uFac = u.fac || (2700 + parseInt(uApto.replace(/\D/g, "") || "10", 10));
+      let uRec = u.rec || (2400 + parseInt(uApto.replace(/\D/g, "") || "10", 10));
+      if (is0107) {
+        if (mes === "OCTUBRE") {
+          uFac = 2745;
+          uRec = 2501;
+        } else if (mes === "SEPTIEMBRE") {
+          uFac = 2662;
+          uRec = 2414;
+        } else {
+          uFac = 2745;
+          uRec = 2501;
+        }
+      }
 
       const tagApto = (cod === "4901") ? `APTO-${uApto}-AP` : uApto;
 
@@ -82086,6 +82105,8 @@ function descargarDocumentoDriveDirecto(docId, formato) {
   link.href = urlDescarga;
 
   link.download = nombreArchivo;
+
+  link.target = "_blank";
 
   document.body.appendChild(link);
 

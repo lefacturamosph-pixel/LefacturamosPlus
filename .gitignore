@@ -11,6 +11,7 @@ cloudflared.exe
 *.apk
 *.idsig
 scratch/
+data/cache_pdf/
 
 # Android build cache
 android/app/build/

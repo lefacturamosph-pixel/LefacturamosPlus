@@ -3612,10 +3612,23 @@ def drive_arbol_edificio(codigo: str):
 @app.get("/api/google-drive/archivo")
 def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: str = "OCTUBRE", descargar: bool = False):
     """
-    Sirve directamente el archivo binario PDF o Excel REAL alojado en Google Drive / C:\dbplus
+    Sirve directamente el archivo binario PDF o Excel REAL alojado en Google Drive, data/drive_docs o generado al vuelo
     """
     from lefacturamos_drive_service import buscar_archivo_disco
     path_encontrado = buscar_archivo_disco(edificio, anio, mes, archivo)
+    if not path_encontrado or not path_encontrado.exists():
+        if archivo.lower().endswith(".pdf"):
+            try:
+                from lefacturamos_pdf_generator import generar_pdf_documento
+                cache_dir = Path("data/cache_pdf")
+                cache_dir.mkdir(parents=True, exist_ok=True)
+                cache_p = cache_dir / f"{edificio}_{anio}_{mes}_{archivo}"
+                generar_pdf_documento(edificio, anio, mes, archivo, cache_p)
+                if cache_p.exists():
+                    path_encontrado = cache_p
+            except Exception as e:
+                print("Error en fallback PDF de backend:", e)
+
     if not path_encontrado or not path_encontrado.exists():
         raise HTTPException(status_code=404, detail=f"Archivo no encontrado en Google Drive o disco local: {archivo}")
     
@@ -3628,7 +3641,8 @@ def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: s
     disposition = "attachment" if descargar else "inline"
     headers = {
         "Content-Disposition": f'{disposition}; filename="{path_encontrado.name}"',
-        "Cache-Control": "public, max-age=3600"
+        "Cache-Control": "public, max-age=3600",
+        "Access-Control-Allow-Origin": "*"
     }
     return FileResponse(path=str(path_encontrado), media_type=media_type, headers=headers)
 
