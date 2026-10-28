@@ -22102,10 +22102,7 @@ if (tabId && tabId.startsWith("manual-")) {
 
     else if (tabId === "zonas") { cargarZonasEdificioStorage(); renderizarModuloZonasComunes(); }
     else if (tabId === "reservas") {
-      cargarZonasEdificioStorage();
-      cargarOpcionesZonasSelect();
-      actualizarHorariosOcupados();
-      cargarMisReservas();
+      inicializarModuloReservas();
     }
 
     else if (tabId === "documentos") renderizarModuloDocumentosDrive();
@@ -46196,28 +46193,16 @@ let panelAdminTarifasVisible = false;
 
 
 function alternarPanelTarifasAdmin() {
-
   panelAdminTarifasVisible = !panelAdminTarifasVisible;
-
   const panel = document.getElementById("panel-admin-tarifas");
-
   if (panel) {
-
     if (panelAdminTarifasVisible) {
-
       panel.classList.remove("hidden");
-
     } else {
-
       panel.classList.add("hidden");
-
     }
-
   }
-
 }
-
-
 
 function inicializarModuloReservas() {
   const inputFecha = document.getElementById("reserva-fecha");
@@ -46239,6 +46224,29 @@ function inicializarModuloReservas() {
     }
   } catch (e) {}
 
+  const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin"));
+  const panelAdminTarifas = document.getElementById("panel-admin-tarifas");
+  const btnToggleTarifas = document.getElementById("btn-toggle-admin-tarifas");
+
+  if (panelAdminTarifas) {
+    if (esAdmin) {
+      panelAdminTarifas.classList.remove("hidden");
+      panelAdminTarifasVisible = true;
+    } else {
+      panelAdminTarifas.classList.add("hidden");
+      panelAdminTarifasVisible = false;
+    }
+  }
+
+  if (btnToggleTarifas) {
+    if (esAdmin) {
+      btnToggleTarifas.classList.remove("hidden");
+    } else {
+      btnToggleTarifas.classList.add("hidden");
+    }
+  }
+
+  cargarZonasEdificioStorage();
   renderizarTarifasAdmin();
   cargarOpcionesZonasSelect();
   cambioZonaSeleccionada();
@@ -46246,72 +46254,203 @@ function inicializarModuloReservas() {
   cargarMisReservas();
 }
 
-
-
 function renderizarTarifasAdmin() {
-
   const cont = document.getElementById("contenedor-tarifas-zonas");
-
   if (!cont) return;
 
+  cargarZonasEdificioStorage();
 
+  cont.innerHTML = CATALOGO_MAESTRO_ZONAS_DEFAULT.map(z => {
+    // Verificar si la zona ya pertenece a este edificio
+    const enEdificio = listaZonasComunesGestion.find(item => 
+      item.id === `z_${z.clave}` || 
+      item.clave === z.clave || 
+      item.nombre.toLowerCase().trim() === z.nombre.toLowerCase().trim()
+    );
 
-  cont.innerHTML = ZONAS_COMUNES_CATALOGO.map(z => `
+    const estaHabilitada = !!enEdificio;
+    const precioActual = enEdificio ? (enEdificio.precio !== undefined ? enEdificio.precio : (z.precioDefault || 0)) : (z.precioDefault || 0);
 
-    <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+    return `
+      <div id="card-tarifa-${z.clave}" class="p-3.5 rounded-2xl border transition-all ${
+        estaHabilitada 
+          ? 'bg-slate-900 border-emerald-500/80 ring-1 ring-emerald-500/40 shadow-sm shadow-emerald-950' 
+          : 'bg-slate-950/60 border-slate-800 opacity-60 hover:opacity-100'
+      } flex flex-col justify-between gap-2.5">
+        <div class="space-y-1.5">
+          <div class="flex items-start justify-between gap-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="check-tarifa-${z.clave}" ${estaHabilitada ? 'checked' : ''} onchange="toggleZonaEdificioDesdeTarifas('${z.clave}')" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+              <span class="font-bold ${estaHabilitada ? 'text-white' : 'text-slate-300'} text-xs">${z.nombre}</span>
+            </label>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-medium shrink-0">${z.categoria}</span>
+          </div>
+          <p class="text-[10px] text-slate-400 leading-tight">
+            ${z.descripcion}
+          </p>
+        </div>
 
-      <div class="flex items-center justify-between">
+        <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-400 font-medium">Tarifa fijada por Admin:</span>
+            <span id="badge-estado-${z.clave}" class="text-[10px] font-bold ${estaHabilitada ? 'text-emerald-400' : 'text-slate-500'}">
+              ${estaHabilitada ? (precioActual === 0 ? '✓ Gratis ($0)' : '$' + precioActual.toLocaleString('es-CO') + ' COP') : '✕ No asignada'}
+            </span>
+          </div>
 
-        <span class="font-bold text-white text-xs truncate">${z.nombre}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 font-bold">$</span>
+            <input type="number" id="tarifa-input-${z.clave}" value="${precioActual}" min="0" step="5000" oninput="alCambiarPrecioTarifa('${z.clave}', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="0">
+            <span class="text-[10px] text-slate-500 font-semibold">COP</span>
+          </div>
 
-        <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-medium">${z.categoria}</span>
-
+          <div class="flex items-center justify-between text-[10px] text-slate-500">
+            <span>Aforo: ${z.aforoDefault} personas</span>
+            <span>Horario: ${z.horarioDefault}</span>
+          </div>
+        </div>
       </div>
+    `;
+  }).join("");
 
-      <div class="flex items-center gap-2">
-
-        <span class="text-xs text-slate-400 font-bold">$</span>
-
-        <input type="number" id="tarifa-input-${z.id}" value="${z.costoAlquiler}" min="0" step="5000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-
-        <span class="text-[10px] text-slate-500 font-semibold">COP</span>
-
-      </div>
-
-    </div>
-
-  `).join("");
-
+  safeCreateIcons();
 }
 
+function toggleZonaEdificioDesdeTarifas(clave) {
+  const z = CATALOGO_MAESTRO_ZONAS_DEFAULT.find(c => c.clave === clave);
+  if (!z) return;
 
+  const checkbox = document.getElementById(`check-tarifa-${clave}`);
+  const estaCheckeada = checkbox ? checkbox.checked : false;
 
-function guardarTarifasAdmin() {
+  const idxExistente = listaZonasComunesGestion.findIndex(item => 
+    item.id === `z_${z.clave}` || 
+    item.clave === z.clave || 
+    item.nombre.toLowerCase().trim() === z.nombre.toLowerCase().trim()
+  );
 
-  ZONAS_COMUNES_CATALOGO.forEach(z => {
+  const inputPrecio = document.getElementById(`tarifa-input-${clave}`);
+  const precioIngresado = inputPrecio ? (parseFloat(inputPrecio.value) || 0) : (z.precioDefault || 0);
 
-    const input = document.getElementById(`tarifa-input-${z.id}`);
+  if (estaCheckeada) {
+    const esGratis = (precioIngresado === 0);
+    const zonaActualizada = {
+      id: `z_${z.clave}`,
+      clave: z.clave,
+      nombre: z.nombre,
+      categoria: z.categoria,
+      descripcion: z.descripcion,
+      aforo: z.aforoDefault,
+      esGratis: esGratis,
+      precio: precioIngresado,
+      precioTexto: esGratis ? "Gratuito ($0)" : `$${precioIngresado.toLocaleString("es-CO")} COP`,
+      badgeTexto: esGratis ? "✓ Gratis ($0)" : `$${precioIngresado.toLocaleString("es-CO")} COP`,
+      badgeClase: esGratis ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200",
+      horario: z.horarioDefault,
+      maxHoras: z.maxHorasDefault
+    };
 
-    if (input) {
-
-      const nuevoValor = parseFloat(input.value) || 0;
-
-      z.costoAlquiler = nuevoValor;
-
+    if (idxExistente >= 0) {
+      listaZonasComunesGestion[idxExistente] = zonaActualizada;
+    } else {
+      listaZonasComunesGestion.push(zonaActualizada);
     }
 
-  });
-
-
+    guardarZonasEdificioStorage();
+    mostrarToast(`✓ "${z.nombre}" habilitada para este edificio (${zonaActualizada.precioTexto}).`);
+  } else {
+    if (idxExistente >= 0) {
+      listaZonasComunesGestion.splice(idxExistente, 1);
+      guardarZonasEdificioStorage();
+      mostrarToast(`"${z.nombre}" retirada de este edificio.`);
+    }
+  }
 
   cargarOpcionesZonasSelect();
-
   cambioZonaSeleccionada();
-
-  mostrarToast("Tarifas de zonas comunes actualizadas exitosamente por la administración.");
-
+  renderizarTarifasAdmin();
+  if (typeof renderizarModuloZonasComunes === "function") {
+    renderizarModuloZonasComunes();
+  }
 }
 
+function alCambiarPrecioTarifa(clave, valorStr) {
+  const nuevoValor = parseFloat(valorStr) || 0;
+  const z = CATALOGO_MAESTRO_ZONAS_DEFAULT.find(c => c.clave === clave);
+  if (!z) return;
+
+  const enEdificio = listaZonasComunesGestion.find(item => 
+    item.id === `z_${z.clave}` || 
+    item.clave === z.clave || 
+    item.nombre.toLowerCase().trim() === z.nombre.toLowerCase().trim()
+  );
+
+  if (enEdificio) {
+    enEdificio.precio = nuevoValor;
+    enEdificio.esGratis = (nuevoValor === 0);
+    enEdificio.precioTexto = (nuevoValor === 0) ? "Gratuito ($0)" : `$${nuevoValor.toLocaleString("es-CO")} COP`;
+    enEdificio.badgeTexto = (nuevoValor === 0) ? "✓ Gratis ($0)" : `$${nuevoValor.toLocaleString("es-CO")} COP`;
+    enEdificio.badgeClase = (nuevoValor === 0) ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200";
+    guardarZonasEdificioStorage();
+    cargarOpcionesZonasSelect();
+    cambioZonaSeleccionada();
+    const badge = document.getElementById(`badge-estado-${clave}`);
+    if (badge) {
+      badge.textContent = nuevoValor === 0 ? "✓ Gratis ($0)" : `$${nuevoValor.toLocaleString("es-CO")} COP`;
+    }
+  }
+}
+
+function guardarTarifasAdmin() {
+  CATALOGO_MAESTRO_ZONAS_DEFAULT.forEach(z => {
+    const cb = document.getElementById(`check-tarifa-${z.clave}`);
+    const input = document.getElementById(`tarifa-input-${z.clave}`);
+    const precio = input ? (parseFloat(input.value) || 0) : (z.precioDefault || 0);
+
+    const idx = listaZonasComunesGestion.findIndex(item => 
+      item.id === `z_${z.clave}` || 
+      item.clave === z.clave || 
+      item.nombre.toLowerCase().trim() === z.nombre.toLowerCase().trim()
+    );
+
+    if (cb && cb.checked) {
+      const esGratis = (precio === 0);
+      const obj = {
+        id: `z_${z.clave}`,
+        clave: z.clave,
+        nombre: z.nombre,
+        categoria: z.categoria,
+        descripcion: z.descripcion,
+        aforo: z.aforoDefault,
+        esGratis: esGratis,
+        precio: precio,
+        precioTexto: esGratis ? "Gratuito ($0)" : `$${precio.toLocaleString("es-CO")} COP`,
+        badgeTexto: esGratis ? "✓ Gratis ($0)" : `$${precio.toLocaleString("es-CO")} COP`,
+        badgeClase: esGratis ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200",
+        horario: z.horarioDefault,
+        maxHoras: z.maxHorasDefault
+      };
+      if (idx >= 0) {
+        listaZonasComunesGestion[idx] = obj;
+      } else {
+        listaZonasComunesGestion.push(obj);
+      }
+    } else {
+      if (idx >= 0) {
+        listaZonasComunesGestion.splice(idx, 1);
+      }
+    }
+  });
+
+  guardarZonasEdificioStorage();
+  cargarOpcionesZonasSelect();
+  cambioZonaSeleccionada();
+  renderizarTarifasAdmin();
+  if (typeof renderizarModuloZonasComunes === "function") {
+    renderizarModuloZonasComunes();
+  }
+  mostrarToast("✓ Zonas comunes y tarifas de este edificio guardadas y aplicadas con éxito.");
+}
 
 
 function cargarOpcionesZonasSelect() {
