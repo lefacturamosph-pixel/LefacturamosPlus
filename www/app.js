@@ -52501,14 +52501,6 @@ function buscarEnModalLey675() {
 
             </button>
 
-            <button type="button" onclick="compartirWhatsAppWeb('${a.articulo}')" class="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer">
-
-              <i data-lucide="share-2" class="w-3 h-3 text-emerald-700"></i>
-
-              <span>Compartir</span>
-
-            </button>
-
           </div>
 
         </div>
@@ -53900,10 +53892,6 @@ function cargarLey675(filtro = "", sub = "Todos", perfil = "Todos") {
             <button type="button" onclick="copiarResolucionWeb('${a.articulo}')" class="px-3 py-1.5 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i>
               <span>Copiar</span>
-            </button>
-            <button type="button" onclick="compartirWhatsAppWeb('${a.articulo}')" class="px-3 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-600/50 text-emerald-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all">
-              <i data-lucide="share-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-              <span>WhatsApp</span>
             </button>
           </div>
         </div>
