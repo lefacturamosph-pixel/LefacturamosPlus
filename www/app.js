@@ -22042,6 +22042,8 @@ if (tabId && tabId.startsWith("manual-")) {
 
     targetBtn.classList.remove("text-slate-300");
 
+    try { targetBtn.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
+
   }
 
 
