@@ -894,7 +894,7 @@ def main(page: ft.Page):
                 vid = f"vot_{uuid.uuid4().hex[:8]}"
                 db_execute("""
                 INSERT INTO votaciones (id, conjunto_id, titulo, descripcion, opciones, estado, quorum_minimo)
-                VALUES (?, ?, ?, ?, '["Sí", "No", "Abstención"]', 'ABIERTA', ?)
+                VALUES (?, ?, ?, ?, '["Sí", "No", "Voto en Blanco"]', 'ABIERTA', ?)
                 """, (vid, session_state["conjunto_id"], tit_preg_tf.value, desc_preg_tf.value or "Formulado por el Administrador", float(quorum_dd.value)))
                 show_toast("Pregunta de asamblea publicada para votación.")
                 navegar_a("votaciones")

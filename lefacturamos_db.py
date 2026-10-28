@@ -301,7 +301,7 @@ def inicializar_base_datos():
         conjunto_id TEXT NOT NULL,
         titulo TEXT NOT NULL, -- ej: ¿Aprueba el presupuesto para el año 2027?
         descripcion TEXT,
-        opciones TEXT DEFAULT '["Sí", "No", "Abstención"]', -- JSON list
+        opciones TEXT DEFAULT '["Sí", "No", "Voto en Blanco"]', -- JSON list
         estado TEXT DEFAULT 'ABIERTA', -- ABIERTA, CERRADA, PROGRAMADA
         fecha_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         fecha_fin TIMESTAMP,
@@ -635,7 +635,7 @@ def sembrar_datos_iniciales():
     # Sembrar Votación de Asamblea
     cursor.execute("""
     INSERT INTO votaciones (id, conjunto_id, titulo, descripcion, opciones, estado, quorum_minimo)
-    VALUES (?, ?, ?, ?, '["Sí", "No", "Abstención"]', 'ABIERTA', 51.0)
+    VALUES (?, ?, ?, ?, '["Sí", "No", "Voto en Blanco"]', 'ABIERTA', 51.0)
     """, (
         "vot_1", conjunto_7480_id,
         "¿Aprueba el presupuesto ordinario para el año 2027?",

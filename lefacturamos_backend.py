@@ -440,7 +440,7 @@ class VotacionCreateRequest(BaseModel):
 
     descripcion: Optional[str] = ""
 
-    opciones: List[str] = ["Sí", "No", "Abstención"]
+    opciones: List[str] = ["Sí", "No", "Voto en Blanco"]
 
     quorum_minimo: float = 51.0
 

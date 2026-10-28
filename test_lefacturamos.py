@@ -385,7 +385,7 @@ def test_suite_completa():
             "conjunto_id": "cj_7480",
             "titulo": "¿Aprueba la ejecución presupuestal y estados financieros 2026?",
             "descripcion": "Ley 675 de 2001 Art. 38. Aprobación por mayoría simple de coeficientes.",
-            "opciones": ["Sí", "No", "Abstención"],
+            "opciones": ["Sí", "No", "Voto en Blanco"],
             "quorum_minimo": 51.0
         })
         assert r_crear_preg.status_code == 200

@@ -51407,7 +51407,7 @@ const preguntasAsamblea = [
 
     estado: "ABIERTA",
 
-    opciones: ["Sí", "No", "Abstención"],
+    opciones: ["Sí", "No", "Voto en Blanco"],
 
     votos: [
 
@@ -51427,7 +51427,7 @@ const preguntasAsamblea = [
 
       { apto: "0302", opcion: "Sí", coef: 2.480 },
 
-      { apto: "0303", opcion: "Abstención", coef: 2.390 },
+      { apto: "0303", opcion: "Voto en Blanco", coef: 2.390 },
 
       { apto: "0401", opcion: "Sí", coef: 2.500 },
 
@@ -51457,7 +51457,7 @@ const preguntasAsamblea = [
 
     estado: "ABIERTA",
 
-    opciones: ["Sí", "No", "Abstención"],
+    opciones: ["Sí", "No", "Voto en Blanco"],
 
     votos: [
 
@@ -51579,7 +51579,7 @@ const estadoAsambleaLefacturamos = {
 
         num: "3",
 
-        texto: "En Blanco / Abstención",
+        texto: "Voto en Blanco",
 
         coeficiente: 0.000,
 
@@ -52067,7 +52067,7 @@ function renderizarModuloAsambleaVotaciones() {
 
                   <i data-lucide="minus" class="w-3.5 h-3.5"></i>
 
-                  <span>Abstención</span>
+                  <span>Voto en Blanco</span>
 
                 </button>
 
@@ -52729,7 +52729,7 @@ function guardarNuevaPreguntaAsambleaModal(event) {
 
       { id: "2", num: "2", texto: "NO - Rechazo la moción propuesta", coeficiente: 0.0, pctEmitidos: 0.0, aptos: 0, barColor: "bg-rose-500", textColor: "text-slate-700" },
 
-      { id: "3", num: "3", texto: "En Blanco / Abstención", coeficiente: 0.0, pctEmitidos: 0.0, aptos: 0, barColor: "bg-slate-300", textColor: "text-slate-400" }
+      { id: "3", num: "3", texto: "Voto en Blanco", coeficiente: 0.0, pctEmitidos: 0.0, aptos: 0, barColor: "bg-slate-300", textColor: "text-slate-400" }
 
     ],
 
@@ -52893,7 +52893,7 @@ function crearPreguntaAsamblea() {
 
     estado: "ABIERTA",
 
-    opciones: ["Sí", "No", "Abstención"],
+    opciones: ["Sí", "No", "Voto en Blanco"],
 
     votos: []
 
@@ -53147,7 +53147,7 @@ function renderizarPreguntasAsamblea() {
 
                 <button onclick="emitirVotoWeb('${p.id}', 'No')" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 font-black text-xs text-white shadow-md transition-all">NO</button>
 
-                <button onclick="emitirVotoWeb('${p.id}', 'Abstención')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-slate-300 transition-all">ABSTENCIÓN</button>
+                <button onclick="emitirVotoWeb('${p.id}', 'Voto en Blanco')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-xs text-slate-300 transition-all">VOTO EN BLANCO</button>
 
               </div>
 
@@ -53225,7 +53225,7 @@ function generarInformeAsamblea() {
 
     const coefNo = conteo["No"] ? conteo["No"].coef : 0;
 
-    const coefAbs = conteo["Abstención"] ? conteo["Abstención"].coef : 0;
+    const coefAbs = (conteo["Voto en Blanco"] ? conteo["Voto en Blanco"].coef : 0) + (conteo["Abstención"] ? conteo["Abstención"].coef : 0);
 
     const dictamen = coefSi >= p.quorumMinimo ? "APROBADO POR MAYORÍA REGLAMENTARIA (LEY 675)" : "NO APROBADO / EN TRÁMITE";
 
@@ -53253,7 +53253,7 @@ PREGUNTA NO. ${idx + 1}:
 
     - VOTOS EN CONTRA (NO):    ${conteo["No"] ? conteo["No"].count : 0} unidades | Coeficiente: ${coefNo.toFixed(3)}%
 
-    - ABSTENCIONES:            ${conteo["Abstención"] ? conteo["Abstención"].count : 0} unidades | Coeficiente: ${coefAbs.toFixed(3)}%
+    - VOTOS EN BLANCO:         ${(conteo["Voto en Blanco"] ? conteo["Voto en Blanco"].count : 0) + (conteo["Abstención"] ? conteo["Abstención"].count : 0)} unidades | Coeficiente: ${coefAbs.toFixed(3)}%
 
 
 
