@@ -5302,181 +5302,54 @@
 
         
 
-        <!-- VISTA OFICIAL ADMINISTRADOR: SOLICITUDES DE RESERVA (2) (EXACTA AL PANTALLAZO) -->
-
-        <div id="seccion-admin-solicitudes-reservas" class="space-y-4">
-
-          <!-- 1. Encabezado Tarjeta Superior -->
-
-          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl flex items-center gap-3">
-
-            <div class="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-800 text-amber-400 flex items-center justify-center shadow-md shrink-0">
-
-              <i data-lucide="calendar" class="w-5 h-5"></i>
-
+        <!-- 1. SECCIÓN PRINCIPAL: RESERVAS DE COPROPIETARIOS -->
+        <div id="seccion-admin-solicitudes-reservas" class="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4 shadow-xl">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800/80 gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-800 text-amber-400 flex items-center justify-center shadow-md shrink-0">
+                <i data-lucide="calendar" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span>Reservas de Copropietarios</span>
+                  <span id="badge-contador-reservas" class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-bold">(5 confirmadas)</span>
+                </h2>
+                <p class="text-xs text-slate-400">Listado oficial de copropietarios con turnos reservados en las zonas comunes de este edificio.</p>
+              </div>
             </div>
 
-            <div>
-
-              <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-
-                <span>Solicitudes de Reserva (2)</span>
-
-              </h2>
-
-              <p class="text-xs text-slate-400 font-medium">Salón Social, Zona BBQ, Canchas y Áreas Comunes</p>
-
+            <!-- Acciones y Filtros -->
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800">
+                <span class="text-[11px] text-slate-400">Fecha:</span>
+                <input type="date" id="filtro-fecha-reservas-admin" onchange="renderizarReservasCopropietarios()" class="bg-transparent text-xs text-white focus:outline-none">
+                <button type="button" onclick="limpiarFiltroReservas()" class="text-slate-400 hover:text-white transition-colors" title="Ver todas las fechas">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+              <button type="button" onclick="cambiarPestana('zonas')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-brand-400 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer" title="Configurar áreas y precios de zonas comunes">
+                <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Configurar Zonas</span>
+              </button>
             </div>
-
           </div>
 
-
-
-          <!-- 2. Tarjeta con Listado de Reservas del Pantallazo Oficial -->
-
-          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl divide-y divide-slate-800/80 space-y-4">
-
-            <!-- Item 1: Cancha de Tenis -->
-
-            <div class="pt-0 first:pt-0 space-y-1">
-
-              <div class="flex items-center gap-2.5">
-
-                <h4 class="font-black text-white text-sm">Cancha de Tenis</h4>
-
-                <span class="px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 text-[10px] font-bold">Confirmada</span>
-
-              </div>
-
-              <div class="text-xs text-slate-400 font-medium">
-
-                Fecha: <span class="font-semibold text-slate-300">2026-09-16 (17:00 - 19:00)</span>
-
-              </div>
-
-              <div class="text-xs text-slate-400 font-medium">
-
-                Solicitante: <span class="font-semibold text-slate-200">Carlos Alberto Sánchez • Apto 502</span>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- Item 2: Zona BBQ y Pérgola -->
-
-            <div class="pt-4 space-y-1">
-
-              <div class="flex items-center gap-2.5">
-
-                <h4 class="font-black text-white text-sm">Zona BBQ y Pérgola</h4>
-
-                <span class="px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 text-[10px] font-bold">Confirmada</span>
-
-              </div>
-
-              <div class="text-xs text-slate-400 font-medium">
-
-                Fecha: <span class="font-semibold text-slate-300">2026-09-19 (13:00 - 17:00)</span>
-
-              </div>
-
-              <div class="text-xs text-slate-400 font-medium">
-
-                Solicitante: <span class="font-semibold text-slate-200">Dra. Elena Mercedes Valdés • Apto 201</span>
-
-              </div>
-
-            </div>
-
+          <!-- Listado dinámico de reservas de copropietarios -->
+          <div id="lista-reservas-copropietarios" class="divide-y divide-slate-800/80 space-y-3">
+            <!-- Renderizado reactivo desde renderizarReservasCopropietarios -->
           </div>
-
         </div>
 
-
-
-        <!-- MÓDULO INTEGRAL Y GESTIÓN DE TARIFAS (RESIDENTES Y ADMINISTRACIÓN) -->
-
-        <div id="seccion-gestion-reservas-completo" class="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-5 shadow-xl">
-
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
-
+        <!-- 2. FORMULARIO DE SOLICITUD DE NUEVA RESERVA -->
+        <div id="seccion-gestion-reservas-completo" class="bg-slate-900 rounded-2xl border border-slate-800 p-5 space-y-4 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
-
               <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Control Integral de Áreas Comunes</span>
-
-              <h3 class="text-base font-black text-white">Solicitud y Formulario de Reservas</h3>
-
-              <p class="text-xs text-slate-400">Zonas Húmedas, BBQ, Canchas, Gimnasio, Coworking, Salones & Piscina.</p>
-
+              <h3 class="text-base font-black text-white">Solicitud y Formulario de Nueva Reserva</h3>
+              <p class="text-xs text-slate-400">Selecciona la zona común habilitada de este edificio y confirma tu fecha y franja horaria.</p>
             </div>
-
-            <!-- Botón para alternar Vista de Gestión de Tarifas del Administrador (Solo Administrador) -->
-
-            <div class="flex gap-2">
-
-              <button id="btn-toggle-admin-tarifas" onclick="alternarPanelTarifasAdmin()" class="hidden px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-brand-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all">
-
-                <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
-
-                <span>Gestión de Tarifas (Administrador)</span>
-
-              </button>
-
-            </div>
-
           </div>
-
-
-
-          <!-- PANEL DEL ADMINISTRADOR: GESTIÓN Y FIJACIÓN DE VALORES DE RESERVA (SOLO ADMINISTRADOR) -->
-
-          <div id="panel-admin-tarifas" class="hidden p-4 sm:p-5 rounded-2xl bg-slate-950 border border-emerald-900/40 space-y-4">
-
-            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-
-              <div class="flex items-center gap-2">
-
-                <i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-400"></i>
-
-                <h3 class="text-sm font-black text-white uppercase tracking-wide">Zonas Comunes del Edificio y Fijación de Tarifas Oficiales</h3>
-
-              </div>
-
-              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700/50 font-bold">Exclusivo Administrador</span>
-
-            </div>
-
-            <p class="text-xs text-slate-400">Marca la casilla (☑) al lado de cada zona común para escoger cuáles tiene este edificio y pon el valor de alquiler oficial ($0 para uso gratuito). Solo las zonas marcadas estarán disponibles para que los copropietarios las reserven.</p>
-
-            
-
-            <div id="contenedor-tarifas-zonas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-
-              <!-- Se llena dinámicamente con todas las zonas y sus inputs de valor -->
-
-            </div>
-
-
-
-            <div class="flex justify-end pt-2">
-
-              <button onclick="guardarTarifasAdmin()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-950">
-
-                <i data-lucide="save" class="w-4 h-4"></i>
-
-                <span>Guardar y Aplicar Zonas y Tarifas del Edificio</span>
-
-              </button>
-
-            </div>
-
-          </div>
-
-
-
-          <!-- FORMULARIO DE RESERVA DE COPROPIETARIOS -->
+<!-- FORMULARIO DE RESERVA DE COPROPIETARIOS -->
 
           <div class="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
 
@@ -5711,68 +5584,49 @@
       <!-- PESTAÑA: GESTIÓN DE AFOROS Y PRECIOS DE ZONAS COMUNES (EXACTO AL SCREENSHOT MEDIA_1792187988267) -->
 
       <section id="tab-zonas" class="tab-content space-y-4">
-
         
-
-        <!-- 1. ENCABEZADO SUPERIOR (CARD BLANCA CON ACCIÓN) -->
-
-        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-
+        <!-- ENCABEZADO SUPERIOR (CARD OSCURA EXACTA AL SCREENSHOT CON ACCIÓN) -->
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-start gap-3">
-
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-
+            <div class="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-400 flex items-center justify-center shrink-0">
               <i data-lucide="layers" class="w-5 h-5"></i>
-
             </div>
-
             <div>
-
-              <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-
-                <span>Gestión de Aforos y Precios de Zonas Comunes</span>
-
-                <span id="badge-contador-zonas" class="text-slate-800 font-extrabold">(0)</span>
-
+              <h2 class="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
+                <span>Zonas Comunes del Edificio y Fijación de Tarifas Oficiales</span>
+                <span id="badge-contador-zonas" class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-bold">(0 activas)</span>
               </h2>
-
-              <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
-
-                El aforo máximo de personas y el precio de alquiler son fijados y regulados oficialmente por la administración.
-
+              <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                Marca la casilla (☑) al lado de cada zona común para escoger cuáles tiene este edificio y pon el valor de alquiler oficial ($0 para uso gratuito). Solo las zonas marcadas estarán disponibles para que los copropietarios las reserven.
               </p>
-
             </div>
-
           </div>
 
-
-
-          <div class="shrink-0">
-
-            <button type="button" onclick="abrirModalNuevaZonaComun()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95">
-
-              <i data-lucide="plus" class="w-4 h-4"></i>
-
-              <span>+ Escoger / Añadir Zona Común</span>
-
+          <div class="shrink-0 flex items-center gap-2">
+            <button type="button" onclick="guardarTarifasAdmin()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950 transition-all active:scale-95 cursor-pointer">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Guardar y Aplicar Cambios</span>
             </button>
-
+            <button type="button" onclick="abrirModalNuevaZonaComun()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <i data-lucide="plus" class="w-4 h-4 text-emerald-400"></i>
+              <span>+ Zona Personalizada</span>
+            </button>
           </div>
-
         </div>
 
-
-
-        <!-- 2. GRID DE LAS 11 ZONAS COMUNES -->
-
-        <div id="grid-zonas-comunes-admin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-          <!-- Renderizado reactivo desde listaZonasComunesGestion -->
-
+        <!-- GRID EXACTO A LA IMAGEN CON CHECKBOXES, VALORES Y ACCIONES -->
+        <div id="grid-zonas-comunes-admin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <!-- Renderizado reactivo desde renderizarModuloZonasComunes -->
         </div>
 
-
+        <!-- BARRA INFERIOR DE ACCIÓN -->
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <span>💡 Marca las casillas de las zonas de este edificio y pulsa el botón para guardar y sincronizar los precios oficiales.</span>
+          <button type="button" onclick="guardarTarifasAdmin()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950 transition-all active:scale-95 cursor-pointer">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Guardar y Aplicar Zonas y Tarifas del Edificio</span>
+          </button>
+        </div>
 
       </section>
 
@@ -18546,7 +18400,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="app.js?v=20261027_2145"></script>
+  <script src="app.js?v=20261028_1145"></script>
 
 
   <!-- MODAL: VISOR DE FOTO / EVIDENCIA EN TAMAÑO COMPLETO -->

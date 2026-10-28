@@ -45756,77 +45756,83 @@ function renderizarModuloZonasComunes() {
 
   const badgeCont = document.getElementById("badge-contador-zonas");
   if (badgeCont) {
-    badgeCont.textContent = `(${listaZonasComunesGestion.length})`;
+    badgeCont.textContent = `(${listaZonasComunesGestion.length} ${listaZonasComunesGestion.length === 1 ? 'activa' : 'activas'})`;
   }
 
   const contenedor = document.getElementById("grid-zonas-comunes-admin");
   if (!contenedor) return;
 
-  if (listaZonasComunesGestion.length === 0) {
-    contenedor.innerHTML = `
-      <div class="col-span-full py-12 px-6 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-center space-y-4">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-          <i data-lucide="layers" class="w-8 h-8"></i>
-        </div>
-        <div class="max-w-md mx-auto space-y-1">
-          <h3 class="text-base font-bold text-slate-800">No hay zonas comunes configuradas en este edificio</h3>
-          <p class="text-xs text-slate-500 leading-relaxed">
-            Este edificio aún no tiene zonas comunes asignadas. Escoge las zonas que tiene la copropiedad para definir sus aforos y precios oficiales de alquiler.
+  contenedor.innerHTML = CATALOGO_MAESTRO_ZONAS_DEFAULT.map(z => {
+    // Verificar si la zona ya pertenece a este edificio
+    const enEdificio = listaZonasComunesGestion.find(item => 
+      item.id === `z_${z.clave}` || 
+      item.clave === z.clave || 
+      item.nombre.toLowerCase().trim() === z.nombre.toLowerCase().trim()
+    );
+
+    const estaHabilitada = !!enEdificio;
+    const precioActual = enEdificio ? (enEdificio.precio !== undefined ? enEdificio.precio : (z.precioDefault || 0)) : (z.precioDefault || 0);
+
+    return `
+      <div id="card-tarifa-${z.clave}" class="p-4 rounded-2xl border transition-all ${
+        estaHabilitada 
+          ? 'bg-slate-900 border-emerald-500/80 ring-1 ring-emerald-500/40 shadow-md shadow-emerald-950/40' 
+          : 'bg-slate-950/70 border-slate-800/80 opacity-60 hover:opacity-100'
+      } flex flex-col justify-between gap-3">
+        <div class="space-y-1.5">
+          <div class="flex items-start justify-between gap-2">
+            <!-- Cuadrito / Checkbox para escoger si el edificio tiene esta zona -->
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="check-tarifa-${z.clave}" ${estaHabilitada ? 'checked' : ''} onchange="toggleZonaEdificioDesdeTarifas('${z.clave}')" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+              <span class="font-bold ${estaHabilitada ? 'text-white' : 'text-slate-300'} text-xs sm:text-sm">${z.nombre}</span>
+            </label>
+            <span class="text-[9px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium shrink-0">${z.categoria}</span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-slate-400 leading-relaxed">
+            ${z.descripcion}
           </p>
         </div>
-        <button type="button" onclick="abrirModalNuevaZonaComun()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer">
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          <span>+ Escoger Zonas Comunes del Edificio</span>
-        </button>
+
+        <div class="pt-2.5 border-t border-slate-800/80 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400 font-medium">Tarifa fijada por Admin:</span>
+            <span id="badge-estado-${z.clave}" class="text-[11px] font-bold ${estaHabilitada ? 'text-emerald-400' : 'text-slate-500'}">
+              ${estaHabilitada ? (precioActual === 0 ? '✓ Gratis ($0)' : '$' + precioActual.toLocaleString('es-CO') + ' COP') : '✕ No asignada'}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 font-bold">$</span>
+            <input type="number" id="tarifa-input-${z.clave}" value="${precioActual}" min="0" step="5000" oninput="alCambiarPrecioTarifa('${z.clave}', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="0">
+            <span class="text-[10px] text-slate-500 font-semibold">COP</span>
+          </div>
+
+          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+            <span>Aforo: ${z.aforoDefault} personas</span>
+            <span>Horario: ${z.horarioDefault}</span>
+          </div>
+
+          ${estaHabilitada ? `
+            <div class="pt-1.5 flex items-center gap-2 border-t border-slate-800/60">
+              <button type="button" onclick="abrirModalConfigurarZona('${enEdificio.id}')" class="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer">
+                <i data-lucide="edit-3" class="w-3 h-3 text-emerald-400"></i>
+                <span>Modificar</span>
+              </button>
+              <button type="button" onclick="eliminarZonaComun('${enEdificio.id}')" class="py-1.5 px-2 rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-800/60 text-rose-300 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer" title="Eliminar de este edificio">
+                <i data-lucide="trash-2" class="w-3 h-3 text-rose-400"></i>
+                <span>Eliminar</span>
+              </button>
+            </div>
+          ` : `
+            <button type="button" onclick="document.getElementById('check-tarifa-${z.clave}').click()" class="w-full py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-emerald-400 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>Activar en este edificio</span>
+            </button>
+          `}
+        </div>
       </div>
     `;
-    safeCreateIcons();
-    return;
-  }
-
-  contenedor.innerHTML = listaZonasComunesGestion.map(z => `
-    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-emerald-300 transition-all">
-      <div>
-        <div class="flex items-center justify-between gap-2">
-          <h3 class="font-bold text-slate-900 text-sm">${z.nombre}</h3>
-          <span class="px-2.5 py-0.5 rounded-md border text-[11px] font-bold shrink-0 ${z.badgeClase || (z.esGratis ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200')}">
-            ${z.badgeTexto || (z.esGratis ? '✓ Gratis ($0)' : `$${(z.precio||0).toLocaleString('es-CO')} COP`)}
-          </span>
-        </div>
-        <p class="text-xs text-slate-500 leading-relaxed mt-2">
-          ${z.descripcion}
-        </p>
-      </div>
-
-      <div>
-        <div class="bg-slate-50/80 rounded-xl p-3 border border-slate-100 space-y-1.5 mt-4 text-xs">
-          <div class="flex items-center justify-between">
-            <span class="text-slate-500 text-[11px]">Aforo fijado por Admin:</span>
-            <span class="font-black text-emerald-700 text-xs">${z.aforo} personas</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-500 text-[11px]">Precio fijado por Admin:</span>
-            <span class="font-bold text-slate-800 text-xs">${z.precioTexto || (z.esGratis ? 'Gratuito ($0)' : `$${(z.precio||0).toLocaleString('es-CO')} COP`)}</span>
-          </div>
-          <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400 font-medium">
-            <span>Horario: ${z.horario}</span>
-            <span>Máx: ${z.maxHoras}</span>
-          </div>
-        </div>
-
-        <div class="mt-4 flex items-center gap-2">
-          <button type="button" onclick="abrirModalConfigurarZona('${z.id}')" class="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-emerald-600"></i>
-            <span>Modificar</span>
-          </button>
-          <button type="button" onclick="eliminarZonaComun('${z.id}')" class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer" title="Eliminar zona común de este edificio">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
-            <span>Eliminar</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join("");
+  }).join("");
 
   safeCreateIcons();
 }
@@ -46224,96 +46230,91 @@ function inicializarModuloReservas() {
     }
   } catch (e) {}
 
-  const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin"));
-  const panelAdminTarifas = document.getElementById("panel-admin-tarifas");
-  const btnToggleTarifas = document.getElementById("btn-toggle-admin-tarifas");
-
-  if (panelAdminTarifas) {
-    if (esAdmin) {
-      panelAdminTarifas.classList.remove("hidden");
-      panelAdminTarifasVisible = true;
-    } else {
-      panelAdminTarifas.classList.add("hidden");
-      panelAdminTarifasVisible = false;
-    }
-  }
-
-  if (btnToggleTarifas) {
-    if (esAdmin) {
-      btnToggleTarifas.classList.remove("hidden");
-    } else {
-      btnToggleTarifas.classList.add("hidden");
-    }
-  }
-
   cargarZonasEdificioStorage();
-  renderizarTarifasAdmin();
+  renderizarReservasCopropietarios();
   cargarOpcionesZonasSelect();
   cambioZonaSeleccionada();
   actualizarHorariosOcupados();
   cargarMisReservas();
 }
 
-function renderizarTarifasAdmin() {
-  const cont = document.getElementById("contenedor-tarifas-zonas");
+function renderizarReservasCopropietarios() {
+  const cont = document.getElementById("lista-reservas-copropietarios");
+  const badgeCont = document.getElementById("badge-contador-reservas");
   if (!cont) return;
 
-  cargarZonasEdificioStorage();
+  const filtroFecha = document.getElementById("filtro-fecha-reservas-admin")?.value;
 
-  cont.innerHTML = CATALOGO_MAESTRO_ZONAS_DEFAULT.map(z => {
-    // Verificar si la zona ya pertenece a este edificio
-    const enEdificio = listaZonasComunesGestion.find(item => 
-      item.id === `z_${z.clave}` || 
-      item.clave === z.clave || 
-      item.nombre.toLowerCase().trim() === z.nombre.toLowerCase().trim()
-    );
+  let reservasAMostrar = listaReservasCopropiedad;
+  if (filtroFecha) {
+    reservasAMostrar = reservasAMostrar.filter(r => r.fecha === filtroFecha);
+  }
 
-    const estaHabilitada = !!enEdificio;
-    const precioActual = enEdificio ? (enEdificio.precio !== undefined ? enEdificio.precio : (z.precioDefault || 0)) : (z.precioDefault || 0);
+  if (badgeCont) {
+    badgeCont.textContent = `(${reservasAMostrar.length} ${reservasAMostrar.length === 1 ? 'confirmada' : 'confirmadas'})`;
+  }
+
+  if (reservasAMostrar.length === 0) {
+    cont.innerHTML = `
+      <div class="py-8 text-center text-xs text-slate-400 space-y-1">
+        <div class="w-10 h-10 mx-auto rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-2">
+          <i data-lucide="calendar-x" class="w-5 h-5"></i>
+        </div>
+        <p class="font-bold text-slate-300">No hay reservas de copropietarios ${filtroFecha ? 'para la fecha ' + filtroFecha : 'registradas'}</p>
+        <p class="text-[11px] text-slate-500">Usa el formulario de abajo para registrar una nueva reserva en las zonas comunes activas.</p>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
+
+  cont.innerHTML = reservasAMostrar.map(r => {
+    const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin"));
+    const esMiApto = (typeof AppState !== "undefined" && (r.apto === AppState.aptoNumero || r.residente === AppState.propietario));
+    const puedeCancelar = esAdmin || esMiApto;
 
     return `
-      <div id="card-tarifa-${z.clave}" class="p-3.5 rounded-2xl border transition-all ${
-        estaHabilitada 
-          ? 'bg-slate-900 border-emerald-500/80 ring-1 ring-emerald-500/40 shadow-sm shadow-emerald-950' 
-          : 'bg-slate-950/60 border-slate-800 opacity-60 hover:opacity-100'
-      } flex flex-col justify-between gap-2.5">
-        <div class="space-y-1.5">
-          <div class="flex items-start justify-between gap-2">
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="check-tarifa-${z.clave}" ${estaHabilitada ? 'checked' : ''} onchange="toggleZonaEdificioDesdeTarifas('${z.clave}')" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
-              <span class="font-bold ${estaHabilitada ? 'text-white' : 'text-slate-300'} text-xs">${z.nombre}</span>
-            </label>
-            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-medium shrink-0">${z.categoria}</span>
+      <div class="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-slate-800/40 p-3 rounded-xl transition-all">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h4 class="font-black text-white text-sm">${r.zona}</h4>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-950/90 text-emerald-400 border border-emerald-800 text-[10px] font-bold">${r.estado || 'Confirmada'}</span>
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono text-[11px] font-bold">Apto ${r.apto}</span>
           </div>
-          <p class="text-[10px] text-slate-400 leading-tight">
-            ${z.descripcion}
-          </p>
+          <div class="text-xs text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+            <span>📅 Fecha: <strong class="text-white">${r.fecha}</strong></span>
+            <span>⏰ Horario: <strong class="text-white">${r.horario || (r.horaIni + ' - ' + r.horaFin)}</strong></span>
+            <span>👥 Aforo: <strong class="text-white">${r.personas || 4} personas</strong></span>
+          </div>
+          <div class="text-xs text-slate-400">
+            <span>👤 Copropietario Solicitante: <strong class="text-slate-200">${r.residente || 'Residente'}</strong></span>
+          </div>
         </div>
 
-        <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
-          <div class="flex items-center justify-between text-[11px]">
-            <span class="text-slate-400 font-medium">Tarifa fijada por Admin:</span>
-            <span id="badge-estado-${z.clave}" class="text-[10px] font-bold ${estaHabilitada ? 'text-emerald-400' : 'text-slate-500'}">
-              ${estaHabilitada ? (precioActual === 0 ? '✓ Gratis ($0)' : '$' + precioActual.toLocaleString('es-CO') + ' COP') : '✕ No asignada'}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400 font-bold">$</span>
-            <input type="number" id="tarifa-input-${z.clave}" value="${precioActual}" min="0" step="5000" oninput="alCambiarPrecioTarifa('${z.clave}', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="0">
-            <span class="text-[10px] text-slate-500 font-semibold">COP</span>
-          </div>
-
-          <div class="flex items-center justify-between text-[10px] text-slate-500">
-            <span>Aforo: ${z.aforoDefault} personas</span>
-            <span>Horario: ${z.horarioDefault}</span>
-          </div>
+        <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0">
+          <span class="font-mono font-black text-emerald-400 text-xs sm:text-sm bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/60">${r.costo || '$0 COP'}</span>
+          ${puedeCancelar ? `
+            <button type="button" onclick="cancelarReserva('${r.id}')" class="px-3 py-1 rounded-lg bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-[11px] flex items-center gap-1 transition-all active:scale-95 cursor-pointer" title="Cancelar reserva y liberar el horario">
+              <i data-lucide="x" class="w-3.5 h-3.5 text-rose-400"></i>
+              <span>Cancelar / Liberar</span>
+            </button>
+          ` : ""}
         </div>
       </div>
     `;
   }).join("");
 
   safeCreateIcons();
+}
+
+function limpiarFiltroReservas() {
+  const inp = document.getElementById("filtro-fecha-reservas-admin");
+  if (inp) inp.value = "";
+  renderizarReservasCopropietarios();
+}
+
+function renderizarTarifasAdmin() {
+  renderizarModuloZonasComunes();
 }
 
 function toggleZonaEdificioDesdeTarifas(clave) {
@@ -46368,10 +46369,7 @@ function toggleZonaEdificioDesdeTarifas(clave) {
 
   cargarOpcionesZonasSelect();
   cambioZonaSeleccionada();
-  renderizarTarifasAdmin();
-  if (typeof renderizarModuloZonasComunes === "function") {
-    renderizarModuloZonasComunes();
-  }
+  renderizarModuloZonasComunes();
 }
 
 function alCambiarPrecioTarifa(clave, valorStr) {
@@ -46445,13 +46443,9 @@ function guardarTarifasAdmin() {
   guardarZonasEdificioStorage();
   cargarOpcionesZonasSelect();
   cambioZonaSeleccionada();
-  renderizarTarifasAdmin();
-  if (typeof renderizarModuloZonasComunes === "function") {
-    renderizarModuloZonasComunes();
-  }
-  mostrarToast("✓ Zonas comunes y tarifas de este edificio guardadas y aplicadas con éxito.");
+  renderizarModuloZonasComunes();
+  mostrarToast("✓ Zonas comunes y tarifas del edificio guardadas y aplicadas con éxito.");
 }
-
 
 function cargarOpcionesZonasSelect() {
   const sel = document.getElementById("reserva-zona-sel");
@@ -46561,6 +46555,7 @@ function cancelarReserva(rid) {
   mostrarToast(`✅ Reserva #${rid} cancelada. El horario ahora está disponible.`);
   actualizarHorariosOcupados();
   cargarMisReservas();
+  renderizarReservasCopropietarios();
   safeCreateIcons();
 }
 
