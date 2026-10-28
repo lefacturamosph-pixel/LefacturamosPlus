@@ -20507,7 +20507,7 @@ const CONFIG_MANUAL_POR_ROL = {
     placeholder: "Buscar en el manual de Superadministrador (Bre-B, DIAN, conciliación, mora)..."
   },
   admin: {
-    titulo: "Manual Oficial del Administrador de Copropiedades",
+    titulo: "Manual de Lefacturamos para el Administrador",
     subtitulo: "Protocolos operativos de cartera, convocatorias de asamblea Ley 675, pagos a proveedores y circulares oficiales.",
     badge: "DOCUMENTACIÓN OFICIAL • ADMINISTRACIÓN P.H.",
     icono: "book-open-check",
@@ -20517,7 +20517,7 @@ const CONFIG_MANUAL_POR_ROL = {
     badgeBg: "bg-blue-950",
     badgeBorder: "border-blue-800",
     badgeText: "text-blue-300",
-    placeholder: "Buscar en el manual del Administrador (cartera, asambleas, circulares, pagos)..."
+    placeholder: "Buscar en el manual de Lefacturamos para el Administrador (cartera, asambleas, pagos)..."
   },
   residente: {
     titulo: "Manual del Copropietario y Residente",
@@ -20667,7 +20667,7 @@ function imprimirManualActual() {
 
   const nombresRol = {
     superadmin: "Superadministrador Global",
-    admin: "Administrador de Copropiedad",
+    admin: "Lefacturamos para el Administrador",
     residente: "Copropietario y Residente",
     porteria: "Portería y Vigilancia 24/7"
   };
