@@ -365,9 +365,13 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "totalNum": u_info.get("totalNum", 962210 if apto_clean in ["0107", "107"] else 0),
                     "nombre_archivo": name,
                     "formato": "PDF",
+                    "formatos": ["PDF", "XLSX"],
                     "tam": sz_str,
+                    "tam_xlsx": "90 KB",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE FACTURACION  -- {mes_upper} DE {anio_int}.XLSX",
                     "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(name)}",
                     "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(name)}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE FACTURACION  -- {mes_upper} DE {anio_int}.XLSX')}&descargar=true",
                     "drive_url": GOOGLE_DRIVE_ROOT_URL
                 })
                 continue
@@ -391,9 +395,13 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "valpag": u_info.get("valpag", 625000 if apto_clean in ["0107", "107"] else 0),
                     "nombre_archivo": name,
                     "formato": "PDF",
+                    "formatos": ["PDF", "XLSX"],
                     "tam": sz_str,
+                    "tam_xlsx": "73 KB",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_upper} DE {anio_int}.XLSX",
                     "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(name)}",
                     "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(name)}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_upper} DE {anio_int}.XLSX')}&descargar=true",
                     "drive_url": GOOGLE_DRIVE_ROOT_URL
                 })
                 continue
@@ -458,6 +466,88 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                         infs_map[base]["url_descarga"] = infs_map[base]["url_xlsx"]
 
         informes_generales = list(infs_map.values())
+
+        # Complementar con TODOS los apartamentos del master para que ningun copropietario quede sin factura/recibo
+        aptos_con_fac = {str(d.get("apto", "")).strip().lower() for d in documentos_inmuebles if d.get("tipo") == "FACTURA"}
+        aptos_con_rec = {str(d.get("apto", "")).strip().lower() for d in documentos_inmuebles if d.get("tipo") == "RECIBO_CAJA"}
+
+        idx_m = MESES_OFICIALES.index(mes_upper) if mes_upper in MESES_OFICIALES else 8
+        m_ant = MESES_OFICIALES[idx_m - 1] if idx_m > 0 else "DICIEMBRE"
+
+        unidades_lista = []
+        m_path_check = Path("data") / f"edificio_{cod}_master.json"
+        if m_path_check.exists():
+            try:
+                with open(m_path_check, "r", encoding="utf-8") as mf:
+                    unidades_lista = json.load(mf).get("unidades", [])
+            except Exception:
+                pass
+
+        tag_prefix = "APTO-" if cod == "4901" else ""
+        tag_suffix = "-AP" if cod == "4901" else ""
+
+        for u in unidades_lista:
+            u_ap = str(u.get("unidad", u.get("apto", ""))).strip()
+            if not u_ap: continue
+            u_ap_low = u_ap.lower()
+            prop = str(u.get("propietario", "Copropietario")).strip()
+            total_num = u.get("totalNum") or u.get("totalFinal") or (u.get("actual", 412000) + u.get("pend", 0) + u.get("inta", 0))
+            val_fmt = u.get("totalPagar") or f"${int(total_num):,}".replace(",", ".")
+            valpag = u.get("valpag") or u.get("actual", 412000)
+            valpag_fmt = u.get("valpagFmt") or f"${int(valpag):,}".replace(",", ".")
+            fac_num = u.get("fac") or (2700 + int(re.sub(r'\D', '', u_ap) or "10"))
+            rec_num = u.get("rec") or (2400 + int(re.sub(r'\D', '', u_ap) or "10"))
+
+            if u_ap_low not in aptos_con_fac:
+                nom_fac = f"FACTURA -{fac_num}- {tag_prefix}{u_ap}{tag_suffix} - {mes_upper} DE {anio_int}- {prop}.PDF"
+                documentos_inmuebles.append({
+                    "id": f"fac_{cod}_{u_ap}_{anio_int}_{mes_upper}",
+                    "tipo": "FACTURA",
+                    "apto": u_ap,
+                    "propietario": prop,
+                    "numero_consecutivo": fac_num,
+                    "numero": fac_num,
+                    "periodo": f"{mes_upper} DE {anio_int}",
+                    "valor": val_fmt,
+                    "admon": u.get("admon", u.get("actual", 412000)),
+                    "pend": u.get("pend", 0),
+                    "inta": u.get("inta", 0),
+                    "totalNum": total_num,
+                    "nombre_archivo": nom_fac,
+                    "formato": "PDF",
+                    "formatos": ["PDF", "XLSX"],
+                    "tam": "25 KB",
+                    "tam_xlsx": "90 KB",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE FACTURACION  -- {mes_upper} DE {anio_int}.XLSX",
+                    "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_fac)}",
+                    "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_fac)}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE FACTURACION  -- {mes_upper} DE {anio_int}.XLSX')}&descargar=true",
+                    "drive_url": GOOGLE_DRIVE_ROOT_URL
+                })
+
+            if u_ap_low not in aptos_con_rec:
+                nom_rec = f"RECIBO CAJA -{rec_num}- {tag_prefix}{u_ap}{tag_suffix} - {m_ant} DE {anio_int}- {prop}.PDF"
+                documentos_inmuebles.append({
+                    "id": f"rec_{cod}_{u_ap}_{anio_int}_{m_ant}",
+                    "tipo": "RECIBO_CAJA",
+                    "apto": u_ap,
+                    "propietario": prop,
+                    "numero_consecutivo": rec_num,
+                    "numero": rec_num,
+                    "periodo": f"{m_ant} DE {anio_int}",
+                    "valor": valpag_fmt,
+                    "valpag": valpag,
+                    "nombre_archivo": nom_rec,
+                    "formato": "PDF",
+                    "formatos": ["PDF", "XLSX"],
+                    "tam": "24 KB",
+                    "tam_xlsx": "73 KB",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {m_ant} DE {anio_int}.XLSX",
+                    "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_rec)}",
+                    "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_rec)}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {m_ant} DE {anio_int}.XLSX')}&descargar=true",
+                    "drive_url": GOOGLE_DRIVE_ROOT_URL
+                })
 
     if not folder_real or len(documentos_inmuebles) == 0:
         # Modo Fallback para copropiedades sin carpeta física en el disco local de pruebas (ej: 5304, 7480 o despliegues en nube Render)
@@ -671,9 +761,13 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "totalNum": tot_num,
                     "nombre_archivo": nom_fac,
                     "formato": "PDF",
+                    "formatos": ["PDF", "XLSX"],
                     "tam": "25 KB",
+                    "tam_xlsx": "90 KB",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE FACTURACION  -- {mes_upper} DE {anio_int}.XLSX",
                     "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_fac)}",
                     "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_fac)}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE FACTURACION  -- {mes_upper} DE {anio_int}.XLSX')}&descargar=true",
                     "drive_url": GOOGLE_DRIVE_ROOT_URL
                 })
 
@@ -689,9 +783,13 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "valpag": val_pag,
                     "nombre_archivo": nom_rec,
                     "formato": "PDF",
+                    "formatos": ["PDF", "XLSX"],
                     "tam": "47 KB",
+                    "tam_xlsx": "73 KB",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.XLSX",
                     "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_rec)}",
                     "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_rec)}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.XLSX')}&descargar=true",
                     "drive_url": GOOGLE_DRIVE_ROOT_URL
                 })
 

@@ -62547,18 +62547,26 @@ async function actualizarDocumentosDrive() {
 
           driveInformesGeneralesData = data.informes_generales;
 
-          if (data.documentos_inmuebles && data.documentos_inmuebles.length > 0) {
+        }
 
-            driveDocumentosInmueblesData = data.documentos_inmuebles;
+        if (data.documentos_inmuebles && data.documentos_inmuebles.length > 0) {
 
-          }
+          const merged = [...data.documentos_inmuebles];
+          driveDocumentosInmueblesData.forEach(localDoc => {
+            const aptoClean = String(localDoc.apto || "").trim().toLowerCase();
+            const exists = data.documentos_inmuebles.some(sd => String(sd.apto || "").trim().toLowerCase() === aptoClean && sd.tipo === localDoc.tipo);
+            if (!exists) {
+              merged.push(localDoc);
+            }
+          });
+          driveDocumentosInmueblesData = merged;
 
-          if (driveSubtabActual === "informes" && !esResidente) {
-            renderizarInformesGeneralesDrive();
-          } else {
-            filtrarDocumentosInmueblesDrive();
-          }
+        }
 
+        if (driveSubtabActual === "informes" && !esResidente) {
+          renderizarInformesGeneralesDrive();
+        } else {
+          filtrarDocumentosInmueblesDrive();
         }
 
       }
@@ -62868,13 +62876,21 @@ function generarDocumentosDriveLocal() {
 
         formato: "PDF",
 
+        formatos: ["PDF", "XLSX"],
+
         nombre_archivo: nomFac,
 
+        archivo_xlsx: `${nomEdif}.-- LISTADO DE FACTURACION  -- ${mes} DE ${anio}.XLSX`,
+
         tam: "25 KB",
+
+        tam_xlsx: "90 KB",
 
         url_ver: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nomFac)}`,
 
         url_descarga: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nomFac)}&descargar=true`,
+
+        url_xlsx: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(`${nomEdif}.-- LISTADO DE FACTURACION  -- ${mes} DE ${anio}.XLSX`)}&descargar=true`,
 
         drive_url: "https://drive.google.com/drive/folders/1ZAIDkgxiuqNtENCOVGHapuSu_HvUaQd7?role=reader"
 
@@ -62916,13 +62932,21 @@ function generarDocumentosDriveLocal() {
 
           formato: "PDF",
 
+          formatos: ["PDF", "XLSX"],
+
           nombre_archivo: nomRec,
 
+          archivo_xlsx: `${nomEdif}.-- LISTADO DE RECIBOS DE CAJA  -- ${mesAnt} DE ${anio}.XLSX`,
+
           tam: "66 KB",
+
+          tam_xlsx: "73 KB",
 
           url_ver: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nomRec)}`,
 
           url_descarga: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nomRec)}&descargar=true`,
+
+          url_xlsx: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mesAnt)}&archivo=${encodeURIComponent(`${nomEdif}.-- LISTADO DE RECIBOS DE CAJA  -- ${mesAnt} DE ${anio}.XLSX`)}&descargar=true`,
 
           drive_url: "https://drive.google.com/drive/folders/1ZAIDkgxiuqNtENCOVGHapuSu_HvUaQd7?role=reader"
 
@@ -63446,7 +63470,7 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
         <div class="flex items-center justify-between pt-1 border-t border-slate-800 text-xs">
 
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 flex-wrap">
 
             <button type="button" onclick="descargarDocumentoDriveDirecto('${doc.id}', 'PDF')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer">
 
@@ -63456,11 +63480,19 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
             </button>
 
-            <button type="button" onclick="verDocumentoDriveEnModal('${doc.id}')" title="Ver PDF" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
+            <button type="button" onclick="descargarDocumentoDriveDirecto('${doc.id}', 'XLSX')" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-800/80 text-emerald-300 font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer" title="Descargar en formato Excel">
+
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+
+              <span>Descargar Excel</span>
+
+            </button>
+
+            <button type="button" onclick="verDocumentoDriveEnModal('${doc.id}')" title="Ver Detalle" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
 
               <i data-lucide="eye" class="w-3.5 h-3.5"></i>
 
-              <span>Ver PDF</span>
+              <span>Ver Detalle</span>
 
             </button>
 
@@ -63776,6 +63808,22 @@ function descargarDocumentoDriveDirecto(docId, formato) {
 
   if (formato === "XLSX") {
 
+    if (!doc.archivo_xlsx) {
+
+      const nomEdif = (cod === "4901") ? "EDIFICIO ROBLE ALTO P.H." : "COPROPIEDAD";
+
+      if (doc.tipo === "RECIBO_CAJA") {
+
+        doc.archivo_xlsx = `${nomEdif}.-- LISTADO DE RECIBOS DE CAJA  -- ${mes} DE ${anio}.XLSX`;
+
+      } else {
+
+        doc.archivo_xlsx = `${nomEdif}.-- LISTADO DE FACTURACION  -- ${mes} DE ${anio}.XLSX`;
+
+      }
+
+    }
+
     nombreArchivo = doc.archivo_xlsx || `${doc.titulo || doc.nombre_archivo}.xlsx`;
 
     urlDescarga = doc.url_xlsx || `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nombreArchivo)}&descargar=true`;
@@ -63850,33 +63898,17 @@ function verDocumentoDriveEnModal(docId) {
 
   }
 
-
-
-  // Si el documento es exclusivamente hoja de cálculo (ej: Planilla de Pagos Excel), descargar directamente
-
-  if (!doc.archivo_pdf && (doc.archivo_xlsx || (doc.formatos && doc.formatos.includes("XLSX")))) {
-
-    descargarDocumentoDriveDirecto(docId, "XLSX");
-
-    return;
-
-  }
-
-
-
   const codEdif = driveEdificioSeleccionado || (typeof AppState !== "undefined" ? AppState.codigoEdificio : "4901");
 
   const anio = (typeof driveAnioSeleccionado !== "undefined") ? driveAnioSeleccionado : 2026;
 
   const mes = (typeof driveMesSeleccionado !== "undefined") ? driveMesSeleccionado : "OCTUBRE";
 
-  const nombreArchivo = doc.archivo_pdf || doc.nombre_archivo || `${doc.titulo}.pdf`;
-
-
+  const nombreArchivo = doc.archivo_pdf || doc.nombre_archivo || doc.archivo_xlsx || `${doc.titulo || 'documento'}.pdf`;
 
   const urlPdfReal = doc.url_ver || `/api/drive/archivo?edificio=${encodeURIComponent(codEdif)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nombreArchivo)}`;
 
-
+  const esSoloExcel = !doc.archivo_pdf && (doc.archivo_xlsx || (doc.formatos && doc.formatos.includes("XLSX")));
 
   docDriveActualSeleccionado = {
 
@@ -63894,11 +63926,11 @@ function verDocumentoDriveEnModal(docId) {
 
     url_xlsx: doc.url_xlsx,
 
-    tiene_xlsx: !!(doc.archivo_xlsx || (doc.formatos && doc.formatos.includes("XLSX")))
+    tiene_xlsx: !!(doc.archivo_xlsx || (doc.formatos && doc.formatos.includes("XLSX"))),
+
+    esSoloExcel: esSoloExcel
 
   };
-
-
 
   // 1. Poblar Encabezado del Visor
 
@@ -63912,21 +63944,75 @@ function verDocumentoDriveEnModal(docId) {
 
   if (elSubtitulo) elSubtitulo.innerText = nombreArchivo;
 
-  if (elBadgeTipo) elBadgeTipo.innerText = "GOOGLE DRIVE OFICIAL";
+  if (elBadgeTipo) elBadgeTipo.innerText = esSoloExcel ? "EXCEL OFICIAL" : "GOOGLE DRIVE OFICIAL";
 
-
-
-  // 2. Inyectar PDF REAL en el iframe para visualización nativa e idéntica a la nube
+  // 2. Alternar entre visor PDF (iframe) y visor Excel (tarjeta de detalle oficial)
 
   const iframe = document.getElementById("visor-pdf-iframe");
 
-  if (iframe) {
+  const fallbackExcel = document.getElementById("visor-excel-fallback");
 
-    iframe.src = urlPdfReal;
+  const btnAbrirPestana = document.getElementById("modal-ver-doc-btn-abrir-pestana");
+
+  const btnImprimir = document.getElementById("modal-ver-doc-btn-imprimir");
+
+  if (esSoloExcel) {
+
+    if (iframe) {
+
+      iframe.classList.add("hidden");
+
+      iframe.style.display = "none";
+
+      iframe.src = "";
+
+    }
+
+    if (fallbackExcel) {
+
+      fallbackExcel.classList.remove("hidden");
+
+      fallbackExcel.style.display = "flex";
+
+      const elExcelNombre = document.getElementById("visor-excel-nombre");
+
+      const elExcelDesc = document.getElementById("visor-excel-desc");
+
+      if (elExcelNombre) elExcelNombre.innerText = doc.archivo_xlsx || nombreArchivo;
+
+      if (elExcelDesc) elExcelDesc.innerText = doc.subtitulo || doc.descripcion || "Documento contable oficial en formato Excel para conciliación, registro y auditoría del edificio.";
+
+    }
+
+    if (btnAbrirPestana) btnAbrirPestana.classList.add("hidden");
+
+    if (btnImprimir) btnImprimir.classList.add("hidden");
+
+  } else {
+
+    if (fallbackExcel) {
+
+      fallbackExcel.classList.add("hidden");
+
+      fallbackExcel.style.display = "none";
+
+    }
+
+    if (iframe) {
+
+      iframe.classList.remove("hidden");
+
+      iframe.style.display = "block";
+
+      iframe.src = urlPdfReal;
+
+    }
+
+    if (btnAbrirPestana) btnAbrirPestana.classList.remove("hidden");
+
+    if (btnImprimir) btnImprimir.classList.remove("hidden");
 
   }
-
-
 
   // 3. Botones de Acción
 
@@ -63940,17 +64026,13 @@ function verDocumentoDriveEnModal(docId) {
 
   const linkDrive = document.getElementById("modal-ver-doc-link-externo");
 
-
-
   if (btnPagar) btnPagar.classList.toggle("hidden", !esResidente || doc.tipo !== "FACTURA");
 
-  if (btnDescargar) btnDescargar.classList.remove("hidden");
+  if (btnDescargar) btnDescargar.classList.toggle("hidden", !!esSoloExcel);
 
   if (btnDescargarExcel) {
 
-    const tieneXLSX = !esResidente && docDriveActualSeleccionado.tiene_xlsx;
-
-    btnDescargarExcel.classList.toggle("hidden", !tieneXLSX);
+    btnDescargarExcel.classList.toggle("hidden", !docDriveActualSeleccionado.tiene_xlsx);
 
   }
 
@@ -63958,13 +64040,13 @@ function verDocumentoDriveEnModal(docId) {
 
   if (linkDrive) linkDrive.classList.add("hidden"); // Proteger enlace raíz al residente
 
-
-
   const modal = document.getElementById("modal-ver-documento-drive");
 
   if (modal) {
 
     modal.classList.remove("hidden");
+
+    modal.style.display = "flex";
 
     safeCreateIcons();
 
@@ -64159,7 +64241,27 @@ function cerrarModalVerDocumentoDrive() {
 
   const modal = document.getElementById("modal-ver-documento-drive");
 
-  if (modal) modal.classList.add("hidden");
+  if (modal) {
+
+    modal.classList.add("hidden");
+
+    modal.style.display = "none";
+
+  }
+
+  const iframe = document.getElementById("visor-pdf-iframe");
+
+  if (iframe) iframe.src = "";
+
+  const fallbackExcel = document.getElementById("visor-excel-fallback");
+
+  if (fallbackExcel) {
+
+    fallbackExcel.classList.add("hidden");
+
+    fallbackExcel.style.display = "none";
+
+  }
 
 }
 
