@@ -6914,7 +6914,7 @@
 
                   <p id="drive-breadcrumb-actual" class="text-xs text-amber-400 font-medium mt-0.5">
 
-                    PARCELACION VALLADOS DE GRATAMIRA. (5304) ➜ Año: 2026 ➜ Mes: SEPTIEMBRE
+                    EDIFICIO ROBLE ALTO P.H. (4901) ➜ Año: 2026 ➜ Mes: SEPTIEMBRE
 
                   </p>
 
@@ -41308,6 +41308,16 @@ function actualizarVisibilidadPorRol(rol) {
   }
 
   // 4.3 Navegador de Documentos / Facturas (Copropietario vs Administrador)
+  const seccionEdif = document.getElementById("drive-seccion-selector-edificio");
+  if (seccionEdif) {
+    if (rol === "residente") {
+      seccionEdif.classList.add("hidden");
+      seccionEdif.style.display = "none";
+    } else {
+      seccionEdif.classList.remove("hidden");
+      seccionEdif.style.display = "block";
+    }
+  }
   const btnSubtabInformes = document.getElementById("btn-subtab-drive-informes");
   const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
   if (btnSubtabInformes) {
@@ -80723,172 +80733,187 @@ function seleccionarMesDrive(mes) {
 
 
 
+let isActualizandoDocumentosDrive = false;
+
 async function actualizarDocumentosDrive() {
 
-  actualizarFichaPeriodoDrive();
-
-  const breadcrumb = document.getElementById("drive-breadcrumb-actual");
-
-  const edif = EDIFICIOS_CATALOGO_DRIVE[driveEdificioSeleccionado] || { nombre: "Copropiedad" };
-
-  const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
-
-
-
-  if (breadcrumb) {
-
-    if (esResidente) {
-
-      breadcrumb.innerHTML = `
-
-        <span class="text-amber-400 font-bold">${edif.nombre} (${driveEdificioSeleccionado})</span>
-
-        <span class="text-slate-500"> ➜ </span>
-
-        <span class="text-amber-300 font-bold">Inmueble: Apto ${AppState.aptoNumero}</span>
-
-        <span class="text-slate-500"> ➜ </span>
-
-        <span class="text-sky-400 font-bold">${driveMesSeleccionado} ${driveAnioSeleccionado}</span>
-
-      `;
-
-    } else {
-
-      breadcrumb.innerHTML = `
-
-        <span class="text-amber-400 font-bold">${edif.nombre} (${driveEdificioSeleccionado})</span>
-
-        <span class="text-slate-500"> ➜ </span>
-
-        <span class="text-sky-400 font-bold">Año: ${driveAnioSeleccionado}</span>
-
-        <span class="text-slate-500"> ➜ </span>
-
-        <span class="text-emerald-400 font-black">Mes: ${driveMesSeleccionado}</span>
-
-      `;
-
-    }
-
-  }
-
-
-
-  // Aislamiento de Residentes en Navegador de Informes / Facturas
-
-  const seccionEdif = document.getElementById("drive-seccion-selector-edificio");
-
-  if (seccionEdif) {
-
-    if (esResidente) seccionEdif.classList.add("hidden");
-
-    else seccionEdif.classList.remove("hidden");
-
-  }
-
-
-
-  const btnInf = document.getElementById("btn-subtab-drive-informes");
-
-  if (btnInf) {
-
-    if (esResidente) {
-      btnInf.classList.add("hidden");
-      btnInf.style.display = "none";
-    } else {
-      btnInf.classList.remove("hidden");
-      btnInf.style.display = "flex";
-    }
-
-  }
-
-  const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
-  if (tituloDrivePdf) {
-    tituloDrivePdf.innerText = esResidente ? "Factura y Recibos en PDF" : "Todos los Listados en PDF";
-  }
-
-  if (esResidente) {
-    cambiarSubtabDrive("inmuebles");
-  }
-
-
-
-  const lblInm = document.getElementById("btn-subtab-drive-inmuebles-label");
-
-  if (lblInm) {
-
-    lblInm.innerText = esResidente ? "Mi Factura & Recibo de Caja" : "Facturas & Recibos por Apto";
-
-  }
-
-
-
-  // 1. Inmediatamente generar y renderizar localmente para respuesta instantánea (0 ms)
-
-  generarDocumentosDriveLocal();
-
-  renderizarInformesGeneralesDrive();
-
-  filtrarDocumentosInmueblesDrive();
-
-
-
-  // 2. Sincronizar en segundo plano con el backend
+  if (isActualizandoDocumentosDrive) return;
+  isActualizandoDocumentosDrive = true;
 
   try {
 
-    const res = await fetch(`/api/google-drive/documentos/${encodeURIComponent(driveEdificioSeleccionado)}/${driveAnioSeleccionado}/${encodeURIComponent(driveMesSeleccionado)}`);
+    actualizarFichaPeriodoDrive();
 
-    if (res.ok) {
+    const breadcrumb = document.getElementById("drive-breadcrumb-actual");
 
-      const data = await res.json();
+    const edif = EDIFICIOS_CATALOGO_DRIVE[driveEdificioSeleccionado] || { nombre: "Copropiedad" };
 
-      if (data.informes_generales && data.informes_generales.length > 0) {
-
-        driveInformesGeneralesData = data.informes_generales;
-
-        if (data.documentos_inmuebles && data.documentos_inmuebles.length > 0) {
-
-          driveDocumentosInmueblesData = data.documentos_inmuebles;
-
-        }
-
-        renderizarInformesGeneralesDrive();
-
-        filtrarDocumentosInmueblesDrive();
-
-      }
-
-    }
-
-  } catch (err) {
-
-    // Ya está renderizado con datos locales
-
-  }
+    const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
 
 
 
-  // Actualizar Stepper Visual (resaltar paso 4)
+    if (breadcrumb) {
 
-  for (let i = 1; i <= 4; i++) {
+      if (esResidente) {
 
-    const el = document.getElementById(`step-indicator-${i}`);
+        breadcrumb.innerHTML = `
 
-    if (el) {
+          <span class="text-amber-400 font-bold">${edif.nombre} (${driveEdificioSeleccionado})</span>
 
-      if (i === 4) {
+          <span class="text-slate-500"> ➜ </span>
 
-        el.className = "p-3 rounded-2xl bg-amber-500/15 border border-amber-500 text-amber-300 flex items-center gap-3 transition-all";
+          <span class="text-amber-300 font-bold">Inmueble: Apto ${AppState.aptoNumero}</span>
+
+          <span class="text-slate-500"> ➜ </span>
+
+          <span class="text-sky-400 font-bold">${driveMesSeleccionado} ${driveAnioSeleccionado}</span>
+
+        `;
 
       } else {
 
-        el.className = "p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-400 flex items-center gap-3 transition-all";
+        breadcrumb.innerHTML = `
+
+          <span class="text-amber-400 font-bold">${edif.nombre} (${driveEdificioSeleccionado})</span>
+
+          <span class="text-slate-500"> ➜ </span>
+
+          <span class="text-sky-400 font-bold">Año: ${driveAnioSeleccionado}</span>
+
+          <span class="text-slate-500"> ➜ </span>
+
+          <span class="text-emerald-400 font-black">Mes: ${driveMesSeleccionado}</span>
+
+        `;
 
       }
 
     }
+
+
+
+    // Aislamiento de Residentes en Navegador de Informes / Facturas
+
+    const seccionEdif = document.getElementById("drive-seccion-selector-edificio");
+
+    if (seccionEdif) {
+
+      if (esResidente) {
+        seccionEdif.classList.add("hidden");
+        seccionEdif.style.display = "none";
+      } else {
+        seccionEdif.classList.remove("hidden");
+        seccionEdif.style.display = "block";
+      }
+
+    }
+
+
+
+    const btnInf = document.getElementById("btn-subtab-drive-informes");
+
+    if (btnInf) {
+
+      if (esResidente) {
+        btnInf.classList.add("hidden");
+        btnInf.style.display = "none";
+      } else {
+        btnInf.classList.remove("hidden");
+        btnInf.style.display = "flex";
+      }
+
+    }
+
+    const tituloDrivePdf = document.getElementById("drive-titulo-listados-pdf");
+    if (tituloDrivePdf) {
+      tituloDrivePdf.innerText = esResidente ? "Factura y Recibos en PDF" : "Todos los Listados en PDF";
+    }
+
+    const lblInm = document.getElementById("btn-subtab-drive-inmuebles-label");
+
+    if (lblInm) {
+
+      lblInm.innerText = esResidente ? "Mi Factura & Recibo de Caja" : "Facturas & Recibos por Apto";
+
+    }
+
+
+
+    // 1. Inmediatamente generar datos locales para respuesta instantánea (0 ms)
+
+    generarDocumentosDriveLocal();
+
+
+
+    // 2. Sincronizar estado visual de subpestaña (forzar 'inmuebles' si es residente)
+
+    cambiarSubtabDrive(esResidente ? "inmuebles" : driveSubtabActual);
+
+
+
+    // 3. Sincronizar en segundo plano con el backend
+
+    try {
+
+      const res = await fetch(`/api/google-drive/documentos/${encodeURIComponent(driveEdificioSeleccionado)}/${driveAnioSeleccionado}/${encodeURIComponent(driveMesSeleccionado)}`);
+
+      if (res.ok) {
+
+        const data = await res.json();
+
+        if (data.informes_generales && data.informes_generales.length > 0) {
+
+          driveInformesGeneralesData = data.informes_generales;
+
+          if (data.documentos_inmuebles && data.documentos_inmuebles.length > 0) {
+
+            driveDocumentosInmueblesData = data.documentos_inmuebles;
+
+          }
+
+          if (driveSubtabActual === "informes" && !esResidente) {
+            renderizarInformesGeneralesDrive();
+          } else {
+            filtrarDocumentosInmueblesDrive();
+          }
+
+        }
+
+      }
+
+    } catch (err) {
+
+      // Ya está renderizado con datos locales
+
+    }
+
+
+
+    // Actualizar Stepper Visual (resaltar paso 4)
+
+    for (let i = 1; i <= 4; i++) {
+
+      const el = document.getElementById(`step-indicator-${i}`);
+
+      if (el) {
+
+        if (i === 4) {
+
+          el.className = "p-3 rounded-2xl bg-amber-500/15 border border-amber-500 text-amber-300 flex items-center gap-3 transition-all";
+
+        } else {
+
+          el.className = "p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-400 flex items-center gap-3 transition-all";
+
+        }
+
+      }
+
+    }
+
+  } finally {
+
+    isActualizandoDocumentosDrive = false;
 
   }
 
@@ -81986,7 +82011,7 @@ function cambiarSubtabDrive(subtab) {
 
   if (btnInmuebles) {
 
-    btnInmuebles.className = subtab === "inmuebles"
+    btnInmuebles.className = (subtab === "inmuebles" || esResidente)
 
       ? "px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
 
@@ -81996,35 +82021,20 @@ function cambiarSubtabDrive(subtab) {
 
 
 
-  // Asegurar que al hacer clic en la pestaña se rendericen los documentos de inmediato
-
-  if (subtab === "informes") {
-
-    if (!driveInformesGeneralesData || driveInformesGeneralesData.length === 0) {
-
-      actualizarDocumentosDrive();
-
-    } else {
-
-      renderizarInformesGeneralesDrive();
-
+  // Asegurar que los datos locales existan antes de renderizar
+  if (!driveInformesGeneralesData || driveInformesGeneralesData.length === 0 ||
+      !driveDocumentosInmueblesData || driveDocumentosInmueblesData.length === 0) {
+    if (typeof generarDocumentosDriveLocal === "function") {
+      generarDocumentosDriveLocal();
     }
-
-  } else if (subtab === "inmuebles") {
-
-    if (!driveDocumentosInmueblesData || driveDocumentosInmueblesData.length === 0) {
-
-      actualizarDocumentosDrive();
-
-    } else {
-
-      filtrarDocumentosInmueblesDrive();
-
-    }
-
   }
 
-
+  // Renderizar la vista de la subpestaña seleccionada (SIN llamar actualizarDocumentosDrive para evitar ciclos)
+  if (subtab === "informes" && !esResidente) {
+    renderizarInformesGeneralesDrive();
+  } else {
+    filtrarDocumentosInmueblesDrive();
+  }
 
   safeCreateIcons();
 
