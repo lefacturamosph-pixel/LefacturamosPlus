@@ -81815,19 +81815,23 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
             </button>
 
-            <button type="button" onclick="descargarDocumentoDriveDirecto('${doc.id}', 'XLSX')" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-800/80 text-emerald-300 font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer" title="Descargar en formato Excel">
+            ${!esResidente && doc.archivo_xlsx ? `
 
-              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+              <button type="button" onclick="descargarDocumentoDriveDirecto('${doc.id}', 'XLSX')" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-800/80 text-emerald-300 font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer" title="Descargar en formato Excel">
 
-              <span>Descargar Excel</span>
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
 
-            </button>
+                <span>Descargar Excel</span>
 
-            <button type="button" onclick="verDocumentoDriveEnModal('${doc.id}')" title="Ver Detalle" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
+              </button>
+
+            ` : ''}
+
+            <button type="button" onclick="verDocumentoDriveEnModal('${doc.id}')" title="Ver PDF" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
 
               <i data-lucide="eye" class="w-3.5 h-3.5"></i>
 
-              <span>Ver Detalle</span>
+              <span>Ver PDF</span>
 
             </button>
 
@@ -81837,7 +81841,7 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
           <div class="flex items-center gap-1.5">
 
-            ${esResidente ? `
+            ${(esResidente && esFac) ? `
 
               <button type="button" onclick="cambiarPestana('pagos')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] flex items-center gap-1 shadow-md shadow-emerald-950/40 transition-all active:scale-95 cursor-pointer">
 
@@ -81847,7 +81851,7 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
               </button>
 
-            ` : `
+            ` : (esResidente ? '' : `
 
               <button type="button" onclick="compartirDocumentoWhatsApp('${doc.id}')" title="Enviar enlace por WhatsApp" class="p-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 transition-colors cursor-pointer">
 
@@ -81861,7 +81865,7 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
               </a>
 
-            `}
+            `)}
 
           </div>
 
@@ -82243,7 +82247,9 @@ function verDocumentoDriveEnModal(docId) {
 
   const urlPdfReal = doc.url_ver || `/api/drive/archivo?edificio=${encodeURIComponent(codEdif)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(nombreArchivo)}`;
 
-  const esSoloExcel = !doc.archivo_pdf && (doc.archivo_xlsx || (doc.formatos && doc.formatos.includes("XLSX")));
+  const esPdf = !!(doc.archivo_pdf || (doc.nombre_archivo && doc.nombre_archivo.toUpperCase().endsWith(".PDF")) || doc.tipo === "FACTURA" || doc.tipo === "RECIBO_CAJA" || (doc.formatos && doc.formatos.includes("PDF")));
+
+  const esSoloExcel = !esPdf && !!(doc.archivo_xlsx || (doc.formatos && doc.formatos.includes("XLSX")));
 
   docDriveActualSeleccionado = {
 

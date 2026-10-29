@@ -174,167 +174,144 @@ def parsear_nombre_archivo(archivo: str, edificio: str, anio: str, mes: str) -> 
     }
 
 
-def generar_pdf_factura(c, width, height, edif_info: Dict[str, Any], datos: Dict[str, Any]):
-    u = datos["u_data"]
-    apto = datos["apto"]
-    prop = datos["propietario"]
-    num = datos["consecutivo"]
-    periodo = datos["periodo"]
+def draw_half_factura(c, x_offset, is_admin, data):
+    w = 278
+    y_top = 770
+    
+    apto = data.get("apto", "0107")
+    prop = data.get("propietario", "Copropietario").upper()
+    fac_num = data.get("consecutivo", data.get("fac", 2745))
+    mes = data.get("periodo", "OCTUBRE DE 2026")
+    u = data.get("u_data", {})
+    pend = u.get("pend", 0)
+    admon = u.get("admon", u.get("actual", 412000))
+    inta = u.get("inta", 0)
+    total = u.get("totalNum", admon + pend + inta)
+    valpag = u.get("valpag", admon)
+    ctas_vdas = 1 if pend > 0 else 0
+    cc = u.get("cc", "")
 
-    # 1. Encabezado Lefacturamos (Azul Oscuro / Slate 950)
-    c.setFillColor(colors.HexColor("#090d16"))
-    c.rect(0, height - 90, width, 90, fill=1, stroke=0)
+    fmt_cur = lambda v: f"${int(v):,}".replace(",", ".")
 
-    # Franja decorativa esmeralda
-    c.setFillColor(colors.HexColor("#10b981"))
-    c.rect(0, height - 94, width, 4, fill=1, stroke=0)
+    c.setStrokeColor(colors.black)
+    c.setLineWidth(0.75)
+    c.rect(x_offset, 435, w, 335, fill=0, stroke=1)
 
-    # Logo / Texto principal
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(36, height - 38, "LEFACTURAMOS")
-    c.setFont("Helvetica", 9)
-    c.setFillColor(colors.HexColor("#94a3b8"))
-    c.drawString(36, height - 52, "Plataforma Oficial de Administración Contable de Propiedad Horizontal")
-    c.drawString(36, height - 66, "Conforme estricto con el Régimen Legal de la Ley 675 de 2001 • República de Colombia")
-
-    # Badge Oficial a la derecha
-    c.setFillColor(colors.HexColor("#f59e0b"))
-    c.roundRect(width - 180, height - 65, 144, 38, 6, fill=1, stroke=0)
-    c.setFillColor(colors.HexColor("#0f172a"))
-    c.setFont("Helvetica-Bold", 10)
-    c.drawCentredString(width - 108, height - 44, "CUENTA DE COBRO")
-    c.setFont("Helvetica-Bold", 12)
-    c.drawCentredString(width - 108, height - 58, f"FACTURA N° {num}")
-
-    # 2. Información del Edificio Emisor
-    y = height - 120
-    c.setFillColor(colors.HexColor("#0f172a"))
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(36, y, edif_info["nombre"])
-
-    c.setFont("Helvetica", 9)
-    c.setFillColor(colors.HexColor("#475569"))
-    c.drawString(36, y - 14, f"NIT: {edif_info['nit']} • Dirección: {edif_info['direccion']}")
-    c.drawString(36, y - 26, f"Ciudad: {edif_info['ciudad']} • Administrador: {edif_info['administrador']}")
-
-    # Línea separadora
-    y = height - 158
-    c.setStrokeColor(colors.HexColor("#e2e8f0"))
-    c.setLineWidth(1)
-    c.line(36, y, width - 36, y)
-
-    # 3. Datos del Inmueble y Propietario (Tarjeta gris elegante)
-    y = height - 170
-    card_h = 75
-    c.setFillColor(colors.HexColor("#f8fafc"))
-    c.setStrokeColor(colors.HexColor("#cbd5e1"))
-    c.roundRect(36, y - card_h, width - 72, card_h, 6, fill=1, stroke=1)
-
-    c.setFillColor(colors.HexColor("#0f172a"))
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(50, y - 20, "DATOS DEL INMUEBLE:")
-    c.setFont("Helvetica", 9)
-    c.drawString(180, y - 20, f"Apartamento {apto} (Coeficiente: {u.get('coef', '1.205%')})")
-
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(50, y - 36, "COPROPIETARIO / RESPONSABLE:")
-    c.setFont("Helvetica-Bold", 9)
-    c.setFillColor(colors.HexColor("#1e293b"))
-    c.drawString(180, y - 36, prop)
-
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(50, y - 52, "PERIODO FACTURADO:")
-    c.setFont("Helvetica", 9)
-    c.drawString(180, y - 52, periodo)
-
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(50, y - 68, "FECHA DE CORTE / LÍMITE:")
-    c.setFont("Helvetica-Bold", 9)
-    c.setFillColor(colors.HexColor("#b91c1c"))
-    c.drawString(180, y - 68, "15 de cada mes (Recargo de mora automático según Ley 675)")
-
-    # 4. Tabla de Liquidación y Conceptos
-    y = height - 265
-    c.setFillColor(colors.HexColor("#0f172a"))
-    c.rect(36, y, width - 72, 24, fill=1, stroke=0)
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(50, y + 7, "CÓD")
-    c.drawString(100, y + 7, "CONCEPTO / DESCRIPCIÓN DE LA EXPENSA COMÚN")
-    c.drawRightString(width - 50, y + 7, "VALOR (COP)")
-
-    filas = [
-        ("01", f"Cuota Ordinaria de Administración - {periodo}", u.get("admon", 451000)),
-        ("02", "Saldo Pendiente Anterior (Cartera en Mora)", u.get("pend", 0)),
-        ("03", "Intereses de Mora Liquidados por Ley 675", u.get("inta", 0)),
-        ("04", "Intereses Pendientes Meses Anteriores", u.get("intp", 0)),
-    ]
-
-    total_calc = u.get("totalNum", 0) or (u.get("admon", 451000) + u.get("pend", 0) + u.get("inta", 0) + u.get("intp", 0))
-
-    row_y = y - 22
-    for idx, (cod_c, desc_c, val_c) in enumerate(filas):
-        bg = colors.HexColor("#f8fafc") if idx % 2 == 0 else colors.white
-        c.setFillColor(bg)
-        c.rect(36, row_y - 4, width - 72, 22, fill=1, stroke=0)
-        c.setStrokeColor(colors.HexColor("#f1f5f9"))
-        c.line(36, row_y - 4, width - 36, row_y - 4)
-
-        c.setFillColor(colors.HexColor("#475569"))
-        c.setFont("Helvetica-Bold", 9)
-        c.drawString(50, row_y + 2, cod_c)
-        c.setFont("Helvetica", 9)
-        c.drawString(100, row_y + 2, desc_c)
-        c.setFont("Helvetica-Bold", 9)
-        c.drawRightString(width - 50, row_y + 2, f"${val_c:,.0f}".replace(",", "."))
-        row_y -= 22
-
-    # Fila de Total a Pagar
-    row_y -= 6
-    c.setFillColor(colors.HexColor("#090d16"))
-    c.roundRect(36, row_y - 12, width - 72, 32, 6, fill=1, stroke=0)
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, row_y - 2, "TOTAL A PAGAR MES:")
-    c.setFont("Helvetica-Bold", 14)
-    c.setFillColor(colors.HexColor("#f59e0b"))
-    c.drawRightString(width - 50, row_y - 2, f"${total_calc:,.0f}".replace(",", "."))
-
-    # 5. Información Bancaria y Métodos de Pago
-    y_bank = row_y - 65
-    c.setFillColor(colors.HexColor("#f0fdf4"))
-    c.setStrokeColor(colors.HexColor("#86efac"))
-    c.roundRect(36, y_bank, width - 72, 70, 6, fill=1, stroke=1)
-
-    c.setFillColor(colors.HexColor("#166534"))
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(50, y_bank + 52, "MEDIOS OFICIALES DE PAGO:")
-    c.setFont("Helvetica", 9)
-    c.setFillColor(colors.HexColor("#14532d"))
-    c.drawString(50, y_bank + 38, f"• BANCO: {edif_info['banco']} - N°: {edif_info['cuenta']}")
-    c.drawString(50, y_bank + 24, f"• CONVENIO RECAUDO BANCOLOMBIA: {edif_info['convenio']} • Referencia: Apartamento {apto}")
-    c.drawString(50, y_bank + 10, "• BRE-B / PSE / TRANSFERENCIA DIRECTA: Habilitado 24/7 en la plataforma Lefacturamos")
-
-    # 6. Sello Digital / Código de Verificación
-    y_stamp = y_bank - 80
-    c.setFillColor(colors.HexColor("#f8fafc"))
-    c.setStrokeColor(colors.HexColor("#cbd5e1"))
-    c.roundRect(36, y_stamp, width - 72, 65, 6, fill=1, stroke=1)
-
-    c.setFillColor(colors.HexColor("#0f172a"))
+    role_title = "ADMINISTRACIÓN" if is_admin else "PROPIETARIO"
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString(x_offset + 10, y_top - 12, role_title)
     c.setFont("Helvetica-Bold", 8)
-    c.drawString(50, y_stamp + 48, "AUTENTICACIÓN DIGITAL Y CUMPLIMIENTO LEY 675 DE 2001:")
-    c.setFont("Helvetica", 7.5)
-    c.setFillColor(colors.HexColor("#64748b"))
-    c.drawString(50, y_stamp + 36, "Este documento presta mérito ejecutivo en los términos del Artículo 48 de la Ley 675 de 2001.")
-    c.drawString(50, y_stamp + 25, f"Certificado digitalmente por Lefacturamos PH para el Edificio {edif_info['nombre']}.")
-    c.drawString(50, y_stamp + 14, f"Hash de Verificación SHA-256: 4901-{apto}-{num}-{periodo.replace(' ', '')}-VERIFIED-OK")
+    c.drawString(x_offset + 60, y_top - 12, prop[:38])
 
-    # Pie de página
-    c.setFillColor(colors.HexColor("#94a3b8"))
-    c.setFont("Helvetica", 8)
-    c.drawCentredString(width / 2, 24, "Lefacturamos Cloud PH • Soporte: soporte@lefacturamos.com • www.lefacturamos.com")
+    c.line(x_offset, y_top - 18, x_offset + w, y_top - 18)
+
+    c.setFont("Helvetica", 6)
+    c.drawString(x_offset + 10, y_top - 28, "INQ:")
+    c.drawString(x_offset + 10, y_top - 38, "PROPIEDADES:")
+    c.line(x_offset, y_top - 42, x_offset + w, y_top - 42)
+
+    c.drawString(x_offset + 5, y_top - 50, "NIT. COPROP. 901690778-9")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(x_offset + 120, y_top - 51, f"APTO {apto}")
+    c.setFont("Helvetica", 7)
+    c.drawString(x_offset + 180, y_top - 51, "C. COBRO N°")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(x_offset + 235, y_top - 51, str(fac_num))
+    c.line(x_offset, y_top - 56, x_offset + w, y_top - 56)
+
+    c.setFont("Helvetica", 6)
+    c.drawString(x_offset + 5, y_top - 66, "C.C./NIT PROP.")
+    c.setFont("Helvetica", 7)
+    c.drawString(x_offset + 60, y_top - 66, str(cc))
+    c.drawString(x_offset + 120, y_top - 66, "BLOQ. AP")
+    c.drawString(x_offset + 180, y_top - 66, "CTAS. VDAS.")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(x_offset + 245, y_top - 66, str(ctas_vdas))
+    c.line(x_offset, y_top - 72, x_offset + w, y_top - 72)
+
+    c.setFont("Helvetica-Bold", 6.5)
+    c.drawString(x_offset + 5, y_top - 82, f"FACTURA MES DE {mes}")
+    c.setFont("Helvetica", 7)
+    c.drawString(x_offset + 165, y_top - 82, "REFER. DE PAGO")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(x_offset + 240, y_top - 82, apto)
+    c.line(x_offset, y_top - 88, x_offset + w, y_top - 88)
+
+    c.setFont("Helvetica", 6)
+    c.drawString(x_offset + 5, y_top - 98, "FECHA DE PAGO: 19 / 10 / 2026")
+    c.drawString(x_offset + 155, y_top - 98, "PAGO ANTERIOR:")
+    c.setFont("Helvetica-Bold", 7.5)
+    c.drawString(x_offset + 225, y_top - 98, fmt_cur(valpag))
+    c.line(x_offset, y_top - 104, x_offset + w, y_top - 104)
+
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString(x_offset + 10, y_top - 114, "CONCEPTO")
+    c.drawString(x_offset + 130, y_top - 114, "PENDIENTE")
+    c.drawString(x_offset + 215, y_top - 114, "ACTUAL")
+    c.line(x_offset, y_top - 118, x_offset + w, y_top - 118)
+
+    concepts = [
+        ("ADMINISTRACIÓN", fmt_cur(pend) if pend > 0 else "$0", fmt_cur(admon)),
+        ("INTERÉS DE MORA (2.118%)", "", fmt_cur(inta) if inta > 0 else "$0"),
+        ("REAJUSTE ENERO", "", ""),
+        ("EXTRA", "", ""),
+        ("MULTA", "", ""),
+        ("SERVICIOS PUBLICOS", "", ""),
+        ("SEGURO", "", ""),
+        ("NOTAS D/C", "", "")
+    ]
+    
+    y_row = y_top - 128
+    c.setFont("Helvetica", 6.8)
+    for nom_c, val_p, val_a in concepts:
+        c.drawString(x_offset + 10, y_row, nom_c)
+        if val_p:
+            c.drawRightString(x_offset + 175, y_row, val_p)
+        if val_a:
+            c.drawRightString(x_offset + 265, y_row, val_a)
+        y_row -= 12.5
+
+    c.line(x_offset, y_top - 230, x_offset + w, y_top - 230)
+
+    c.setFont("Helvetica-Bold", 6.5)
+    c.drawString(x_offset + 8, y_top - 242, "PAGUE EN BANCOLOMBIA AHO")
+    c.setFont("Helvetica", 6.5)
+    c.drawString(x_offset + 140, y_top - 242, "VALOR BRUTO:")
+    c.setFont("Helvetica-Bold", 7.5)
+    c.drawRightString(x_offset + 265, y_top - 242, fmt_cur(total))
+
+    c.setFont("Helvetica", 6.5)
+    c.drawString(x_offset + 8, y_top - 256, "CUENTA N° 991-000017-17")
+    c.drawString(x_offset + 140, y_top - 256, "DESCUENTO:")
+    c.drawRightString(x_offset + 265, y_top - 256, "$0")
+
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString(x_offset + 140, y_top - 270, "TOTAL A PAGAR:")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawRightString(x_offset + 265, y_top - 270, fmt_cur(total))
+
+    c.line(x_offset, y_top - 276, x_offset + w, y_top - 276)
+
+    c.setFont("Helvetica", 5)
+    c.drawString(x_offset + 5, y_top - 286, "ESTA CUENTA DE COBRO SE ASIMILA PARA TODOS SUS EFECTOS LEGALES A UNA")
+    c.drawString(x_offset + 5, y_top - 294, "LETRA DE CAMBIO (ART. 774 DEL CÓDIGO DE COMERCIO) • A PARTIR DEL 3° MES")
+    c.drawString(x_offset + 5, y_top - 302, "EN MORA, PASA A COBRO JURÍDICO.")
+
+    c.setFont("Helvetica-Oblique", 6)
+    c.drawString(x_offset + 5, y_top - 316, "«Camina con cuidado y mucho tacto, y recuerda que la vida")
+    c.drawString(x_offset + 5, y_top - 325, "es un gran acto de equilibrio».")
+
+    c.saveState()
+    c.setFont("Helvetica", 5.5)
+    c.translate(x_offset + w + 10, 480)
+    c.rotate(90)
+    c.drawString(0, 0, "JUAN CARLOS ARROYAVE GALLEGO • LEFACTURAMOS -NIT: 71582999-7")
+    c.restoreState()
+
+
+def generar_pdf_factura(c, width, height, edif_info: Dict[str, Any], datos: Dict[str, Any]):
+    draw_half_factura(c, 20, is_admin=True, data=datos)
+    draw_half_factura(c, 316, is_admin=False, data=datos)
 
 
 def generar_pdf_recibo(c, width, height, edif_info: Dict[str, Any], datos: Dict[str, Any]):

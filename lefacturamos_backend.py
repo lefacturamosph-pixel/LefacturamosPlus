@@ -3638,9 +3638,11 @@ def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: s
     elif archivo.lower().endswith(".csv"):
         media_type = "text/csv; charset=utf-8"
         
+    import unicodedata
+    clean_fn = unicodedata.normalize('NFKD', path_encontrado.name).encode('ascii', 'ignore').decode('ascii')
     disposition = "attachment" if descargar else "inline"
     headers = {
-        "Content-Disposition": f'{disposition}; filename="{path_encontrado.name}"',
+        "Content-Disposition": f'{disposition}; filename="{clean_fn}"',
         "Cache-Control": "public, max-age=3600",
         "Access-Control-Allow-Origin": "*"
     }
