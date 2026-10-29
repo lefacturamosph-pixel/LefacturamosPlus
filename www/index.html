@@ -3977,26 +3977,7 @@
         </div>
 
 
-        <!-- CARD OFICIAL: MANUAL DEL COPROPIETARIO Y RESIDENTE -->
-        <div class="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-          <div class="flex items-center gap-3.5">
-            <div class="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-md">
-              <i data-lucide="book-open-check" class="w-6 h-6"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-black uppercase tracking-wider">Guía Oficial del Inmueble</span>
-                <span class="text-xs text-emerald-400 font-bold">Ley 675 / Ley 1581</span>
-              </div>
-              <h3 class="text-base font-bold text-white mt-0.5">Manual del Copropietario y Residente</h3>
-              <p class="text-xs text-slate-400">Instrucciones para pago de administración Bre-B/PSE, reservas de zonas comunes, control QR de visitas y radicación de PQR.</p>
-            </div>
-          </div>
-          <button type="button" onclick="abrirManualRol('residente')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all shrink-0 cursor-pointer">
-            <i data-lucide="book-open" class="w-4 h-4"></i>
-            <span>Consultar Manual Copropietario</span>
-          </button>
-        </div>
+
 
 
 
@@ -7181,7 +7162,7 @@
 
             </div>
 
-            <div class="flex items-center gap-2.5 shrink-0">
+            <div id="btn-group-admin-manual-top" class="flex items-center gap-2.5 shrink-0">
 
               <button type="button" onclick="abrirModalSubirPDFEdificio()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 transition-all">
 
@@ -7251,7 +7232,7 @@
 
             </button>
 
-            <button type="button" onclick="restablecerManualEdificio()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
+            <button id="btn-manual-restablecer" type="button" onclick="restablecerManualEdificio()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
 
               <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-slate-400"></i>
 
@@ -7259,7 +7240,7 @@
 
             </button>
 
-            <button type="button" onclick="abrirModalEditarDatosJuridicos()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
+            <button id="btn-manual-editar-juridicos" type="button" onclick="abrirModalEditarDatosJuridicos()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
 
               <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-400"></i>
 
@@ -7267,7 +7248,7 @@
 
             </button>
 
-            <button type="button" onclick="abrirModalSubirPDFEdificio()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
+            <button id="btn-manual-subir-propio" type="button" onclick="abrirModalSubirPDFEdificio()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
 
               <i data-lucide="upload" class="w-3.5 h-3.5 text-slate-400"></i>
 
@@ -7401,7 +7382,7 @@
 
             </select>
 
-            <button type="button" onclick="abrirModalAgregarCapitulo()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
+            <button id="btn-manual-agregar-capitulo" type="button" onclick="abrirModalAgregarCapitulo()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
 
               <i data-lucide="plus" class="w-3.5 h-3.5"></i>
 
@@ -7409,7 +7390,7 @@
 
             </button>
 
-            <button type="button" onclick="abrirModalNuevoArticulo()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all">
+            <button id="btn-manual-nuevo-articulo" type="button" onclick="abrirModalNuevoArticulo()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all">
 
               <i data-lucide="plus" class="w-3.5 h-3.5"></i>
 
@@ -9833,7 +9814,7 @@
               </span>
               <span class="text-xs text-emerald-300 font-semibold">Portal Digital del Inmueble</span>
             </div>
-            <h3 class="text-base sm:text-lg font-black text-white">Manual del Copropietario y Residente</h3>
+            <h3 class="text-base sm:text-lg font-black text-white">Manual de Lefacturamos para el Residente</h3>
             <p class="text-xs text-slate-300">
               Guía paso a paso para la consulta de cuentas de cobro, descarga de recibos oficiales en PDF, pagos electrónicos Bre-B/PSE, reservas de zonas comunes con visualización de horarios libres en verde, pases de visita QR y radicación de PQR.
             </p>

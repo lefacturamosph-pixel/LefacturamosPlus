@@ -19214,7 +19214,9 @@ const MENUS_POR_ROL = {
 
       { id: "mascotas", label: "Mis Mascotas", icono: "dog" },
 
-      { id: "manual-residente", label: "Manual del Residente", icono: "book-open", action: "abrirManualRol('residente')" },
+      { id: "manual-residente", label: "Manual de Lefacturamos para el Residente", icono: "book-open", action: "abrirManualRol('residente')" },
+
+      { id: "manual", label: "Reglamento Interno PH (Edificio)", icono: "file-text" },
 
       { id: "votaciones", label: "Asamblea Ley 675", icono: "vote" },
 
@@ -20520,7 +20522,7 @@ const CONFIG_MANUAL_POR_ROL = {
     placeholder: "Buscar en el manual de Lefacturamos para el Administrador (cartera, asambleas, pagos)..."
   },
   residente: {
-    titulo: "Manual del Copropietario y Residente",
+    titulo: "Manual de Lefacturamos para el Residente",
     subtitulo: "Guía oficial para pago de administración Bre-B/PSE, reservas de áreas comunes, visitas QR y radicación de PQR.",
     badge: "GUÍA OFICIAL DEL INMUEBLE • COPROPIETARIO",
     icono: "book-open",
@@ -20530,7 +20532,7 @@ const CONFIG_MANUAL_POR_ROL = {
     badgeBg: "bg-emerald-950",
     badgeBorder: "border-emerald-800",
     badgeText: "text-emerald-300",
-    placeholder: "Buscar en el manual del Copropietario (pagos Bre-B, reservas, visitas QR, PQR)..."
+    placeholder: "Buscar en el manual de Lefacturamos para el Residente (pagos Bre-B, reservas, visitas QR, PQR)..."
   },
   porteria: {
     titulo: "Manual Operativo del Puesto de Control y Portería 24/7",
@@ -22953,6 +22955,21 @@ function actualizarVisibilidadPorRol(rol) {
   }
 
 
+
+  // 5. Botones de edicion/subida de Reglamento Interno PH (EXCLUSIVOS ADMINISTRADOR)
+  const groupAdminManualTop = document.getElementById("btn-group-admin-manual-top");
+  const btnManualRestablecer = document.getElementById("btn-manual-restablecer");
+  const btnManualEditarJuridicos = document.getElementById("btn-manual-editar-juridicos");
+  const btnManualSubirPropio = document.getElementById("btn-manual-subir-propio");
+  const btnManualAgregarCap = document.getElementById("btn-manual-agregar-capitulo");
+  const btnManualNuevoArt = document.getElementById("btn-manual-nuevo-articulo");
+
+  if (groupAdminManualTop) groupAdminManualTop.classList.toggle("hidden", !esAdmin);
+  if (btnManualRestablecer) btnManualRestablecer.classList.toggle("hidden", !esAdmin);
+  if (btnManualEditarJuridicos) btnManualEditarJuridicos.classList.toggle("hidden", !esAdmin);
+  if (btnManualSubirPropio) btnManualSubirPropio.classList.toggle("hidden", !esAdmin);
+  if (btnManualAgregarCap) btnManualAgregarCap.classList.toggle("hidden", !esAdmin);
+  if (btnManualNuevoArt) btnManualNuevoArt.classList.toggle("hidden", !esAdmin);
 
   // 4.2 Vista de Control de Visitas del Administrador (EXCLUSIVO ADMINISTRADOR)
 
