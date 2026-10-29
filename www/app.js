@@ -62551,15 +62551,7 @@ async function actualizarDocumentosDrive() {
 
         if (data.documentos_inmuebles && data.documentos_inmuebles.length > 0) {
 
-          const merged = [...data.documentos_inmuebles];
-          driveDocumentosInmueblesData.forEach(localDoc => {
-            const aptoClean = String(localDoc.apto || "").trim().toLowerCase();
-            const exists = data.documentos_inmuebles.some(sd => String(sd.apto || "").trim().toLowerCase() === aptoClean && sd.tipo === localDoc.tipo);
-            if (!exists) {
-              merged.push(localDoc);
-            }
-          });
-          driveDocumentosInmueblesData = merged;
+          driveDocumentosInmueblesData = data.documentos_inmuebles;
 
         }
 
@@ -63952,9 +63944,7 @@ function verDocumentoDriveEnModal(docId) {
 
   if (elBadgeTipo) elBadgeTipo.innerText = esSoloExcel ? "EXCEL OFICIAL" : "GOOGLE DRIVE OFICIAL";
 
-  // 2. Alternar entre visor PDF (object/iframe) y visor Excel (tarjeta de detalle oficial)
-
-  const obj = document.getElementById("visor-pdf-object");
+  // 2. Alternar entre visor PDF (iframe nativo) y visor Excel (tarjeta de detalle oficial)
 
   const iframe = document.getElementById("visor-pdf-iframe");
 
@@ -63965,16 +63955,6 @@ function verDocumentoDriveEnModal(docId) {
   const btnImprimir = document.getElementById("modal-ver-doc-btn-imprimir");
 
   if (esSoloExcel) {
-
-    if (obj) {
-
-      obj.classList.add("hidden");
-
-      obj.style.display = "none";
-
-      obj.data = "";
-
-    }
 
     if (iframe) {
 
@@ -63998,7 +63978,7 @@ function verDocumentoDriveEnModal(docId) {
 
       if (elExcelNombre) elExcelNombre.innerText = doc.archivo_xlsx || nombreArchivo;
 
-      if (elExcelDesc) elExcelDesc.innerText = doc.subtitulo || doc.descripcion || "Documento contable oficial en formato Excel para conciliación, registro y auditoría del edificio.";
+      if (elExcelDesc) elExcelDesc.innerText = doc.subtitulo || doc.descripcion || "Documento contable oficial en formato Excel para conciliacion, registro y auditoria del edificio.";
 
     }
 
@@ -64013,16 +63993,6 @@ function verDocumentoDriveEnModal(docId) {
       fallbackExcel.classList.add("hidden");
 
       fallbackExcel.style.display = "none";
-
-    }
-
-    if (obj) {
-
-      obj.classList.remove("hidden");
-
-      obj.style.display = "block";
-
-      obj.data = urlPdfReal;
 
     }
 
@@ -64277,9 +64247,7 @@ function cerrarModalVerDocumentoDrive() {
 
   }
 
-  const obj = document.getElementById("visor-pdf-object");
 
-  if (obj) obj.data = "";
 
   const iframe = document.getElementById("visor-pdf-iframe");
 

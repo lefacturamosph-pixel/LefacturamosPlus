@@ -18153,7 +18153,7 @@
 
   <!-- ======================================================== -->
 
-  <div id="modal-ver-documento-drive" class="hidden fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto" style="display: none;">
+  <div id="modal-ver-documento-drive" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
 
     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full shadow-2xl my-4 relative text-white flex flex-col max-h-[95vh] overflow-hidden">
 
@@ -18223,17 +18223,9 @@
 
       <div class="p-2 sm:p-4 bg-slate-950/90 flex-1 flex flex-col items-center justify-center overflow-hidden min-h-[550px] w-full">
 
-        <object id="visor-pdf-object" data="" type="application/pdf" class="w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-white shadow-2xl">
-          <iframe id="visor-pdf-iframe" src="" class="w-full h-full rounded-2xl border-0" allow="fullscreen">
-            <div class="p-8 text-center text-slate-300 flex flex-col items-center justify-center space-y-4">
-              <i data-lucide="file-text" class="w-12 h-12 text-amber-400 mx-auto"></i>
-              <p class="font-bold text-sm">Visualizador de Documentos Oficiales Lefacturamos</p>
-              <button type="button" onclick="abrirDocumentoPestanaNueva()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs cursor-pointer">Abrir en Pestaña Nueva</button>
-            </div>
-          </iframe>
-        </object>
+        <iframe id="visor-pdf-iframe" src="" class="w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-white shadow-2xl" allow="fullscreen"></iframe>
 
-        <div id="visor-excel-fallback" class="hidden w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-slate-900 flex flex-col items-center justify-center p-8 text-center space-y-5 shadow-2xl" style="display: none;">
+        <div id="visor-excel-fallback" class="hidden w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-slate-900 flex flex-col items-center justify-center p-8 text-center space-y-5 shadow-2xl">
           <div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-xl">
             <i data-lucide="file-spreadsheet" class="w-10 h-10"></i>
           </div>
@@ -80894,15 +80886,7 @@ async function actualizarDocumentosDrive() {
 
         if (data.documentos_inmuebles && data.documentos_inmuebles.length > 0) {
 
-          const merged = [...data.documentos_inmuebles];
-          driveDocumentosInmueblesData.forEach(localDoc => {
-            const aptoClean = String(localDoc.apto || "").trim().toLowerCase();
-            const exists = data.documentos_inmuebles.some(sd => String(sd.apto || "").trim().toLowerCase() === aptoClean && sd.tipo === localDoc.tipo);
-            if (!exists) {
-              merged.push(localDoc);
-            }
-          });
-          driveDocumentosInmueblesData = merged;
+          driveDocumentosInmueblesData = data.documentos_inmuebles;
 
         }
 
@@ -82295,9 +82279,7 @@ function verDocumentoDriveEnModal(docId) {
 
   if (elBadgeTipo) elBadgeTipo.innerText = esSoloExcel ? "EXCEL OFICIAL" : "GOOGLE DRIVE OFICIAL";
 
-  // 2. Alternar entre visor PDF (object/iframe) y visor Excel (tarjeta de detalle oficial)
-
-  const obj = document.getElementById("visor-pdf-object");
+  // 2. Alternar entre visor PDF (iframe nativo) y visor Excel (tarjeta de detalle oficial)
 
   const iframe = document.getElementById("visor-pdf-iframe");
 
@@ -82308,16 +82290,6 @@ function verDocumentoDriveEnModal(docId) {
   const btnImprimir = document.getElementById("modal-ver-doc-btn-imprimir");
 
   if (esSoloExcel) {
-
-    if (obj) {
-
-      obj.classList.add("hidden");
-
-      obj.style.display = "none";
-
-      obj.data = "";
-
-    }
 
     if (iframe) {
 
@@ -82341,7 +82313,7 @@ function verDocumentoDriveEnModal(docId) {
 
       if (elExcelNombre) elExcelNombre.innerText = doc.archivo_xlsx || nombreArchivo;
 
-      if (elExcelDesc) elExcelDesc.innerText = doc.subtitulo || doc.descripcion || "Documento contable oficial en formato Excel para conciliación, registro y auditoría del edificio.";
+      if (elExcelDesc) elExcelDesc.innerText = doc.subtitulo || doc.descripcion || "Documento contable oficial en formato Excel para conciliacion, registro y auditoria del edificio.";
 
     }
 
@@ -82356,16 +82328,6 @@ function verDocumentoDriveEnModal(docId) {
       fallbackExcel.classList.add("hidden");
 
       fallbackExcel.style.display = "none";
-
-    }
-
-    if (obj) {
-
-      obj.classList.remove("hidden");
-
-      obj.style.display = "block";
-
-      obj.data = urlPdfReal;
 
     }
 
@@ -82620,9 +82582,7 @@ function cerrarModalVerDocumentoDrive() {
 
   }
 
-  const obj = document.getElementById("visor-pdf-object");
 
-  if (obj) obj.data = "";
 
   const iframe = document.getElementById("visor-pdf-iframe");
 
