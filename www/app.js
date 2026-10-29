@@ -63318,17 +63318,17 @@ function renderizarInformesGeneralesDrive() {
 
 
 
-          <div class="flex items-center justify-between pt-0.5 text-[10px] text-slate-400">
+          <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
 
-            <button type="button" onclick="verDocumentoDriveEnModal('${inf.id}')" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer">
+            <button type="button" onclick="verDocumentoDriveEnModal('${inf.id}')" title="${tienePDF ? 'Ver PDF Oficial' : 'Ver Detalle Excel'}" class="px-2.5 py-1.5 rounded-lg ${tienePDF ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'} font-bold flex items-center gap-1.5 transition-all cursor-pointer">
 
-              <span>Ver Detalle</span>
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i>
 
-              <i data-lucide="eye" class="w-3 h-3"></i>
+              <span>${tienePDF ? 'Ver PDF' : 'Ver Detalle'}</span>
 
             </button>
 
-            <span class="text-[10px] text-slate-500 font-mono">${inf.tam_pdf || inf.tam_xlsx || 'Oficial'}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${inf.tam_pdf || inf.tam_xlsx || 'Oficial'}</span>
 
           </div>
 
@@ -63770,11 +63770,45 @@ function cargarDatosDriveExplorador(forzar = false) {
 
 function descargarDocumentoDriveDirecto(docId, formato) {
 
-  let doc = driveInformesGeneralesData.find(d => d.id === docId);
+  let doc = null;
 
-  if (!doc) {
+  if (Array.isArray(driveInformesGeneralesData)) {
+
+    doc = driveInformesGeneralesData.find(d => d.id === docId);
+
+    if (!doc) {
+
+      doc = driveInformesGeneralesData.find(d => d.titulo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
+
+  }
+
+  if (!doc && Array.isArray(driveDocumentosInmueblesData)) {
 
     doc = driveDocumentosInmueblesData.find(d => d.id === docId);
+
+    if (!doc) {
+
+      doc = driveDocumentosInmueblesData.find(d => d.nombre_archivo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
+
+  }
+
+  const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
+
+  if (!doc && esResidente && Array.isArray(driveDocumentosInmueblesData)) {
+
+    if (docId && (docId.includes("fac_") || docId.includes("fac"))) {
+
+      doc = driveDocumentosInmueblesData.find(d => d.tipo === "FACTURA");
+
+    } else {
+
+      doc = driveDocumentosInmueblesData.find(d => d.tipo === "RECIBO_CAJA");
+
+    }
 
   }
 
@@ -63856,25 +63890,41 @@ function descargarDocumentoDriveDirecto(docId, formato) {
 
 function verDocumentoDriveEnModal(docId) {
 
-  let doc = driveInformesGeneralesData.find(d => d.id === docId);
+  let doc = null;
 
-  let esGeneral = true;
+  let esGeneral = false;
 
-  if (!doc) {
+  if (Array.isArray(driveInformesGeneralesData)) {
+
+    doc = driveInformesGeneralesData.find(d => d.id === docId);
+
+    if (!doc) {
+
+      doc = driveInformesGeneralesData.find(d => d.titulo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
+
+    if (doc) esGeneral = true;
+
+  }
+
+  if (!doc && Array.isArray(driveDocumentosInmueblesData)) {
 
     doc = driveDocumentosInmueblesData.find(d => d.id === docId);
 
-    esGeneral = false;
+    if (!doc) {
+
+      doc = driveDocumentosInmueblesData.find(d => d.nombre_archivo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
 
   }
 
   const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
 
-  if (!doc && esResidente) {
+  if (!doc && esResidente && Array.isArray(driveDocumentosInmueblesData)) {
 
-    // Si busca factura o recibo activo del residente
-
-    if (docId.includes("fac_")) {
+    if (docId && (docId.includes("fac_") || docId.includes("fac"))) {
 
       doc = driveDocumentosInmueblesData.find(d => d.tipo === "FACTURA");
 

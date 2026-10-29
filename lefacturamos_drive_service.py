@@ -436,8 +436,29 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     desc_inf = f"Documento oficial de control contable para {nom_edif}."
 
                 if base not in infs_map:
+                    import hashlib
+                    b_up = base.upper()
+                    if "PLANILLA" in b_up:
+                        id_inf = f"inf_planilla_{cod}_{anio_int}_{mes_upper}"
+                    elif "FACTURAS DE COBRO" in b_up:
+                        id_inf = f"inf_facturas_todas_{cod}_{anio_int}_{mes_upper}"
+                    elif "LISTADO DE FACTURACION" in b_up or "FACTURACION" in b_up:
+                        id_inf = f"inf_fac_{cod}_{anio_int}_{mes_upper}"
+                    elif "DESCUENTO" in b_up:
+                        id_inf = f"inf_desc_{cod}_{anio_int}_{mes_upper}"
+                    elif "PENDIENTE" in b_up:
+                        id_inf = f"inf_pend_{cod}_{anio_int}_{mes_upper}"
+                    elif "LISTADO DE PAGOS" in b_up or "PAGOS" in b_up:
+                        id_inf = f"inf_pagos_{cod}_{anio_int}_{mes_upper}"
+                    elif "LISTADO DE RECIBOS" in b_up:
+                        id_inf = f"inf_recibos_{cod}_{anio_int}_{mes_upper}"
+                    elif "RECIBOS DE CAJA" in b_up:
+                        id_inf = f"inf_recibos_todos_{cod}_{anio_int}_{mes_upper}"
+                    else:
+                        id_inf = f"inf_{cod}_{hashlib.md5(base.encode()).hexdigest()[:8]}"
+
                     infs_map[base] = {
-                        "id": f"inf_{cod}_{abs(hash(base)) % 1000000}",
+                        "id": id_inf,
                         "tipo": tipo_inf,
                         "titulo": base,
                         "subtitulo": desc_inf,

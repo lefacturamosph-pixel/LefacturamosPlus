@@ -18153,25 +18153,25 @@
 
   <!-- ======================================================== -->
 
-  <div id="modal-ver-documento-drive" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+  <div id="modal-ver-documento-drive" class="hidden fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-3 overflow-y-auto">
 
-    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full shadow-2xl my-4 relative text-white flex flex-col max-h-[95vh] overflow-hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-[96vw] max-w-7xl h-[94vh] shadow-2xl my-auto relative text-white flex flex-col overflow-hidden">
 
       
 
       <!-- Barra Superior del Visor de PDF -->
 
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-slate-950/90 shrink-0">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-slate-950/95 shrink-0">
 
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
 
-          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
 
             <i data-lucide="file-text" class="w-4 h-4"></i>
 
           </div>
 
-          <div>
+          <div class="min-w-0">
 
             <div class="flex items-center gap-2">
 
@@ -18189,13 +18189,13 @@
 
 
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
 
-          <button id="modal-ver-doc-btn-abrir-pestana" type="button" onclick="abrirDocumentoPestanaNueva()" title="Abrir en pestaña nueva" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+          <button id="modal-ver-doc-btn-abrir-pestana" type="button" onclick="abrirDocumentoPestanaNueva()" title="Abrir en pestaña nueva con visor completo de Chrome" class="px-3.5 py-1.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
 
             <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
 
-            <span class="hidden sm:inline">Abrir en Pestaña</span>
+            <span class="hidden sm:inline">Pantalla Completa</span>
 
           </button>
 
@@ -18221,9 +18221,9 @@
 
       <!-- Área de Visualización: Visor del Archivo PDF Real de Google Drive o Detalle Excel -->
 
-      <div class="p-2 sm:p-4 bg-slate-950/90 flex-1 flex flex-col items-center justify-center overflow-hidden min-h-[550px] w-full">
+      <div class="p-2 sm:p-3 bg-slate-950 flex-1 flex flex-col items-center justify-center overflow-hidden w-full h-full">
 
-        <iframe id="visor-pdf-iframe" src="" class="w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-white shadow-2xl" allow="fullscreen"></iframe>
+        <iframe id="visor-pdf-iframe" src="" class="w-full flex-1 h-full min-h-[500px] rounded-2xl border border-slate-800 bg-white shadow-2xl" allow="fullscreen"></iframe>
 
         <div id="visor-excel-fallback" class="hidden w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-slate-900 flex flex-col items-center justify-center p-8 text-center space-y-5 shadow-2xl">
           <div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-xl">
@@ -81653,17 +81653,17 @@ function renderizarInformesGeneralesDrive() {
 
 
 
-          <div class="flex items-center justify-between pt-0.5 text-[10px] text-slate-400">
+          <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
 
-            <button type="button" onclick="verDocumentoDriveEnModal('${inf.id}')" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer">
+            <button type="button" onclick="verDocumentoDriveEnModal('${inf.id}')" title="${tienePDF ? 'Ver PDF Oficial' : 'Ver Detalle Excel'}" class="px-2.5 py-1.5 rounded-lg ${tienePDF ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30'} font-bold flex items-center gap-1.5 transition-all cursor-pointer">
 
-              <span>Ver Detalle</span>
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i>
 
-              <i data-lucide="eye" class="w-3 h-3"></i>
+              <span>${tienePDF ? 'Ver PDF' : 'Ver Detalle'}</span>
 
             </button>
 
-            <span class="text-[10px] text-slate-500 font-mono">${inf.tam_pdf || inf.tam_xlsx || 'Oficial'}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${inf.tam_pdf || inf.tam_xlsx || 'Oficial'}</span>
 
           </div>
 
@@ -82105,11 +82105,45 @@ function cargarDatosDriveExplorador(forzar = false) {
 
 function descargarDocumentoDriveDirecto(docId, formato) {
 
-  let doc = driveInformesGeneralesData.find(d => d.id === docId);
+  let doc = null;
 
-  if (!doc) {
+  if (Array.isArray(driveInformesGeneralesData)) {
+
+    doc = driveInformesGeneralesData.find(d => d.id === docId);
+
+    if (!doc) {
+
+      doc = driveInformesGeneralesData.find(d => d.titulo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
+
+  }
+
+  if (!doc && Array.isArray(driveDocumentosInmueblesData)) {
 
     doc = driveDocumentosInmueblesData.find(d => d.id === docId);
+
+    if (!doc) {
+
+      doc = driveDocumentosInmueblesData.find(d => d.nombre_archivo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
+
+  }
+
+  const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
+
+  if (!doc && esResidente && Array.isArray(driveDocumentosInmueblesData)) {
+
+    if (docId && (docId.includes("fac_") || docId.includes("fac"))) {
+
+      doc = driveDocumentosInmueblesData.find(d => d.tipo === "FACTURA");
+
+    } else {
+
+      doc = driveDocumentosInmueblesData.find(d => d.tipo === "RECIBO_CAJA");
+
+    }
 
   }
 
@@ -82191,25 +82225,41 @@ function descargarDocumentoDriveDirecto(docId, formato) {
 
 function verDocumentoDriveEnModal(docId) {
 
-  let doc = driveInformesGeneralesData.find(d => d.id === docId);
+  let doc = null;
 
-  let esGeneral = true;
+  let esGeneral = false;
 
-  if (!doc) {
+  if (Array.isArray(driveInformesGeneralesData)) {
+
+    doc = driveInformesGeneralesData.find(d => d.id === docId);
+
+    if (!doc) {
+
+      doc = driveInformesGeneralesData.find(d => d.titulo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
+
+    if (doc) esGeneral = true;
+
+  }
+
+  if (!doc && Array.isArray(driveDocumentosInmueblesData)) {
 
     doc = driveDocumentosInmueblesData.find(d => d.id === docId);
 
-    esGeneral = false;
+    if (!doc) {
+
+      doc = driveDocumentosInmueblesData.find(d => d.nombre_archivo === docId || (d.id && docId && (d.id.includes(docId) || docId.includes(d.id))));
+
+    }
 
   }
 
   const esResidente = (typeof AppState !== "undefined" && AppState.rol === "residente");
 
-  if (!doc && esResidente) {
+  if (!doc && esResidente && Array.isArray(driveDocumentosInmueblesData)) {
 
-    // Si busca factura o recibo activo del residente
-
-    if (docId.includes("fac_")) {
+    if (docId && (docId.includes("fac_") || docId.includes("fac"))) {
 
       doc = driveDocumentosInmueblesData.find(d => d.tipo === "FACTURA");
 
