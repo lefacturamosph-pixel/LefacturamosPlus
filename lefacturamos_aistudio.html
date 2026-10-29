@@ -18221,9 +18221,17 @@
 
       <!-- Área de Visualización: Visor del Archivo PDF Real de Google Drive o Detalle Excel -->
 
-      <div class="p-2 sm:p-4 bg-slate-950/90 flex-1 flex flex-col items-center justify-center overflow-hidden min-h-[550px]">
+      <div class="p-2 sm:p-4 bg-slate-950/90 flex-1 flex flex-col items-center justify-center overflow-hidden min-h-[550px] w-full">
 
-        <iframe id="visor-pdf-iframe" src="" class="w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-white shadow-2xl" allow="fullscreen"></iframe>
+        <object id="visor-pdf-object" data="" type="application/pdf" class="w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-white shadow-2xl">
+          <iframe id="visor-pdf-iframe" src="" class="w-full h-full rounded-2xl border-0" allow="fullscreen">
+            <div class="p-8 text-center text-slate-300 flex flex-col items-center justify-center space-y-4">
+              <i data-lucide="file-text" class="w-12 h-12 text-amber-400 mx-auto"></i>
+              <p class="font-bold text-sm">Visualizador de Documentos Oficiales Lefacturamos</p>
+              <button type="button" onclick="abrirDocumentoPestanaNueva()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs cursor-pointer">Abrir en Pestaña Nueva</button>
+            </div>
+          </iframe>
+        </object>
 
         <div id="visor-excel-fallback" class="hidden w-full h-[76vh] min-h-[550px] rounded-2xl border border-slate-700 bg-slate-900 flex flex-col items-center justify-center p-8 text-center space-y-5 shadow-2xl" style="display: none;">
           <div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-xl">
@@ -81227,7 +81235,7 @@ function generarDocumentosDriveLocal() {
 
         url_xlsx: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(`${nomEdif}.-- LISTADO DE FACTURACION  -- ${mes} DE ${anio}.XLSX`)}&descargar=true`,
 
-        drive_url: "https://drive.google.com/drive/folders/1ZAIDkgxiuqNtENCOVGHapuSu_HvUaQd7?role=reader"
+        drive_url: "https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link"
 
       });
 
@@ -81283,7 +81291,7 @@ function generarDocumentosDriveLocal() {
 
           url_xlsx: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mesAnt)}&archivo=${encodeURIComponent(`${nomEdif}.-- LISTADO DE RECIBOS DE CAJA  -- ${mesAnt} DE ${anio}.XLSX`)}&descargar=true`,
 
-          drive_url: "https://drive.google.com/drive/folders/1ZAIDkgxiuqNtENCOVGHapuSu_HvUaQd7?role=reader"
+          drive_url: "https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link"
 
         });
 
@@ -82287,7 +82295,9 @@ function verDocumentoDriveEnModal(docId) {
 
   if (elBadgeTipo) elBadgeTipo.innerText = esSoloExcel ? "EXCEL OFICIAL" : "GOOGLE DRIVE OFICIAL";
 
-  // 2. Alternar entre visor PDF (iframe) y visor Excel (tarjeta de detalle oficial)
+  // 2. Alternar entre visor PDF (object/iframe) y visor Excel (tarjeta de detalle oficial)
+
+  const obj = document.getElementById("visor-pdf-object");
 
   const iframe = document.getElementById("visor-pdf-iframe");
 
@@ -82298,6 +82308,16 @@ function verDocumentoDriveEnModal(docId) {
   const btnImprimir = document.getElementById("modal-ver-doc-btn-imprimir");
 
   if (esSoloExcel) {
+
+    if (obj) {
+
+      obj.classList.add("hidden");
+
+      obj.style.display = "none";
+
+      obj.data = "";
+
+    }
 
     if (iframe) {
 
@@ -82336,6 +82356,16 @@ function verDocumentoDriveEnModal(docId) {
       fallbackExcel.classList.add("hidden");
 
       fallbackExcel.style.display = "none";
+
+    }
+
+    if (obj) {
+
+      obj.classList.remove("hidden");
+
+      obj.style.display = "block";
+
+      obj.data = urlPdfReal;
 
     }
 
@@ -82589,6 +82619,10 @@ function cerrarModalVerDocumentoDrive() {
     modal.style.display = "none";
 
   }
+
+  const obj = document.getElementById("visor-pdf-object");
+
+  if (obj) obj.data = "";
 
   const iframe = document.getElementById("visor-pdf-iframe");
 

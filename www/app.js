@@ -62892,7 +62892,7 @@ function generarDocumentosDriveLocal() {
 
         url_xlsx: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mes)}&archivo=${encodeURIComponent(`${nomEdif}.-- LISTADO DE FACTURACION  -- ${mes} DE ${anio}.XLSX`)}&descargar=true`,
 
-        drive_url: "https://drive.google.com/drive/folders/1ZAIDkgxiuqNtENCOVGHapuSu_HvUaQd7?role=reader"
+        drive_url: "https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link"
 
       });
 
@@ -62948,7 +62948,7 @@ function generarDocumentosDriveLocal() {
 
           url_xlsx: `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&anio=${encodeURIComponent(anio)}&mes=${encodeURIComponent(mesAnt)}&archivo=${encodeURIComponent(`${nomEdif}.-- LISTADO DE RECIBOS DE CAJA  -- ${mesAnt} DE ${anio}.XLSX`)}&descargar=true`,
 
-          drive_url: "https://drive.google.com/drive/folders/1ZAIDkgxiuqNtENCOVGHapuSu_HvUaQd7?role=reader"
+          drive_url: "https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link"
 
         });
 
@@ -63952,7 +63952,9 @@ function verDocumentoDriveEnModal(docId) {
 
   if (elBadgeTipo) elBadgeTipo.innerText = esSoloExcel ? "EXCEL OFICIAL" : "GOOGLE DRIVE OFICIAL";
 
-  // 2. Alternar entre visor PDF (iframe) y visor Excel (tarjeta de detalle oficial)
+  // 2. Alternar entre visor PDF (object/iframe) y visor Excel (tarjeta de detalle oficial)
+
+  const obj = document.getElementById("visor-pdf-object");
 
   const iframe = document.getElementById("visor-pdf-iframe");
 
@@ -63963,6 +63965,16 @@ function verDocumentoDriveEnModal(docId) {
   const btnImprimir = document.getElementById("modal-ver-doc-btn-imprimir");
 
   if (esSoloExcel) {
+
+    if (obj) {
+
+      obj.classList.add("hidden");
+
+      obj.style.display = "none";
+
+      obj.data = "";
+
+    }
 
     if (iframe) {
 
@@ -64001,6 +64013,16 @@ function verDocumentoDriveEnModal(docId) {
       fallbackExcel.classList.add("hidden");
 
       fallbackExcel.style.display = "none";
+
+    }
+
+    if (obj) {
+
+      obj.classList.remove("hidden");
+
+      obj.style.display = "block";
+
+      obj.data = urlPdfReal;
 
     }
 
@@ -64254,6 +64276,10 @@ function cerrarModalVerDocumentoDrive() {
     modal.style.display = "none";
 
   }
+
+  const obj = document.getElementById("visor-pdf-object");
+
+  if (obj) obj.data = "";
 
   const iframe = document.getElementById("visor-pdf-iframe");
 

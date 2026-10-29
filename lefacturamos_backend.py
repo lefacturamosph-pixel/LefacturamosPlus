@@ -3640,12 +3640,16 @@ def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: s
         
     import unicodedata
     clean_fn = unicodedata.normalize('NFKD', path_encontrado.name).encode('ascii', 'ignore').decode('ascii')
-    disposition = "attachment" if descargar else "inline"
     headers = {
-        "Content-Disposition": f'{disposition}; filename="{clean_fn}"',
         "Cache-Control": "public, max-age=3600",
-        "Access-Control-Allow-Origin": "*"
+        "Access-Control-Allow-Origin": "*",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Content-Security-Policy": "frame-ancestors 'self' https://lefacturamos.onrender.com *"
     }
+    if descargar or not archivo.lower().endswith(".pdf"):
+        headers["Content-Disposition"] = f'attachment; filename="{clean_fn}"'
+    else:
+        headers["Content-Disposition"] = "inline"
     return FileResponse(path=str(path_encontrado), media_type=media_type, headers=headers)
 
 
