@@ -19322,6 +19322,8 @@ const MENUS_POR_ROL = {
 
       { id: "comunicados", label: "Alertas", icono: "megaphone" },
 
+      { id: "pqr", label: "PQR", icono: "message-square" },
+
       { id: "ley675", label: "Ley 675", icono: "search" }
 
     ],
@@ -19336,7 +19338,9 @@ const MENUS_POR_ROL = {
 
       { id: "comunicados", label: "Alertas y Novedades", icono: "megaphone" },
 
-      { id: "manual-porteria", label: "Manual Portería 24/7", icono: "book-open-check", action: "abrirManualRol('porteria')" },
+      { id: "pqr", label: "PQR (Solo Lectura)", icono: "message-square" },
+
+      { id: "manual-porteria", label: "Manual de Lefacturamos para Portería", icono: "book-open-check", action: "abrirManualRol('porteria')" },
 
       { id: "ley675", label: "Consultar Ley 675", icono: "search" }
 
@@ -20535,7 +20539,7 @@ const CONFIG_MANUAL_POR_ROL = {
     placeholder: "Buscar en el manual de Lefacturamos para el Residente (pagos Bre-B, reservas, visitas QR, PQR)..."
   },
   porteria: {
-    titulo: "Manual Operativo del Puesto de Control y Portería 24/7",
+    titulo: "Manual de Lefacturamos para Portería",
     subtitulo: "Procedimientos de escaneo QR (< 2s), minuta digital inalterable, paquetería y botón de pánico.",
     badge: "PROTOCOLO DE SEGURIDAD 24/7 • PUESTO DE CONTROL",
     icono: "shield-check",
@@ -20545,7 +20549,7 @@ const CONFIG_MANUAL_POR_ROL = {
     badgeBg: "bg-amber-950",
     badgeBorder: "border-amber-800",
     badgeText: "text-amber-300",
-    placeholder: "Buscar en el manual de Portería (escaneo QR, minuta, vehículos, paquetería)..."
+    placeholder: "Buscar en el manual de Lefacturamos para Portería (escaneo QR, minuta, vehículos, paquetería)..."
   }
 };
 
@@ -22819,6 +22823,42 @@ function actualizarVisibilidadPorRol(rol) {
   if (pillPorteria) pillPorteria.classList.add("hidden");
 
   if (btnTopEntrada) btnTopEntrada.classList.add("hidden");
+
+
+
+  // Control de permisos PQR para Portería (Solo Lectura)
+
+  const btnRadicarPqr = document.getElementById("btn-radicar-pqr-header");
+
+  const badgeSoloLecturaPqr = document.getElementById("pqr-badge-solo-lectura");
+
+  if (btnRadicarPqr) {
+
+    if (rol === "porteria") {
+
+      btnRadicarPqr.classList.add("hidden");
+
+    } else {
+
+      btnRadicarPqr.classList.remove("hidden");
+
+    }
+
+  }
+
+  if (badgeSoloLecturaPqr) {
+
+    if (rol === "porteria") {
+
+      badgeSoloLecturaPqr.classList.remove("hidden");
+
+    } else {
+
+      badgeSoloLecturaPqr.classList.add("hidden");
+
+    }
+
+  }
 
 
 
@@ -50821,6 +50861,19 @@ function renderizarModuloPQR() {
   const bPqrPorteria = document.getElementById("badge-count-pqr-porteria");
   if (bPqrPorteria) bPqrPorteria.innerText = listaPQR.length;
 
+  const esPorteria = (typeof AppState !== "undefined" && AppState.rol === "porteria");
+
+  const btnRadicarHeader = document.getElementById("btn-radicar-pqr-header");
+  const badgeSoloLectura = document.getElementById("pqr-badge-solo-lectura");
+  if (btnRadicarHeader) {
+    if (esPorteria) btnRadicarHeader.classList.add("hidden");
+    else btnRadicarHeader.classList.remove("hidden");
+  }
+  if (badgeSoloLectura) {
+    if (esPorteria) badgeSoloLectura.classList.remove("hidden");
+    else badgeSoloLectura.classList.add("hidden");
+  }
+
   const abiertas = listaPQR.filter(p => p.estado !== "Respondida" && p.estado !== "Cerrada").length;
 
   const kpiCount = document.getElementById("dashboard-kpi-pqr-count");
@@ -50959,15 +51012,22 @@ function renderizarModuloPQR() {
           </div>
         `}
 
-        <!-- Botón Inferior Derecho Responder Radicado -->
+        <!-- Botón Inferior Derecho Responder Radicado / Modo Solo Lectura -->
         <div class="flex items-center justify-between pt-1">
           <span class="text-[11px] text-slate-400 font-medium">
             Ley 675 de 2001 • Convivencia y Mediación Comunitaria
           </span>
-          <button type="button" onclick="abrirModalResponderRadicado('${p.consecutivo}')" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer">
-            <i data-lucide="reply" class="w-3.5 h-3.5 text-emerald-400"></i>
-            <span>${p.respuesta ? 'Modificar / Responder Nuevamente' : 'Responder Radicado'}</span>
-          </button>
+          ${esPorteria ? `
+            <span class="px-3.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-bold text-xs flex items-center gap-1.5 shadow-2xs">
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>PQR Solo Lectura</span>
+            </span>
+          ` : `
+            <button type="button" onclick="abrirModalResponderRadicado('${p.consecutivo}')" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer">
+              <i data-lucide="reply" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>${p.respuesta ? 'Modificar / Responder Nuevamente' : 'Responder Radicado'}</span>
+            </button>
+          `}
         </div>
       </div>
     `;
@@ -50980,6 +51040,10 @@ function renderizarModuloPQR() {
 }
 
 function abrirModalResponderRadicado(consecutivo) {
+  if (typeof AppState !== "undefined" && AppState.rol === "porteria") {
+    mostrarToast("El puesto de control cuenta con permisos de solo lectura para PQR.", true);
+    return;
+  }
   const p = listaPQR.find(item => item.consecutivo === consecutivo || item.id === consecutivo);
   if (!p) return;
 
@@ -51147,6 +51211,10 @@ async function guardarRespuestaPQR(e) {
 }
 
 function abrirModalRadicarPQR() {
+  if (typeof AppState !== "undefined" && AppState.rol === "porteria") {
+    mostrarToast("El puesto de control cuenta con permisos de solo lectura para PQR.", true);
+    return;
+  }
   const modal = document.getElementById("modal-radicar-pqr");
   if (modal) {
     // Actualizar fecha y hora actual de envío del copropietario en vivo

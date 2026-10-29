@@ -7592,28 +7592,6 @@
         </div>
 
 
-        <!-- CARD OFICIAL: MANUAL OPERATIVO DE PORTERÍA -->
-        <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-900 border border-amber-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-md">
-              <i data-lucide="shield-check" class="w-6 h-6 text-amber-400"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 text-[10px] font-black uppercase tracking-wider">Protocolo de Vigilancia 24/7</span>
-                <span class="text-xs text-amber-400 font-bold">Ley 675 / Ley 1581</span>
-              </div>
-              <h3 class="text-base font-bold text-white mt-0.5">Manual Operativo del Puesto de Control y Portería</h3>
-              <p class="text-xs text-slate-400">Procedimiento para escaneo de códigos QR (&lt; 2s), minuta digital inalterable, control de paquetería y botón de pánico.</p>
-            </div>
-          </div>
-          <button type="button" onclick="abrirManualRol('porteria')" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-950/50 transition-all shrink-0 cursor-pointer">
-            <i data-lucide="book-open" class="w-4 h-4"></i>
-            <span>Consultar Manual Portería</span>
-          </button>
-        </div>
-
-
 
 
         <!-- 4 TARJETAS KPI DE VIGILANCIA EN TIEMPO REAL -->
@@ -8201,13 +8179,18 @@
 
             </button>
 
-            <button type="button" onclick="abrirModalRadicarPQR()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95">
+            <button type="button" id="btn-radicar-pqr-header" onclick="abrirModalRadicarPQR()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95">
 
               <i data-lucide="plus" class="w-3.5 h-3.5 text-slate-600"></i>
 
               <span>+ Radicar PQR</span>
 
             </button>
+
+            <span id="pqr-badge-solo-lectura" class="hidden px-3.5 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-800 font-bold text-xs flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Puesto de Control (Solo Lectura)</span>
+            </span>
 
           </div>
 
@@ -10025,7 +10008,7 @@
               </span>
               <span class="text-xs text-amber-300 font-semibold">Puesto de Vigilancia & Control de Acceso</span>
             </div>
-            <h3 class="text-base sm:text-lg font-black text-white">Manual Operativo del Puesto de Control y Portería</h3>
+            <h3 class="text-base sm:text-lg font-black text-white">Manual de Lefacturamos para Portería</h3>
             <p class="text-xs text-slate-300">
               Instrucciones para guardas y personal de vigilancia privada: validación rápida de códigos QR en menos de 2 segundos, botones directos de visitas del día, accionamiento de talanqueras, minuta digital foliada inalterable y paquetería.
             </p>
