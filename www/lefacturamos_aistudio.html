@@ -5427,39 +5427,79 @@
 
                 <div class="grid grid-cols-2 gap-2">
 
-                  <select id="reserva-hora-ini" onchange="actualizarHorariosOcupados()" class="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white">
+                  <select id="reserva-hora-ini" onchange="cambioHoraInicio()" class="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white">
+
+                    <option value="06:00">06:00 AM</option>
+
+                    <option value="07:00">07:00 AM</option>
 
                     <option value="08:00" selected>08:00 AM</option>
 
+                    <option value="09:00">09:00 AM</option>
+
                     <option value="10:00">10:00 AM</option>
+
+                    <option value="11:00">11:00 AM</option>
 
                     <option value="12:00">12:00 PM</option>
 
+                    <option value="13:00">01:00 PM</option>
+
                     <option value="14:00">02:00 PM</option>
+
+                    <option value="15:00">03:00 PM</option>
 
                     <option value="16:00">04:00 PM</option>
 
+                    <option value="17:00">05:00 PM</option>
+
                     <option value="18:00">06:00 PM</option>
 
+                    <option value="19:00">07:00 PM</option>
+
                     <option value="20:00">08:00 PM</option>
+
+                    <option value="21:00">09:00 PM</option>
+
+                    <option value="22:00">10:00 PM</option>
 
                   </select>
 
                   <select id="reserva-hora-fin" onchange="actualizarHorariosOcupados()" class="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white">
 
+                    <option value="07:00">07:00 AM</option>
+
+                    <option value="08:00">08:00 AM</option>
+
+                    <option value="09:00">09:00 AM</option>
+
                     <option value="10:00" selected>10:00 AM</option>
+
+                    <option value="11:00">11:00 AM</option>
 
                     <option value="12:00">12:00 PM</option>
 
+                    <option value="13:00">01:00 PM</option>
+
                     <option value="14:00">02:00 PM</option>
+
+                    <option value="15:00">03:00 PM</option>
 
                     <option value="16:00">04:00 PM</option>
 
+                    <option value="17:00">05:00 PM</option>
+
                     <option value="18:00">06:00 PM</option>
+
+                    <option value="19:00">07:00 PM</option>
 
                     <option value="20:00">08:00 PM</option>
 
+                    <option value="21:00">09:00 PM</option>
+
                     <option value="22:00">10:00 PM</option>
+
+                    <option value="23:00">11:00 PM</option>
 
                   </select>
 
@@ -64932,16 +64972,79 @@ function cambioZonaSeleccionada() {
 
 
 
-// Franjas Horarias Oficiales para Reserva de Zonas Comunes (Ley 675 / Turnos de 2 Horas)
+// Franjas Horarias Oficiales para Reserva de Zonas Comunes (Hora por hora: 06:00 a 23:00)
 const FRANJAS_HORARIAS_ESTANDAR = [
-  { ini: "08:00", fin: "10:00", label: "08:00 AM - 10:00 AM" },
-  { ini: "10:00", fin: "12:00", label: "10:00 AM - 12:00 PM" },
-  { ini: "12:00", fin: "14:00", label: "12:00 PM - 02:00 PM" },
-  { ini: "14:00", fin: "16:00", label: "02:00 PM - 04:00 PM" },
-  { ini: "16:00", fin: "18:00", label: "04:00 PM - 06:00 PM" },
-  { ini: "18:00", fin: "20:00", label: "06:00 PM - 08:00 PM" },
-  { ini: "20:00", fin: "22:00", label: "08:00 PM - 10:00 PM" }
+  { ini: "06:00", fin: "07:00", label: "06:00 AM - 07:00 AM" },
+  { ini: "07:00", fin: "08:00", label: "07:00 AM - 08:00 AM" },
+  { ini: "08:00", fin: "09:00", label: "08:00 AM - 09:00 AM" },
+  { ini: "09:00", fin: "10:00", label: "09:00 AM - 10:00 AM" },
+  { ini: "10:00", fin: "11:00", label: "10:00 AM - 11:00 AM" },
+  { ini: "11:00", fin: "12:00", label: "11:00 AM - 12:00 PM" },
+  { ini: "12:00", fin: "13:00", label: "12:00 PM - 01:00 PM" },
+  { ini: "13:00", fin: "14:00", label: "01:00 PM - 02:00 PM" },
+  { ini: "14:00", fin: "15:00", label: "02:00 PM - 03:00 PM" },
+  { ini: "15:00", fin: "16:00", label: "03:00 PM - 04:00 PM" },
+  { ini: "16:00", fin: "17:00", label: "04:00 PM - 05:00 PM" },
+  { ini: "17:00", fin: "18:00", label: "05:00 PM - 06:00 PM" },
+  { ini: "18:00", fin: "19:00", label: "06:00 PM - 07:00 PM" },
+  { ini: "19:00", fin: "20:00", label: "07:00 PM - 08:00 PM" },
+  { ini: "20:00", fin: "21:00", label: "08:00 PM - 09:00 PM" },
+  { ini: "21:00", fin: "22:00", label: "09:00 PM - 10:00 PM" },
+  { ini: "22:00", fin: "23:00", label: "10:00 PM - 11:00 PM" }
 ];
+
+function formatearHora12(hora) {
+  if (!hora) return "";
+  const partes = hora.split(":");
+  let h = parseInt(partes[0], 10);
+  const m = partes[1] || "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  const strH = h < 10 ? "0" + h : "" + h;
+  return `${strH}:${m} ${ampm}`;
+}
+
+function cambioHoraInicio() {
+  const elIni = document.getElementById("reserva-hora-ini");
+  const elFin = document.getElementById("reserva-hora-fin");
+  if (elIni && elFin) {
+    if (elFin.value <= elIni.value) {
+      const hIniVal = parseInt(elIni.value.split(":")[0], 10);
+      const nuevaHoraFin = Math.min(23, hIniVal + 1);
+      elFin.value = (nuevaHoraFin < 10 ? '0' : '') + nuevaHoraFin + ":00";
+    }
+  }
+  actualizarHorariosOcupados();
+}
+
+function actualizarOpcionesDropdownsHoras(ocupadas) {
+  const elIni = document.getElementById("reserva-hora-ini");
+  const elFin = document.getElementById("reserva-hora-fin");
+  if (!elIni || !elFin) return;
+
+  Array.from(elIni.options).forEach(opt => {
+    const hora = opt.value;
+    const formato12h = formatearHora12(hora);
+    const estaOcupada = ocupadas.some(r => r.horaIni <= hora && r.horaFin > hora);
+    if (estaOcupada) {
+      opt.textContent = `${formato12h} (⛔ Ocupada)`;
+    } else {
+      opt.textContent = formato12h;
+    }
+  });
+
+  Array.from(elFin.options).forEach(opt => {
+    const hora = opt.value;
+    const formato12h = formatearHora12(hora);
+    const estaOcupada = ocupadas.some(r => r.horaIni < hora && r.horaFin >= hora);
+    if (estaOcupada) {
+      opt.textContent = `${formato12h} (⛔ Ocupada)`;
+    } else {
+      opt.textContent = formato12h;
+    }
+  });
+}
 
 function seleccionarFranjaHoraria(hIni, hFin) {
   const elIni = document.getElementById("reserva-hora-ini");
@@ -64953,7 +65056,7 @@ function seleccionarFranjaHoraria(hIni, hFin) {
   if (alertaEl) alertaEl.classList.add("hidden");
 
   actualizarHorariosOcupados();
-  mostrarToast(`⏰ Horario seleccionado: ${hIni} a ${hFin}`);
+  mostrarToast(`⏰ Horario seleccionado: ${formatearHora12(hIni)} a ${formatearHora12(hFin)}`);
 }
 
 function cancelarReserva(rid) {
@@ -64996,7 +65099,10 @@ function actualizarHorariosOcupados() {
     r.zonaId === zonaId && r.fecha === fecha && r.estado === "Confirmada"
   );
 
-  // Mapear cada una de las 7 franjas estándar con su disponibilidad real
+  // Actualizar indicadores de ocupado en los selects
+  actualizarOpcionesDropdownsHoras(ocupadas);
+
+  // Mapear cada una de las franjas horarias con su disponibilidad real
   const franjasConEstado = FRANJAS_HORARIAS_ESTANDAR.map(f => {
     const resOcupada = ocupadas.find(r => (f.ini < r.horaFin && f.fin > r.horaIni));
     return {
@@ -65006,6 +65112,7 @@ function actualizarHorariosOcupados() {
     };
   });
 
+  // Filtrar exclusivamente los horarios libres (excluyendo los que ya están seleccionados/ocupados)
   const franjasLibres = franjasConEstado.filter(f => !f.ocupada);
   const franjasOcupadas = franjasConEstado.filter(f => f.ocupada);
 
@@ -65020,11 +65127,11 @@ function actualizarHorariosOcupados() {
               <span>Todos los horarios se encuentran 100% LIBRES</span>
             </span>
             <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/30">
-              7 de 7 Disponibles
+              ${franjasLibres.length} de ${FRANJAS_HORARIAS_ESTANDAR.length} Horas Disponibles
             </span>
           </div>
           <p class="text-[11px] text-emerald-300/90">
-            No hay ninguna reserva en esta fecha (${fecha}). Haz clic en cualquiera de los horarios verdes para seleccionarlo:
+            No hay ninguna reserva en esta fecha (${fecha}). Haz clic en cualquiera de las horas disponibles para seleccionarla:
           </p>
         </div>
       `;
@@ -65037,22 +65144,43 @@ function actualizarHorariosOcupados() {
               <span>Disponibilidad en Fecha: <strong class="text-white">${fecha}</strong></span>
             </span>
             <div class="flex items-center gap-1.5 font-mono text-[10px] font-bold">
-              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">${franjasLibres.length} LIBRE(S)</span>
-              <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800">${franjasOcupadas.length} OCUPADA(S)</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">${franjasLibres.length} DISPONIBLES</span>
+              <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800">${ocupadas.length} RESERVADA(S)</span>
             </div>
           </div>
-          <div class="p-2 rounded-lg bg-amber-950/30 border border-amber-900/40 text-[11px] text-slate-300">
-            ⚠️ <strong>En esta fecha hay ${franjasOcupadas.length} reserva(s) registrada(s).</strong> A continuación te mostramos cuáles horarios están <strong class="text-emerald-400">LIBRES</strong> para que elijas el tuyo:
+          <div class="p-2 rounded-lg bg-rose-950/30 border border-rose-900/40 text-[11px] text-slate-300 space-y-1">
+            <div class="flex items-center gap-1.5 text-rose-300 font-semibold">
+              <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
+              <span>Horarios ya reservados/ocupados (excluidos de la lista):</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-0.5">
+              ${ocupadas.map(o => `
+                <span class="px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800/80 text-rose-300 font-mono text-[10px] font-bold">
+                  ⛔ ${o.horaIni} - ${o.horaFin} (Apto ${o.apto})
+                </span>
+              `).join("")}
+            </div>
+          </div>
+          <div class="text-[11px] text-emerald-300/90">
+            👉 A continuación se muestran todas las <strong>${franjasLibres.length} horas disponibles</strong> para reservar (haz clic en cualquiera para elegir):
           </div>
         </div>
       `;
     }
 
-    const gridHtml = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-        ${franjasConEstado.map(f => {
-          const esSeleccionado = (f.ini === hIni && f.fin === hFin);
-          if (!f.ocupada) {
+    let gridHtml = "";
+    if (franjasLibres.length === 0) {
+      gridHtml = `
+        <div class="p-4 rounded-xl bg-rose-950/40 border border-rose-800 text-center space-y-1 mt-2">
+          <p class="text-xs text-rose-300 font-bold">No quedan horarios disponibles en esta fecha (${fecha}).</p>
+          <p class="text-[11px] text-slate-400">Por favor selecciona otra fecha en el calendario para realizar tu reserva.</p>
+        </div>
+      `;
+    } else {
+      gridHtml = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+          ${franjasLibres.map(f => {
+            const esSeleccionado = (f.ini === hIni && f.fin === hFin) || (f.ini >= hIni && f.fin <= hFin);
             return `
               <button type="button" onclick="seleccionarFranjaHoraria('${f.ini}', '${f.fin}')" 
                 class="flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer text-left ${
@@ -65074,36 +65202,10 @@ function actualizarHorariosOcupados() {
                 </span>
               </button>
             `;
-          } else {
-            const r = f.reserva;
-            const esMio = (r && (r.apto === AppState.aptoNumero || r.residente === AppState.propietario));
-            return `
-              <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-rose-900/50 text-xs">
-                <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
-                  <div>
-                    <span class="font-bold text-slate-400 line-through text-xs block">${f.label}</span>
-                    <span class="text-[10px] text-rose-400 font-semibold">
-                      ⛔ Ocupado por Apto ${r.apto} ${esMio ? '(Tu Reserva)' : ''}
-                    </span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-bold">
-                    ${esMio ? 'Tu Apto' : 'Ocupado'}
-                  </span>
-                  ${esMio ? `
-                    <button type="button" onclick="cancelarReserva('${r.id}')" title="Liberar horario" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-rose-900 text-rose-300 font-bold border border-slate-700 cursor-pointer">
-                      Liberar
-                    </button>
-                  ` : ''}
-                </div>
-              </div>
-            `;
-          }
-        }).join("")}
-      </div>
-    `;
+          }).join("")}
+        </div>
+      `;
+    }
 
     listaEl.innerHTML = headerHtml + gridHtml;
   }
