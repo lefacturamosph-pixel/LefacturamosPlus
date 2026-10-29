@@ -5342,6 +5342,22 @@
             </div>
           </div>
 
+          <!-- Pestañas de Vista: Activas (Hoy y Próximas) vs Historial (Pasadas) -->
+          <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+            <div class="flex items-center gap-2">
+              <button type="button" id="tab-reservas-vigentes" onclick="cambiarVistaReservasAdmin('vigentes')" class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer bg-emerald-950 text-emerald-300 border border-emerald-700/80 shadow">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span>Hoy y Próximas</span>
+                <span id="badge-tab-vigentes" class="px-1.5 py-0.2 rounded-full bg-emerald-800/60 text-[10px] font-mono">0</span>
+              </button>
+              <button type="button" id="tab-reservas-historial" onclick="cambiarVistaReservasAdmin('historial')" class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer bg-slate-800/60 hover:bg-slate-800 text-slate-400 border border-slate-700/60">
+                <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                <span>Historial de Reservas</span>
+                <span id="badge-tab-historial" class="px-1.5 py-0.2 rounded-full bg-slate-700 text-slate-300 text-[10px] font-mono">0</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Listado dinámico de reservas de copropietarios -->
           <div id="lista-reservas-copropietarios" class="divide-y divide-slate-800/80 space-y-3">
             <!-- Renderizado reactivo desde renderizarReservasCopropietarios -->

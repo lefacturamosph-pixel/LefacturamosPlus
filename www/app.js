@@ -46318,48 +46318,144 @@ function inicializarModuloReservas() {
   cargarMisReservas();
 }
 
+let vistaReservasAdminActual = "vigentes"; // "vigentes" (hoy y posteriores) o "historial" (pasadas)
+
+function cambiarVistaReservasAdmin(vista) {
+  vistaReservasAdminActual = vista;
+  const tabVigentes = document.getElementById("tab-reservas-vigentes");
+  const tabHistorial = document.getElementById("tab-reservas-historial");
+  
+  if (tabVigentes && tabHistorial) {
+    if (vista === "vigentes") {
+      tabVigentes.className = "px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer bg-emerald-950 text-emerald-300 border border-emerald-700/80 shadow";
+      tabHistorial.className = "px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer bg-slate-800/60 hover:bg-slate-800 text-slate-400 border border-slate-700/60";
+    } else {
+      tabHistorial.className = "px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer bg-amber-950 text-amber-300 border border-amber-700/80 shadow";
+      tabVigentes.className = "px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer bg-slate-800/60 hover:bg-slate-800 text-slate-400 border border-slate-700/60";
+    }
+  }
+  
+  renderizarReservasCopropietarios();
+}
+
 function renderizarReservasCopropietarios() {
   const cont = document.getElementById("lista-reservas-copropietarios");
   const badgeCont = document.getElementById("badge-contador-reservas");
+  const badgeVigentes = document.getElementById("badge-tab-vigentes");
+  const badgeHistorial = document.getElementById("badge-tab-historial");
   if (!cont) return;
 
+  const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin" || AppState.rol === "administrador"));
+  const hoy = new Date().toISOString().split("T")[0];
   const filtroFecha = document.getElementById("filtro-fecha-reservas-admin")?.value;
 
-  let reservasAMostrar = listaReservasCopropiedad;
+  // Separar reservas activas (hoy y posteriores) del historial (fechas anteriores)
+  const vigentesTodas = listaReservasCopropiedad.filter(r => r.fecha >= hoy);
+  const historialTodas = listaReservasCopropiedad.filter(r => r.fecha < hoy);
+
+  // Actualizar badges de conteo en las pestañas
+  if (badgeVigentes) badgeVigentes.textContent = vigentesTodas.length;
+  if (badgeHistorial) badgeHistorial.textContent = historialTodas.length;
+
+  let reservasAMostrar = [];
+
   if (filtroFecha) {
-    reservasAMostrar = reservasAMostrar.filter(r => r.fecha === filtroFecha);
+    // Si el administrador eligió una fecha específica en el calendario
+    reservasAMostrar = listaReservasCopropiedad.filter(r => r.fecha === filtroFecha);
+  } else {
+    // Modo pestaña: hoy y posteriores (por defecto) o historial de pasadas
+    if (vistaReservasAdminActual === "vigentes") {
+      reservasAMostrar = [...vigentesTodas].sort((a, b) => (a.fecha + a.horaIni).localeCompare(b.fecha + b.horaIni));
+    } else {
+      reservasAMostrar = [...historialTodas].sort((a, b) => (b.fecha + b.horaIni).localeCompare(a.fecha + a.horaIni));
+    }
   }
 
   if (badgeCont) {
-    badgeCont.textContent = `(${reservasAMostrar.length} ${reservasAMostrar.length === 1 ? 'confirmada' : 'confirmadas'})`;
+    if (filtroFecha) {
+      badgeCont.textContent = `(${reservasAMostrar.length} el ${filtroFecha})`;
+    } else if (vistaReservasAdminActual === "vigentes") {
+      badgeCont.textContent = `(${reservasAMostrar.length} ${reservasAMostrar.length === 1 ? 'vigente' : 'vigentes'})`;
+    } else {
+      badgeCont.textContent = `(${reservasAMostrar.length} en historial)`;
+    }
   }
 
   if (reservasAMostrar.length === 0) {
-    cont.innerHTML = `
-      <div class="py-8 text-center text-xs text-slate-400 space-y-1">
-        <div class="w-10 h-10 mx-auto rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-2">
-          <i data-lucide="calendar-x" class="w-5 h-5"></i>
+    if (filtroFecha) {
+      cont.innerHTML = `
+        <div class="py-8 text-center text-xs text-slate-400 space-y-1">
+          <div class="w-10 h-10 mx-auto rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-2">
+            <i data-lucide="calendar-x" class="w-5 h-5"></i>
+          </div>
+          <p class="font-bold text-slate-300">No hay reservas para la fecha ${filtroFecha}</p>
+          <button type="button" onclick="limpiarFiltroReservas()" class="text-xs text-emerald-400 underline hover:text-emerald-300 cursor-pointer pt-1">
+            Limpiar filtro de fecha
+          </button>
         </div>
-        <p class="font-bold text-slate-300">No hay reservas de copropietarios ${filtroFecha ? 'para la fecha ' + filtroFecha : 'registradas'}</p>
-        <p class="text-[11px] text-slate-500">${esAdmin ? 'Las nuevas reservas de los copropietarios aparecerán aquí automáticamente en tiempo real.' : 'Usa el formulario de abajo para registrar una nueva reserva en las zonas comunes activas.'}</p>
-      </div>
-    `;
+      `;
+    } else if (vistaReservasAdminActual === "vigentes") {
+      cont.innerHTML = `
+        <div class="py-8 text-center text-xs text-slate-400 space-y-2">
+          <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-800/80 border border-slate-700/80 text-emerald-400 flex items-center justify-center shadow-lg">
+            <i data-lucide="calendar-check-2" class="w-6 h-6"></i>
+          </div>
+          <p class="font-bold text-white text-sm">No hay reservas programadas para hoy ni días posteriores</p>
+          <p class="text-[11px] text-slate-400 max-w-md mx-auto">
+            Las nuevas solicitudes de zonas comunes reservadas para hoy o fechas futuras se mostrarán aquí automáticamente en tiempo real.
+          </p>
+          ${historialTodas.length > 0 ? `
+            <div class="pt-2">
+              <button type="button" onclick="cambiarVistaReservasAdmin('historial')" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-900/60 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer transition-all shadow">
+                <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                <span>Consultar Historial de Reservas Pasadas (${historialTodas.length})</span>
+              </button>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    } else {
+      cont.innerHTML = `
+        <div class="py-8 text-center text-xs text-slate-400 space-y-1">
+          <div class="w-10 h-10 mx-auto rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-2">
+            <i data-lucide="history" class="w-5 h-5"></i>
+          </div>
+          <p class="font-bold text-slate-300">El historial de reservas se encuentra vacío</p>
+          <p class="text-[11px] text-slate-500">Las reservas concluidas se archivarán aquí automáticamente.</p>
+        </div>
+      `;
+    }
     safeCreateIcons();
     return;
   }
 
   cont.innerHTML = reservasAMostrar.map(r => {
-    const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin"));
     const esMiApto = (typeof AppState !== "undefined" && (r.apto === AppState.aptoNumero || r.residente === AppState.propietario));
     const puedeCancelar = esAdmin || esMiApto;
+    const esPasada = (r.fecha < hoy);
 
     return `
-      <div class="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-slate-800/40 p-3 rounded-xl transition-all">
+      <div class="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-slate-800/40 p-3 rounded-xl transition-all ${esPasada ? 'opacity-85' : ''}">
         <div class="space-y-1">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <h4 class="font-black text-white text-sm">${r.zona}</h4>
-            <span class="px-2 py-0.5 rounded-full bg-emerald-950/90 text-emerald-400 border border-emerald-800 text-[10px] font-bold">${r.estado || 'Confirmada'}</span>
+            ${esPasada ? `
+              <span class="px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 border border-amber-800/60 text-[10px] font-bold flex items-center gap-1">
+                <i data-lucide="history" class="w-3 h-3"></i>
+                <span>Historial (Pasada)</span>
+              </span>
+            ` : `
+              <span class="px-2 py-0.5 rounded-full bg-emerald-950/90 text-emerald-400 border border-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3 h-3"></i>
+                <span>${r.estado || 'Confirmada'}</span>
+              </span>
+            `}
             <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono text-[11px] font-bold">Apto ${r.apto}</span>
+            ${r.fecha === hoy ? `
+              <span class="px-2 py-0.5 rounded-full bg-brand-500 text-slate-950 text-[10px] font-black uppercase tracking-wider animate-pulse">
+                Hoy
+              </span>
+            ` : ''}
           </div>
           <div class="text-xs text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-0.5">
             <span>📅 Fecha: <strong class="text-white">${r.fecha}</strong></span>
@@ -46373,12 +46469,14 @@ function renderizarReservasCopropietarios() {
 
         <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0">
           <span class="font-mono font-black text-emerald-400 text-xs sm:text-sm bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/60">${r.costo || '$0 COP'}</span>
-          ${puedeCancelar ? `
+          ${puedeCancelar && !esPasada ? `
             <button type="button" onclick="cancelarReserva('${r.id}')" class="px-3 py-1 rounded-lg bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-[11px] flex items-center gap-1 transition-all active:scale-95 cursor-pointer" title="Cancelar reserva y liberar el horario">
               <i data-lucide="x" class="w-3.5 h-3.5 text-rose-400"></i>
               <span>Cancelar / Liberar</span>
             </button>
-          ` : ""}
+          ` : (puedeCancelar && esPasada ? `
+            <span class="text-[10px] text-slate-500 font-medium px-2 py-1 rounded bg-slate-800/50">Turno finalizado</span>
+          ` : "")}
         </div>
       </div>
     `;
