@@ -2738,6 +2738,10 @@ def validar_qr_porteria(token_qr: str = Body(..., embed=True), guardia_nombre: s
     conn = get_db_connection()
 
     tok_clean = token_qr.strip().upper()
+    import re
+    match_qr = re.search(r'QR-[A-Z0-9_-]+', tok_clean, re.I)
+    if match_qr:
+        tok_clean = match_qr.group(0).upper()
 
     v_row = conn.execute("""
 
@@ -2816,15 +2820,10 @@ def listar_visitantes(conjunto_id: str, fecha: Optional[str] = None):
     conn = get_db_connection()
 
     query = """
-
-    SELECT v.*, u.numero_unidad
-
+    SELECT v.*, COALESCE(u.numero_unidad, substr(v.unidad_id, instr(v.unidad_id, '_')+1), '0301') as numero_unidad
     FROM visitantes_autorizaciones v
-
-    JOIN unidades u ON v.unidad_id = u.id
-
+    LEFT JOIN unidades u ON v.unidad_id = u.id
     WHERE v.conjunto_id = ?
-
     """
 
     params = [conjunto_id]

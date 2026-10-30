@@ -23007,15 +23007,29 @@ const DEFAULT_BACKEND_LAN_URL = "http://192.168.1.24:8000";
 
 function getApiBaseUrl() {
   try {
-    const saved = localStorage.getItem("lefacturamos_backend_url");
-    if (saved && saved.startsWith("http")) return saved.replace(/\/$/, "");
+    const isHttps = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+    const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin.replace(/\/$/, "") : "";
+    const host = (typeof window !== "undefined" && window.location && window.location.hostname) ? window.location.hostname : "";
 
-    if (typeof window !== "undefined" && window.location) {
-      const origin = (window.location.origin || "").replace(/\/$/, "");
-      const host = window.location.hostname || "";
-      if (origin && !host.includes("localhost") && host !== "127.0.0.1" && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
-        return origin;
+    // 1. Si estamos en la nube bajo HTTPS (Render / Producción), usar siempre el origen HTTPS actual
+    if (isHttps && origin && !host.includes("localhost") && host !== "127.0.0.1" && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
+      return origin;
+    }
+
+    // 2. Verificar URL guardada en localStorage
+    const saved = localStorage.getItem("lefacturamos_backend_url");
+    if (saved && saved.startsWith("http")) {
+      // Si estamos en HTTPS, jamás permitir URL insegura http:// (evita bloqueo Mixed Content)
+      if (isHttps && saved.startsWith("http://")) {
+        try { localStorage.removeItem("lefacturamos_backend_url"); } catch(e) {}
+      } else {
+        return saved.replace(/\/$/, "");
       }
+    }
+
+    // 3. Origen no-localhost
+    if (origin && !host.includes("localhost") && host !== "127.0.0.1" && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
+      return origin;
     }
 
     return DEFAULT_BACKEND_TUNNEL_URL;
@@ -65717,14 +65731,19 @@ function generarQRAnticipado() {
   }
 
   // Despachar a backend para sincronización multi-dispositivo y portería (LAN, Túnel y Local)
+  const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+  const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+
   const candidatosPost = [
-    (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
+    originCtx,
     "https://lefacturamos.onrender.com",
-    "http://192.168.1.24:8000",
-    (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "",
-    "http://127.0.0.1:8000",
+    (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
     ""
   ];
+  if (!isHttpsCtx) {
+    candidatosPost.push("http://192.168.1.24:8000");
+    candidatosPost.push("http://127.0.0.1:8000");
+  }
   const postUrls = [...new Set(candidatosPost.map(u => (u || "").replace(/\/$/, "")))];
 
   const payloadAutorizar = {
@@ -65747,7 +65766,7 @@ function generarQRAnticipado() {
       try {
         const urlPost = `${base}/api/visitantes/autorizar`;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const r = await fetch(urlPost, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -65756,7 +65775,7 @@ function generarQRAnticipado() {
         });
         clearTimeout(timeoutId);
         if (r.ok) {
-          if (base && base.startsWith("http")) {
+          if (base && base.startsWith("http") && (!isHttpsCtx || base.startsWith("https://"))) {
             try { localStorage.setItem("lefacturamos_backend_url", base); } catch(e) {}
           }
           break;
@@ -66145,8 +66164,114 @@ function guardarEstadoPorteriaLocal() {
   } catch(e) {}
 }
 
+let syncVisitantesInterval = null;
+
+async function sincronizarVisitantesDesdeServidor() {
+  const cod = AppState.codigoEdificio || "4901";
+  const isHttps = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+  const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+
+  let candidateBases = [];
+  if (origin && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
+    candidateBases.push(origin);
+  }
+  candidateBases.push("https://lefacturamos.onrender.com");
+  if (typeof getApiBaseUrl === "function") {
+    candidateBases.push(getApiBaseUrl());
+  }
+  candidateBases.push("");
+  if (!isHttps) {
+    candidateBases.push("http://192.168.1.24:8000");
+    candidateBases.push("http://127.0.0.1:8000");
+  }
+
+  const basesUnicas = [...new Set(candidateBases.map(u => (u || "").replace(/\/$/, "")))];
+
+  let listaServidor = [];
+  for (const base of basesUnicas) {
+    try {
+      const url = `${base}/api/conjuntos/cj_${cod}/visitantes`;
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 4000);
+      const res = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(tid);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.visitantes)) {
+          listaServidor = data.visitantes;
+          break;
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (listaServidor.length > 0) {
+    if (typeof listaVisitantesAutorizados === "undefined") {
+      listaVisitantesAutorizados = [];
+    }
+
+    const formateados = listaServidor.map(v => ({
+      id: v.token_qr || v.id,
+      token: (v.token_qr || "").toUpperCase(),
+      token_qr: (v.token_qr || "").toUpperCase(),
+      nombre: v.visitante_nombre || "Visitante",
+      doc: v.visitante_doc || "",
+      tel: v.visitante_telefono || "",
+      placa: v.placa_vehiculo || "Peatonal",
+      apto: v.numero_unidad || (v.unidad_id ? v.unidad_id.split("_").pop() : "0301"),
+      residente: v.residente_nombre || "",
+      estado: v.estado || "AUTORIZADO",
+      fecha: v.fecha_esperada || "",
+      hora: v.hora_esperada || ""
+    }));
+
+    const mapaTokens = new Map();
+    formateados.forEach(v => {
+      if (v.token) mapaTokens.set(v.token, v);
+    });
+    listaVisitantesAutorizados.forEach(v => {
+      const tok = (v.token || v.token_qr || v.id || "").toUpperCase();
+      if (tok && !mapaTokens.has(tok)) {
+        mapaTokens.set(tok, v);
+      }
+    });
+
+    listaVisitantesAutorizados = Array.from(mapaTokens.values());
+    try {
+      localStorage.setItem("lefacturamos_visitantes_autorizados", JSON.stringify(listaVisitantesAutorizados.slice(0, 50)));
+    } catch (e) {}
+
+    actualizarBotonesTokensDinamicos(listaVisitantesAutorizados);
+  }
+}
+
+function actualizarBotonesTokensDinamicos(lista) {
+  const cont = document.getElementById("porteria-tokens-dinamicos");
+  if (!cont) return;
+
+  const items = (lista || []).slice(0, 5);
+  if (items.length === 0) return;
+
+  cont.innerHTML = items.map(v => {
+    const tok = v.token || v.token_qr || v.id;
+    const apto = v.apto || v.numero_unidad || "0301";
+    const nom = v.nombre || v.visitante_nombre || "Visitante";
+    return `<button type="button" onclick="cargarTokenPrueba('${tok}')" class="px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shadow-sm">
+      <i data-lucide="user-check" class="w-3 h-3 text-emerald-400"></i>
+      <span>${nom} (Apto ${apto})</span>
+    </button>`;
+  }).join("");
+  safeCreateIcons();
+}
+
 function renderizarPorteria() {
   guardarEstadoPorteriaLocal();
+  sincronizarVisitantesDesdeServidor();
+  if (!syncVisitantesInterval) {
+    syncVisitantesInterval = setInterval(() => {
+      sincronizarVisitantesDesdeServidor();
+    }, 15000);
+  }
 
   // 1. Datos del guarda en el encabezado
 
@@ -66320,6 +66445,7 @@ function cambiarSubtabPorteria(subtab) {
         if (item.id === "accesos") {
           const inp = document.getElementById("porteria-qr-input");
           if (inp) setTimeout(() => inp.focus(), 150);
+          sincronizarVisitantesDesdeServidor();
         }
 
       } else {
@@ -68549,21 +68675,26 @@ async function validarQRPorteria() {
 
   // 2. Consultar backend oficial con reintento multi-URL (Túnel HTTPS Cloudflare, LAN WiFi e IP local)
   let backendData = null;
+  const isHttps = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+  const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+
   const candidatosUrl = [
-    (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
+    origin,
     "https://lefacturamos.onrender.com",
-    "http://192.168.1.24:8000",
-    (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "",
-    "http://127.0.0.1:8000",
+    (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
     ""
   ];
+  if (!isHttps) {
+    candidatosUrl.push("http://192.168.1.24:8000");
+    candidatosUrl.push("http://127.0.0.1:8000");
+  }
   const urlsUnicas = [...new Set(candidatosUrl.map(u => (u || "").replace(/\/$/, "")))];
 
   for (const base of urlsUnicas) {
     try {
       const targetUrl = `${base}/api/visitantes/validar-qr-porteria`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2800);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const resBack = await fetch(targetUrl, {
         method: "POST",
@@ -68578,7 +68709,7 @@ async function validarQRPorteria() {
 
       if (resBack.ok) {
         backendData = await resBack.json();
-        if (base && base.startsWith("http")) {
+        if (base && base.startsWith("http") && (!isHttps || base.startsWith("https://"))) {
           try { localStorage.setItem("lefacturamos_backend_url", base); } catch(e) {}
         }
         break;
@@ -68594,17 +68725,34 @@ async function validarQRPorteria() {
       token: tok,
       nombre: backendData.visitante.nombre,
       doc: backendData.visitante.documento,
-      placa: backendData.visitante.placa_vehiculo || "Peatonal",
+      placa: backendData.visitante.placa_vehiculo || (visitanteEncontrado ? visitanteEncontrado.placa : "Peatonal"),
       apto: (backendData.destino && backendData.destino.unidad) ? backendData.destino.unidad : (AppState.aptoNumero || "0103"),
       tel: backendData.visitante.telefono || (visitanteEncontrado ? visitanteEncontrado.tel : ""),
-      residente: (backendData.destino && backendData.destino.residente) ? backendData.destino.residente : ""
+      residente: (backendData.destino && backendData.destino.residente) ? backendData.destino.residente : (visitanteEncontrado ? visitanteEncontrado.residente : "Copropietario")
     };
     // Cachear localmente
     try {
       let localList = JSON.parse(localStorage.getItem("lefacturamos_visitantes_autorizados") || "[]");
-      if (!localList.some(v => v.token === tok || v.token_qr === tok)) {
+      const idx = localList.findIndex(v => (v.token && v.token.toUpperCase() === tok) || (v.token_qr && v.token_qr.toUpperCase() === tok));
+      if (idx >= 0) {
+        localList[idx] = { ...localList[idx], ...visitanteEncontrado, estado: "INGRESADO" };
+      } else {
         localList.unshift(visitanteEncontrado);
-        localStorage.setItem("lefacturamos_visitantes_autorizados", JSON.stringify(localList.slice(0, 50)));
+      }
+      localStorage.setItem("lefacturamos_visitantes_autorizados", JSON.stringify(localList.slice(0, 50)));
+    } catch(e) {}
+  }
+
+  // 2.1 Si aún no se encuentra, intentar sincronizar lista completa desde el servidor
+  if (!visitanteEncontrado) {
+    try {
+      await sincronizarVisitantesDesdeServidor();
+      if (typeof listaVisitantesAutorizados !== "undefined" && Array.isArray(listaVisitantesAutorizados)) {
+        visitanteEncontrado = listaVisitantesAutorizados.find(v => 
+          (v.token && v.token.toUpperCase() === tok) || 
+          (v.id && v.id.toUpperCase() === tok) ||
+          (v.token_qr && v.token_qr.toUpperCase() === tok)
+        );
       }
     } catch(e) {}
   }
@@ -68646,20 +68794,23 @@ async function validarQRPorteria() {
 
     if (input) input.value = "";
 
-    // Agregar a visitantes activos en el recinto
+    // Agregar a visitantes activos en el recinto (evitando duplicados inmediatos si escanean dos veces)
     if (typeof visitantesRecinto !== "undefined") {
-      visitantesRecinto.unshift({
-        id: `vis-${Date.now()}`,
-        nombre: nombreVis,
-        documento: docVis,
-        apto: aptoVis,
-        vehiculo: placaVis,
-        horaIngreso: new Date().toLocaleTimeString(),
-        token: tok
-      });
+      const yaEnRecinto = visitantesRecinto.some(vr => vr.token && vr.token.toUpperCase() === tok);
+      if (!yaEnRecinto) {
+        visitantesRecinto.unshift({
+          id: `vis-${Date.now()}`,
+          nombre: nombreVis,
+          documento: docVis,
+          apto: aptoVis,
+          vehiculo: placaVis,
+          horaIngreso: new Date().toLocaleTimeString(),
+          token: tok
+        });
+      }
     }
 
-    // Registrar en minuta digital
+    // Registrar en minuta digital de portería
     if (typeof minutaPorteria !== "undefined") {
       minutaPorteria.unshift({
         id: `min-${Date.now()}`,
@@ -68667,13 +68818,29 @@ async function validarQRPorteria() {
         fecha: new Date().toISOString().split("T")[0],
         hora: new Date().toLocaleTimeString(),
         inmueble: `Apto ${aptoVis}`,
-        portero: (typeof porteroActivo !== "undefined") ? `${porteroActivo.nombre} (${porteroActivo.turno})` : "Carlos Gómez (Día)",
+        portero: (typeof porteroActivo !== "undefined") ? `${porteroActivo.nombre} (${porteroActivo.turno})` : "Carlos Mario Gómez (Puesto 24/7)",
         titulo: `Ingreso de Visitante Autorizado con QR (${tok})`,
         descripcion: `Acceso concedido a ${nombreVis} (${docVis}) hacia Apto ${aptoVis}. Vehículo: ${placaVis}. Talanquera levantada.`,
         estado: "En Recinto"
       });
     }
 
+    // Marcar como INGRESADO en lista local
+    if (typeof listaVisitantesAutorizados !== "undefined" && Array.isArray(listaVisitantesAutorizados)) {
+      const itemAutorizado = listaVisitantesAutorizados.find(v => 
+        (v.token && v.token.toUpperCase() === tok) || 
+        (v.token_qr && v.token_qr.toUpperCase() === tok)
+      );
+      if (itemAutorizado) {
+        itemAutorizado.estado = "INGRESADO";
+        try {
+          localStorage.setItem("lefacturamos_visitantes_autorizados", JSON.stringify(listaVisitantesAutorizados.slice(0, 50)));
+        } catch(e) {}
+      }
+    }
+
+    // Persistir estado y refrescar interfaz de portería
+    guardarEstadoPorteriaLocal();
     if (typeof renderizarPorteria === "function") {
       renderizarPorteria();
     }
@@ -83377,56 +83544,7 @@ function mostrarTodosLosEdificiosSuperadmin() {
 
 
 async function cargarTokensDinamicosPorteria() {
-  const cont = document.getElementById("porteria-tokens-dinamicos");
-  if (!cont) return;
-
-  const cod = AppState.codigoEdificio || "4901";
-  const baseUrlList = [
-    (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
-    "https://lefacturamos.onrender.com",
-    "http://192.168.1.24:8000",
-    "http://127.0.0.1:8000",
-    ""
-  ];
-  const urlsUnicas = [...new Set(baseUrlList.map(u => (u || "").replace(/\/$/, "")))];
-
-  let lista = [];
-  for (const base of urlsUnicas) {
-    try {
-      const url = `${base}/api/conjuntos/cj_${cod}/visitantes`;
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 2000);
-      const res = await fetch(url, { signal: ctrl.signal });
-      clearTimeout(tid);
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Array.isArray(data.visitantes)) {
-          lista = data.visitantes;
-          break;
-        }
-      }
-    } catch(e) {}
-  }
-
-  if (lista.length === 0) {
-    try {
-      lista = JSON.parse(localStorage.getItem("lefacturamos_visitantes_autorizados") || "[]");
-    } catch(e) {}
-  }
-
-  if (lista.length > 0) {
-    const recientes = lista.slice(0, 4);
-    cont.innerHTML = recientes.map(v => {
-      const tok = v.token_qr || v.token || v.id;
-      const apto = v.numero_unidad || v.apto || "0301";
-      const nom = v.visitante_nombre || v.nombre || "Visitante";
-      return `<button type="button" onclick="cargarTokenPrueba('${tok}')" class="px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shadow-sm">
-        <i data-lucide="user-check" class="w-3 h-3 text-emerald-400"></i>
-        <span>${nom} (Apto ${apto})</span>
-      </button>`;
-    }).join("");
-    safeCreateIcons();
-  }
+  await sincronizarVisitantesDesdeServidor();
 }
 
 </script>
