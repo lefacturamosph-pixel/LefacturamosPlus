@@ -21944,17 +21944,16 @@ if (tabId && tabId.startsWith("manual-")) {
 
   });
 
-  const activeTab = document.getElementById(`tab-${tabId}`);
-
+    const activeTab = document.getElementById(`tab-${tabId}`);
   if (activeTab) {
-
     activeTab.classList.add("active");
-
+    activeTab.classList.remove("hidden");
     activeTab.style.display = "block";
-
   }
 
   if (tabId === "parqueaderos") {
+    renderizarInventarioParqueaderos();
+    poblarDatalistAptosParqueaderos();
     cargarParqueaderosDesdeBackend();
   }
 
@@ -66314,7 +66313,7 @@ function renderizarInventarioParqueaderos() {
           ${badgeEstado}
         </td>
         <td class="py-2.5 px-3 text-center whitespace-nowrap">
-          <button type="button" onclick="abrirModalParqueadero('${p.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm">
+          <button type="button" onclick="editarParqueadero('${p.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm">
             <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
             <span>Editar</span>
           </button>
@@ -66531,6 +66530,221 @@ async function eliminarParqueaderoActual() {
   cerrarModalParqueadero();
   renderizarInventarioParqueaderos();
   mostrarToast("Parqueadero eliminado del inventario.");
+}
+
+
+// -----------------------------------------------------------------------------
+// FUNCIONES DE FORMULARIO INTEGRADO EN PÁGINA (PQ MOTO / CARRO)
+// -----------------------------------------------------------------------------
+function poblarDatalistAptosParqueaderos() {
+  const dl = document.getElementById("lista-aptos-sugeridos");
+  if (!dl) return;
+  const aptosRef = (typeof listaApartamentosOriginal !== "undefined" && Array.isArray(listaApartamentosOriginal) && listaApartamentosOriginal.length > 0)
+    ? listaApartamentosOriginal
+    : (typeof listaApartamentos !== "undefined" && Array.isArray(listaApartamentos) && listaApartamentos.length > 0)
+    ? listaApartamentos
+    : [];
+
+  let optionsHtml = '<option value="Zona Común (Visitantes)">Zona Común (Visitantes)</option>';
+  aptosRef.forEach(a => {
+    const num = a.numero || a.apto || "";
+    const prop = a.propietario || a.nombre || "";
+    if (num) {
+      optionsHtml += `<option value="Apto ${num}">${prop ? prop + ' - ' : ''}Apto ${num}</option>`;
+    }
+  });
+  dl.innerHTML = optionsHtml;
+}
+
+function autocompletarTitularPorApto(val) {
+  if (!val) return;
+  const cleanVal = val.toLowerCase().replace(/^(apto|apartamento)\s*/i, "").trim();
+  const aptosRef = (typeof listaApartamentosOriginal !== "undefined" && Array.isArray(listaApartamentosOriginal) && listaApartamentosOriginal.length > 0)
+    ? listaApartamentosOriginal
+    : (typeof listaApartamentos !== "undefined" && Array.isArray(listaApartamentos) && listaApartamentos.length > 0)
+    ? listaApartamentos
+    : [];
+
+  const found = aptosRef.find(a => {
+    const num = String(a.numero || a.apto || "").toLowerCase().trim();
+    return num === cleanVal || `apto ${num}` === val.toLowerCase().trim();
+  });
+
+  if (found) {
+    const titularInput = document.getElementById("form-pk-titular");
+    if (titularInput && (!titularInput.value || titularInput.value === "Visitantes Rotativos" || titularInput.value.startsWith("Propietario"))) {
+      titularInput.value = found.propietario || found.nombre || "";
+    }
+  }
+}
+
+function cambioClasificacionInline(val) {
+  const fApto = document.getElementById("form-pk-apto");
+  const fTit = document.getElementById("form-pk-titular");
+  const fPla = document.getElementById("form-pk-placa");
+  const fUbi = document.getElementById("form-pk-ubicacion");
+
+  if (val === "Visita") {
+    if (fApto) fApto.value = "Zona Común (Visitantes)";
+    if (fTit) fTit.value = "Visitantes Rotativos";
+    if (fPla) fPla.value = "Rotativo";
+    if (fUbi && !fUbi.value) fUbi.value = "Bahía Exterior Visitantes";
+  } else {
+    if (fApto && fApto.value.includes("Zona Común")) fApto.value = "";
+    if (fTit && fTit.value.includes("Visitantes")) fTit.value = "";
+    if (fPla && fPla.value.includes("Rotativo")) fPla.value = "";
+    if (fUbi && fUbi.value.includes("Bahía Exterior")) fUbi.value = "Sótano 1";
+  }
+}
+
+function editarParqueadero(id) {
+  const item = listaParqueaderos.find(p => p.id === id);
+  if (!item) return;
+
+  const fId = document.getElementById("form-pk-id");
+  const fNum = document.getElementById("form-pk-numero");
+  const fTipo = document.getElementById("form-pk-tipo");
+  const fClas = document.getElementById("form-pk-clasificacion");
+  const fApto = document.getElementById("form-pk-apto");
+  const fTit = document.getElementById("form-pk-titular");
+  const fPla = document.getElementById("form-pk-placa");
+  const fEst = document.getElementById("form-pk-estado");
+  const fUbi = document.getElementById("form-pk-ubicacion");
+  const titCard = document.getElementById("form-pk-card-titulo");
+  const btnCancel = document.getElementById("btn-cancelar-edicion-inline");
+  const btnSubmit = document.getElementById("btn-submit-pk-inline");
+
+  if (fId) fId.value = item.id;
+  if (fNum) fNum.value = item.numero;
+  if (fTipo) fTipo.value = item.tipo_vehiculo;
+  if (fClas) fClas.value = item.clasificacion;
+  if (fApto) fApto.value = item.apto || "";
+  if (fTit) fTit.value = item.titular || "";
+  if (fPla) fPla.value = item.placa || "";
+  if (fEst) fEst.value = item.estado || "Libre";
+  if (fUbi) fUbi.value = item.ubicacion || "";
+
+  if (titCard) titCard.innerHTML = `<span class="text-blue-400 font-black">Editando Celda ${item.numero}</span> (${item.tipo_vehiculo} • ${item.clasificacion})`;
+  if (btnCancel) btnCancel.classList.remove("hidden");
+  if (btnSubmit) btnSubmit.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Actualizar Parqueadero</span>`;
+
+  safeCreateIcons();
+
+  const formSection = document.getElementById("seccion-formulario-parqueadero");
+  if (formSection) {
+    formSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function limpiarFormularioInline() {
+  const fId = document.getElementById("form-pk-id");
+  const fNum = document.getElementById("form-pk-numero");
+  const fTipo = document.getElementById("form-pk-tipo");
+  const fClas = document.getElementById("form-pk-clasificacion");
+  const fApto = document.getElementById("form-pk-apto");
+  const fTit = document.getElementById("form-pk-titular");
+  const fPla = document.getElementById("form-pk-placa");
+  const fEst = document.getElementById("form-pk-estado");
+  const fUbi = document.getElementById("form-pk-ubicacion");
+  const titCard = document.getElementById("form-pk-card-titulo");
+  const btnCancel = document.getElementById("btn-cancelar-edicion-inline");
+  const btnSubmit = document.getElementById("btn-submit-pk-inline");
+
+  if (fId) fId.value = "";
+  if (fNum) fNum.value = "";
+  if (fTipo) fTipo.value = "Carro";
+  if (fClas) fClas.value = "Propio";
+  if (fApto) fApto.value = "";
+  if (fTit) fTit.value = "";
+  if (fPla) fPla.value = "";
+  if (fEst) fEst.value = "Libre";
+  if (fUbi) fUbi.value = "";
+
+  if (titCard) titCard.innerText = "Formulario de Registro / Asignación de Parqueadero";
+  if (btnCancel) btnCancel.classList.add("hidden");
+  if (btnSubmit) btnSubmit.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Guardar Parqueadero en Base de Datos</span>`;
+
+  safeCreateIcons();
+}
+
+async function guardarParqueaderoInline() {
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  const id = document.getElementById("form-pk-id")?.value;
+  const numero = document.getElementById("form-pk-numero")?.value.trim().toUpperCase();
+  const tipo_vehiculo = document.getElementById("form-pk-tipo")?.value || "Carro";
+  const clasificacion = document.getElementById("form-pk-clasificacion")?.value || "Propio";
+  const apto = document.getElementById("form-pk-apto")?.value.trim() || (clasificacion === "Visita" ? "Zona Común (Visitantes)" : "Sin Asignar");
+  const titular = document.getElementById("form-pk-titular")?.value.trim() || (clasificacion === "Visita" ? "Visitantes Rotativos" : "Propietario");
+  const placa = document.getElementById("form-pk-placa")?.value.trim().toUpperCase() || (clasificacion === "Visita" ? "Rotativo" : "");
+  const estado = document.getElementById("form-pk-estado")?.value || "Libre";
+  const ubicacion = document.getElementById("form-pk-ubicacion")?.value.trim() || "Sector General";
+
+  if (!numero) {
+    mostrarToast("Ingrese el número o celda del parqueadero.", true);
+    return;
+  }
+
+  const nuevoItem = {
+    id: id || `pk_${cjCod}_${Date.now()}`,
+    conjunto_id: cid,
+    numero,
+    tipo_vehiculo,
+    clasificacion,
+    apto,
+    titular,
+    placa,
+    estado,
+    ubicacion
+  };
+
+  const idx = listaParqueaderos.findIndex(p => p.id === nuevoItem.id || (p.numero === nuevoItem.numero && (!id || p.id === id)));
+  if (idx !== -1) {
+    listaParqueaderos[idx] = nuevoItem;
+  } else {
+    listaParqueaderos.unshift(nuevoItem);
+  }
+
+  try {
+    localStorage.setItem(`lefacturamos_pks_${cid}`, JSON.stringify(listaParqueaderos));
+  } catch (e) {}
+
+  // Sincronizar en segundo plano con backend
+  try {
+    const bases = (typeof obtenerUrlsBaseBackend === "function") ? obtenerUrlsBaseBackend() : ["http://localhost:8000"];
+    for (const base of bases) {
+      try {
+        await fetch(`${base}/api/conjuntos/${cid}/parqueaderos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevoItem),
+          signal: AbortSignal.timeout(3000)
+        });
+        break;
+      } catch (err) {}
+    }
+  } catch (e) {}
+
+  limpiarFormularioInline();
+  renderizarInventarioParqueaderos();
+  mostrarToast(`Parqueadero ${numero} guardado exitosamente en base de datos.`);
+}
+
+function sembrarInventarioDefectoBtn() {
+  if (!confirm("¿Desea poblar el inventario completo de parqueaderos (65 celdas: 40 Carros Propios, 10 Motos Propias, 10 Carros Visita, 5 Motos Visita)?")) {
+    return;
+  }
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  listaParqueaderos = inicializarParqueaderosPorDefecto();
+  try {
+    localStorage.setItem(`lefacturamos_pks_${cid}`, JSON.stringify(listaParqueaderos));
+  } catch (e) {}
+
+  renderizarInventarioParqueaderos();
+  mostrarToast("Inventario de 65 parqueaderos poblado exitosamente.");
 }
 
 function exportarParqueaderosCSV() {

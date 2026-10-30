@@ -5871,7 +5871,7 @@
 
       <!-- ================================================================= -->
 
-      <section id="tab-parqueaderos" class="tab-content hidden space-y-4">
+      <section id="tab-parqueaderos" class="tab-content space-y-4">
         
         <!-- 1. Encabezado Oficial -->
         <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -5891,10 +5891,6 @@
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <button type="button" onclick="abrirModalParqueadero()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-              <span>+ Nuevo Parqueadero</span>
-            </button>
             <button type="button" onclick="imprimirParqueaderos()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
               <i data-lucide="printer" class="w-3.5 h-3.5"></i>
               <span class="hidden sm:inline">Imprimir</span>
@@ -5957,7 +5953,95 @@
           </div>
         </div>
 
-        <!-- 3. Barra de Búsqueda y Filtros Rápidos -->
+        <!-- 3. Formulario Directo: Registrar / Asignar Parqueadero en la Base de Datos -->
+        <div id="seccion-formulario-parqueadero" class="bg-slate-900/95 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-blue-950 border border-blue-800 text-blue-400 flex items-center justify-center shadow-sm shrink-0">
+                <i data-lucide="database" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 id="form-pk-card-titulo" class="font-black text-white text-sm">Formulario de Registro / Asignación de Parqueadero</h3>
+                <p class="text-[11px] text-slate-400">Crea o actualiza celdas de Carro y Moto asignadas a Propietarios o reservadas para Visitantes</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="sembrarInventarioDefectoBtn()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Poblar Inventario de la Copropiedad</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="form-registro-parqueadero-inline" onsubmit="event.preventDefault(); guardarParqueaderoInline();" class="space-y-3 text-xs">
+            <input type="hidden" id="form-pk-id">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Número / Celda *</label>
+                <input type="text" id="form-pk-numero" required placeholder="Ej: P-01, PM-02, V-01" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono uppercase focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Tipo de Vehículo *</label>
+                <select id="form-pk-tipo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="Carro">🚗 Carro</option>
+                  <option value="Moto">🏍️ Moto</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Clasificación / Destino *</label>
+                <select id="form-pk-clasificacion" onchange="cambioClasificacionInline(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="Propio">🟢 Propio (Propietario)</option>
+                  <option value="Visita">🔵 De Visita (Visitantes)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Estado de la Celda</label>
+                <select id="form-pk-estado" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="Libre">Libre</option>
+                  <option value="Ocupado">Ocupado</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Inmueble / Apartamento</label>
+                <input list="lista-aptos-sugeridos" type="text" id="form-pk-apto" oninput="autocompletarTitularPorApto(this.value)" placeholder="Ej: 0101, 0102 o Zona Común" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-blue-500">
+                <datalist id="lista-aptos-sugeridos"></datalist>
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Titular / Propietario</label>
+                <input type="text" id="form-pk-titular" placeholder="Nombre completo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Placa Vehículo</label>
+                <input type="text" id="form-pk-placa" placeholder="Ej: ABC-123" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono uppercase focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-slate-300 font-bold mb-1">Ubicación / Sector</label>
+                <input type="text" id="form-pk-ubicacion" placeholder="Ej: Sótano 1, Bahía Visitantes" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+              <button type="button" id="btn-cancelar-edicion-inline" onclick="limpiarFormularioInline()" class="hidden px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-semibold text-xs cursor-pointer">
+                Cancelar Edición
+              </button>
+              <div class="flex items-center gap-2 ml-auto">
+                <button type="button" onclick="limpiarFormularioInline()" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-semibold text-xs cursor-pointer">
+                  Limpiar Formulario
+                </button>
+                <button type="submit" id="btn-submit-pk-inline" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+                  <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                  <span>Guardar Parqueadero en Base de Datos</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- 4. Barra de Búsqueda y Filtros Rápidos -->
         <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-sm">
           <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2">
             <div class="relative flex-1">
@@ -5969,31 +6053,31 @@
           <!-- Chips de Filtro -->
           <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 text-xs">
             <span class="text-slate-400 font-semibold mr-1 shrink-0">Filtrar por:</span>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Todos', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-sm shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Todos', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-sm shrink-0 cursor-pointer">
               Todos (<span id="pk-badge-todos">65</span>)
             </button>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Propio', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Propio', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer">
               🟢 Propios Propietarios (<span id="pk-badge-propios">50</span>)
             </button>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Visita', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Visita', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer">
               🔵 De Visita (<span id="pk-badge-visitas">15</span>)
             </button>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Carro', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Carro', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer">
               🚗 Solo Carros (<span id="pk-badge-carros">50</span>)
             </button>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Moto', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Moto', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer">
               🏍️ Solo Motos (<span id="pk-badge-motos">15</span>)
             </button>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Libre', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Libre', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer">
               Libres (<span id="pk-badge-libres">65</span>)
             </button>
-            <button type="button" onclick="filtrarParqueaderosPorTipo('Ocupado', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Ocupado', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer">
               Ocupados (<span id="pk-badge-ocupados">0</span>)
             </button>
           </div>
         </div>
 
-        <!-- 4. Contenedor Tabla de Inventario -->
+        <!-- 5. Contenedor Tabla de Inventario -->
         <div id="contenedor-tabla-parqueaderos" class="space-y-3">
           <!-- Renderizado dinámicamente con estilo Hoja de Excel -->
         </div>
