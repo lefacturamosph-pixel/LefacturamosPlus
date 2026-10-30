@@ -604,6 +604,42 @@ def test_suite_completa():
         errores.append(f"Falla en Explorador Google Drive: {e}")
         print(f"  [ERROR] {e}")
 
+    # [15/15] Verificando Inventario de Parqueaderos (PQ Moto / Carro - Propios vs Visitantes)
+    print("\n[15/15] Verificando Inventario de Parqueaderos (PQ Moto / Carro - Propios vs Visitantes)...")
+    try:
+        r_pks = client.get("/api/conjuntos/cj_4901/parqueaderos")
+        assert r_pks.status_code == 200, f"Status code: {r_pks.status_code}"
+        d_pks = r_pks.json()
+        assert d_pks["total"] >= 50, f"Total pks: {d_pks['total']}"
+        assert d_pks["propios"] >= 40, f"Propios: {d_pks['propios']}"
+        assert d_pks["visitas"] >= 10, f"Visitas: {d_pks['visitas']}"
+        assert d_pks["carros_propios"] >= 30, f"Carros propios: {d_pks['carros_propios']}"
+        assert d_pks["motos_propias"] >= 5, f"Motos propias: {d_pks['motos_propias']}"
+
+        # Verificar creación y eliminación de parqueadero
+        test_pk = {
+            "numero": "P-TEST-99",
+            "tipo_vehiculo": "Carro",
+            "clasificacion": "Propio",
+            "apto": "0101",
+            "titular": "TEST PROPIETARIO",
+            "placa": "TST-999",
+            "estado": "Libre",
+            "ubicacion": "Bahía de Prueba"
+        }
+        r_create = client.post("/api/conjuntos/cj_4901/parqueaderos", json=test_pk)
+        assert r_create.status_code == 200, f"Create status: {r_create.status_code}"
+        created_id = r_create.json()["id"]
+
+        r_del = client.delete(f"/api/parqueaderos/{created_id}")
+        assert r_del.status_code == 200, f"Del status: {r_del.status_code}"
+
+        print(f"  [OK] Inventario verificado: {d_pks['total']} celdas ({d_pks['propios']} Propios de Propietarios, {d_pks['visitas']} de Visita).")
+        print("  [OK] Desglose validado: Carros/Motos clasificados con números de celda y titulares.")
+    except Exception as e:
+        errores.append(f"Falla en Inventario de Parqueaderos: {e}")
+        print(f"  [ERROR] {e}")
+
     # Resumen Final
     print("\n" + "="*80)
     if not errores:

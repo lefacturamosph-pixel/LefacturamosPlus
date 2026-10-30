@@ -409,6 +409,23 @@ def inicializar_base_datos():
     );
     """)
 
+    # 18. Tabla de Parqueaderos (Moto & Carro - Propios vs Visitantes)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS parqueaderos (
+        id TEXT PRIMARY KEY,
+        conjunto_id TEXT NOT NULL,
+        numero TEXT NOT NULL,
+        tipo_vehiculo TEXT NOT NULL, -- 'Carro' o 'Moto'
+        clasificacion TEXT NOT NULL, -- 'Propio' o 'Visita'
+        apto TEXT,
+        titular TEXT,
+        placa TEXT,
+        estado TEXT DEFAULT 'Libre', -- 'Libre' o 'Ocupado'
+        ubicacion TEXT,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS log_auditoria (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -901,6 +918,106 @@ def sembrar_ley_675(conn=None):
         conn.close()
     print(f"[OK] {len(articulos_ley_675)} subíndices de resolución de Ley 675 sembrados con éxito.")
 
+def sembrar_parqueaderos_iniciales(conn=None):
+    """Siembra inventario realista de parqueaderos (Carro / Moto - Propios vs Visitas)"""
+    should_close = False
+    if conn is None:
+        conn = get_db_connection()
+        should_close = True
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS parqueaderos (
+        id TEXT PRIMARY KEY,
+        conjunto_id TEXT NOT NULL,
+        numero TEXT NOT NULL,
+        tipo_vehiculo TEXT NOT NULL, -- 'Carro' o 'Moto'
+        clasificacion TEXT NOT NULL, -- 'Propio' o 'Visita'
+        apto TEXT,
+        titular TEXT,
+        placa TEXT,
+        estado TEXT DEFAULT 'Libre', -- 'Libre' o 'Ocupado'
+        ubicacion TEXT,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    sample_placas_carro = ["ABC-123", "KLO-892", "XYZ-456", "MTX-901", "HYU-332", "BBN-511", "JHG-740", "QWE-182", "MKL-903", "ZTR-621"]
+    sample_placas_moto = ["NMQ-12D", "WTR-88F", "JIK-04C", "HBG-55E", "TYU-19A", "XDE-77B", "OPL-33C", "BVN-91E", "MKO-22F", "LAK-66D"]
+
+    for cid, n_carro_propio, n_moto_propia, n_carro_visita, n_moto_visita in [
+        ("cj_4901", 40, 10, 10, 5),
+        ("cj_7480", 30, 8, 8, 4)
+    ]:
+        cursor.execute("SELECT COUNT(*) as c FROM parqueaderos WHERE conjunto_id=?", (cid,))
+        if cursor.fetchone()["c"] == 0:
+            cursor.execute("SELECT id, numero_unidad, propietario_nombre FROM unidades WHERE conjunto_id=? ORDER BY numero_unidad ASC", (cid,))
+            unidades = cursor.fetchall()
+
+            # Carros Propios
+            p_idx = 1
+            for u in unidades[:n_carro_propio]:
+                uid = u["id"]
+                apto = u["numero_unidad"]
+                titular = u["propietario_nombre"] or f"Propietario Apto {apto}"
+                num_pk = f"P-{p_idx:02d}"
+                placa = sample_placas_carro[(p_idx - 1) % len(sample_placas_carro)]
+                pid = f"pk_{cid.replace('cj_', '')}_carro_{p_idx:02d}"
+                cursor.execute("""
+                INSERT INTO parqueaderos (id, conjunto_id, numero, tipo_vehiculo, clasificacion, apto, titular, placa, estado, ubicacion)
+                VALUES (?, ?, ?, 'Carro', 'Propio', ?, ?, ?, 'Libre', 'Sótano 1 - Torre Residencial')
+                """, (pid, cid, num_pk, apto, titular, placa))
+                cursor.execute("UPDATE unidades SET parqueadero=? WHERE id=?", (num_pk, uid))
+                p_idx += 1
+
+            # Motos Propias
+            pm_idx = 1
+            for u in unidades[n_carro_propio:n_carro_propio + n_moto_propia]:
+                uid = u["id"]
+                apto = u["numero_unidad"]
+                titular = u["propietario_nombre"] or f"Propietario Apto {apto}"
+                num_pk = f"PM-{pm_idx:02d}"
+                placa = sample_placas_moto[(pm_idx - 1) % len(sample_placas_moto)]
+                pid = f"pk_{cid.replace('cj_', '')}_moto_{pm_idx:02d}"
+                cursor.execute("""
+                INSERT INTO parqueaderos (id, conjunto_id, numero, tipo_vehiculo, clasificacion, apto, titular, placa, estado, ubicacion)
+                VALUES (?, ?, ?, 'Moto', 'Propio', ?, ?, ?, 'Libre', 'Bahía Motos Propietarios')
+                """, (pid, cid, num_pk, apto, titular, placa))
+                pm_idx += 1
+
+            # Carros Visita
+            for v_idx in range(1, n_carro_visita + 1):
+                num_v = f"V-{v_idx:02d}"
+                pid = f"pk_{cid.replace('cj_', '')}_visita_carro_{v_idx:02d}"
+                cursor.execute("""
+                INSERT INTO parqueaderos (id, conjunto_id, numero, tipo_vehiculo, clasificacion, apto, titular, placa, estado, ubicacion)
+                VALUES (?, ?, ?, 'Carro', 'Visita', 'Zona Común', 'Visitantes Rotativos', 'Rotativo', 'Libre', 'Bahía Exterior Visitantes')
+                """, (pid, cid, num_v))
+
+            # Motos Visita
+            for vm_idx in range(1, n_moto_visita + 1):
+                num_vm = f"VM-{vm_idx:02d}"
+                pid = f"pk_{cid.replace('cj_', '')}_visita_moto_{vm_idx:02d}"
+                cursor.execute("""
+                INSERT INTO parqueaderos (id, conjunto_id, numero, tipo_vehiculo, clasificacion, apto, titular, placa, estado, ubicacion)
+                VALUES (?, ?, ?, 'Moto', 'Visita', 'Zona Común', 'Visitantes Rotativos', 'Rotativo', 'Libre', 'Bahía Exterior Visitantes')
+                """, (pid, cid, num_vm))
+
+    conn.commit()
+    if should_close:
+        conn.close()
+
+def obtener_parqueaderos_db(conjunto_id: str):
+    cid = conjunto_id if conjunto_id.startswith("cj_") else f"cj_{conjunto_id}"
+    conn = get_db_connection()
+    sembrar_parqueaderos_iniciales(conn)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM parqueaderos WHERE conjunto_id=? ORDER BY clasificacion DESC, tipo_vehiculo ASC, numero ASC", (cid,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
 if __name__ == "__main__":
     inicializar_base_datos()
     sembrar_datos_iniciales()
+    sembrar_parqueaderos_iniciales()

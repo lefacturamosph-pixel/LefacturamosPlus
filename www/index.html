@@ -5867,6 +5867,143 @@
 
       <!-- ================================================================= -->
 
+      <!-- PESTAÑA ADMINISTRADOR: INVENTARIO DE PARQUEADEROS (PQ MOTO / CARRO) -->
+
+      <!-- ================================================================= -->
+
+      <section id="tab-parqueaderos" class="tab-content hidden space-y-4">
+        
+        <!-- 1. Encabezado Oficial -->
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-950/80 border border-blue-800 text-blue-400 flex items-center justify-center shadow-md shrink-0">
+              <i data-lucide="car" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">Inventario de Parqueaderos (PQ Moto / Carro)</h2>
+                <span id="parqueaderos-badge-total" class="px-2.5 py-0.5 rounded-full bg-blue-950 border border-blue-700/60 text-blue-300 text-xs font-mono font-bold shadow-sm">65 celdas</span>
+              </div>
+              <p class="text-xs text-slate-400 font-medium mt-0.5">
+                Control y asignación de celdas: <span class="text-emerald-400 font-bold">Propias (Propietarios)</span> vs <span class="text-cyan-400 font-bold">De Visita (Visitantes)</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="abrirModalParqueadero()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>+ Nuevo Parqueadero</span>
+            </button>
+            <button type="button" onclick="imprimirParqueaderos()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">Imprimir</span>
+            </button>
+            <button type="button" onclick="exportarParqueaderosCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+              <span>Excel CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. KPIs de Inventario: Total, Propios, De Visita, Disponibilidad -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Total Celdas -->
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Celdas</span>
+              <div class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center">
+                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-black text-white mt-1" id="kpi-pk-total">65</div>
+            <span class="text-[10px] text-slate-500 font-medium">Capacidad total copropiedad</span>
+          </div>
+
+          <!-- Propios (Propietarios) -->
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Propios (Propietarios)</span>
+              <div class="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-400 flex items-center justify-center">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-black text-emerald-400 mt-1" id="kpi-pk-propios">50</div>
+            <span class="text-[10px] text-slate-400 font-medium" id="kpi-pk-propios-sub">40 Carros • 10 Motos</span>
+          </div>
+
+          <!-- De Visita (Visitantes) -->
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-cyan-400 uppercase tracking-wider">De Visita (Visitantes)</span>
+              <div class="w-7 h-7 rounded-lg bg-cyan-950/80 border border-cyan-800 text-cyan-400 flex items-center justify-center">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-black text-cyan-400 mt-1" id="kpi-pk-visitas">15</div>
+            <span class="text-[10px] text-slate-400 font-medium" id="kpi-pk-visitas-sub">10 Carros • 5 Motos</span>
+          </div>
+
+          <!-- Disponibilidad en Vivo -->
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Disponibilidad</span>
+              <div class="w-7 h-7 rounded-lg bg-amber-950/80 border border-amber-800 text-amber-400 flex items-center justify-center">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-black text-white mt-1" id="kpi-pk-disponibles">65 Libres</div>
+            <span class="text-[10px] text-slate-400 font-medium" id="kpi-pk-ocupados-sub">0 Ocupados en recinto</span>
+          </div>
+        </div>
+
+        <!-- 3. Barra de Búsqueda y Filtros Rápidos -->
+        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-sm">
+          <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+            <div class="relative flex-1">
+              <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="filtro-busqueda-parqueaderos" oninput="filtrarParqueaderos()" placeholder="Buscar por número de celda (P-01, V-01), apartamento, titular o placa..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            </div>
+          </div>
+
+          <!-- Chips de Filtro -->
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 text-xs">
+            <span class="text-slate-400 font-semibold mr-1 shrink-0">Filtrar por:</span>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Todos', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-sm shrink-0">
+              Todos (<span id="pk-badge-todos">65</span>)
+            </button>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Propio', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+              🟢 Propios Propietarios (<span id="pk-badge-propios">50</span>)
+            </button>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Visita', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+              🔵 De Visita (<span id="pk-badge-visitas">15</span>)
+            </button>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Carro', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+              🚗 Solo Carros (<span id="pk-badge-carros">50</span>)
+            </button>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Moto', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+              🏍️ Solo Motos (<span id="pk-badge-motos">15</span>)
+            </button>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Libre', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+              Libres (<span id="pk-badge-libres">65</span>)
+            </button>
+            <button type="button" onclick="filtrarParqueaderosPorTipo('Ocupado', this)" class="btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0">
+              Ocupados (<span id="pk-badge-ocupados">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Contenedor Tabla de Inventario -->
+        <div id="contenedor-tabla-parqueaderos" class="space-y-3">
+          <!-- Renderizado dinámicamente con estilo Hoja de Excel -->
+        </div>
+
+      </section>
+
+
+
+      <!-- ================================================================= -->
+
       <!-- 3.5 VISTA ADMINISTRADOR: BASE DE DATOS DE SALDOS POR COPROPIETARIO -->
 
       <!-- ================================================================= -->
@@ -9470,6 +9607,99 @@
   <!-- ======================================================== -->
   <!-- MODAL MANUALES OFICIALES DEL SISTEMA LEFACTURAMOS.COM   -->
   <!-- ======================================================== -->
+  <!-- ================================================================= -->
+  <!-- MODAL: REGISTRAR / EDITAR PARQUEADERO (PQ MOTO / CARRO) -->
+  <!-- ================================================================= -->
+  <div id="modal-parqueadero" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-950 border border-blue-800 text-blue-400 flex items-center justify-center">
+            <i data-lucide="car" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 id="modal-pk-titulo" class="font-extrabold text-white text-base">Registrar Parqueadero</h3>
+            <p class="text-xs text-slate-400">Inventario Oficial de Celdas de Parqueo</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalParqueadero()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-parqueadero" onsubmit="event.preventDefault(); guardarParqueadero();" class="space-y-3.5 text-xs">
+        <input type="hidden" id="pk-form-id">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Número / Celda *</label>
+            <input type="text" id="pk-form-numero" required placeholder="Ej: P-01, V-01, PM-02" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono uppercase focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Tipo de Vehículo *</label>
+            <select id="pk-form-tipo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 cursor-pointer">
+              <option value="Carro">🚗 Carro</option>
+              <option value="Moto">🏍️ Moto</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Clasificación / Destino *</label>
+            <select id="pk-form-clasificacion" onchange="actualizarCamposClasificacionPK(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-blue-500 cursor-pointer">
+              <option value="Propio">🟢 Propio (Propietario)</option>
+              <option value="Visita">🔵 De Visita (Visitantes)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Estado de la Celda</label>
+            <select id="pk-form-estado" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500 cursor-pointer">
+              <option value="Libre">Libre</option>
+              <option value="Ocupado">Ocupado</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Inmueble / Apartamento Asignado</label>
+          <input type="text" id="pk-form-apto" placeholder="Ej: 0101, 0102 o Zona Común" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Titular / Propietario</label>
+            <input type="text" id="pk-form-titular" placeholder="Nombre completo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Placa del Vehículo</label>
+            <input type="text" id="pk-form-placa" placeholder="Ej: ABC-123" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono uppercase focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Ubicación / Sector en la Copropiedad</label>
+          <input type="text" id="pk-form-ubicacion" placeholder="Ej: Sótano 1, Bahía Exterior Visitantes, Torre 1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+          <button type="button" id="btn-eliminar-pk" onclick="eliminarParqueaderoActual()" class="hidden px-3.5 py-2 rounded-xl bg-rose-950 border border-rose-800 text-rose-300 hover:bg-rose-900 font-bold text-xs flex items-center gap-1 cursor-pointer">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Eliminar</span>
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="cerrarModalParqueadero()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md cursor-pointer">
+              Guardar Parqueadero
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="modal-manuales-sistema" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-5xl w-full p-4 sm:p-7 shadow-2xl space-y-4 my-4 max-h-[95vh] flex flex-col">
       

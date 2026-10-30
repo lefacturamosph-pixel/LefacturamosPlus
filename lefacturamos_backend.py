@@ -4107,6 +4107,97 @@ def consultar_auditoria(conjunto_id: Optional[str] = None):
 
 
 
+# ==============================================================================
+# MÓDULO DE INVENTARIO DE PARQUEADEROS (MOTO & CARRO - PROPIOS VS VISITANTES)
+# ==============================================================================
+
+class ParqueaderoRequest(BaseModel):
+    id: Optional[str] = None
+    numero: str
+    tipo_vehiculo: str # 'Carro' o 'Moto'
+    clasificacion: str # 'Propio' o 'Visita'
+    apto: Optional[str] = ""
+    titular: Optional[str] = ""
+    placa: Optional[str] = ""
+    estado: Optional[str] = "Libre"
+    ubicacion: Optional[str] = ""
+
+@app.get("/api/conjuntos/{conjunto_id}/parqueaderos")
+def listar_parqueaderos_conjunto(conjunto_id: str):
+    cid = conjunto_id if conjunto_id.startswith("cj_") else f"cj_{conjunto_id}"
+    conn = get_db_connection()
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS parqueaderos (
+        id TEXT PRIMARY KEY,
+        conjunto_id TEXT NOT NULL,
+        numero TEXT NOT NULL,
+        tipo_vehiculo TEXT NOT NULL,
+        clasificacion TEXT NOT NULL,
+        apto TEXT,
+        titular TEXT,
+        placa TEXT,
+        estado TEXT DEFAULT 'Libre',
+        ubicacion TEXT,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+    rows = conn.execute("SELECT * FROM parqueaderos WHERE conjunto_id=? ORDER BY clasificacion DESC, tipo_vehiculo ASC, numero ASC", (cid,)).fetchall()
+    pks = [dict(r) for r in rows]
+    conn.close()
+
+    total = len(pks)
+    propios = len([p for p in pks if p.get("clasificacion") == "Propio"])
+    visitas = len([p for p in pks if p.get("clasificacion") == "Visita"])
+    carros_propios = len([p for p in pks if p.get("clasificacion") == "Propio" and p.get("tipo_vehiculo") == "Carro"])
+    motos_propias = len([p for p in pks if p.get("clasificacion") == "Propio" and p.get("tipo_vehiculo") == "Moto"])
+    carros_visitas = len([p for p in pks if p.get("clasificacion") == "Visita" and p.get("tipo_vehiculo") == "Carro"])
+    motos_visitas = len([p for p in pks if p.get("clasificacion") == "Visita" and p.get("tipo_vehiculo") == "Moto"])
+    libres = len([p for p in pks if p.get("estado") == "Libre"])
+    ocupados = len([p for p in pks if p.get("estado") == "Ocupado"])
+
+    return {
+        "conjunto_id": cid,
+        "total": total,
+        "propios": propios,
+        "visitas": visitas,
+        "carros_propios": carros_propios,
+        "motos_propias": motos_propias,
+        "carros_visitas": carros_visitas,
+        "motos_visitas": motos_visitas,
+        "libres": libres,
+        "ocupados": ocupados,
+        "parqueaderos": pks
+    }
+
+@app.post("/api/conjuntos/{conjunto_id}/parqueaderos")
+def guardar_parqueadero_conjunto(conjunto_id: str, req: ParqueaderoRequest):
+    cid = conjunto_id if conjunto_id.startswith("cj_") else f"cj_{conjunto_id}"
+    conn = get_db_connection()
+    pid = req.id if req.id else f"pk_{cid.replace('cj_', '')}_{uuid.uuid4().hex[:8]}"
+    existing = conn.execute("SELECT id FROM parqueaderos WHERE id=?", (pid,)).fetchone()
+    if existing:
+        conn.execute("""
+        UPDATE parqueaderos 
+        SET numero=?, tipo_vehiculo=?, clasificacion=?, apto=?, titular=?, placa=?, estado=?, ubicacion=?
+        WHERE id=?
+        """, (req.numero, req.tipo_vehiculo, req.clasificacion, req.apto or "", req.titular or "", req.placa or "", req.estado or "Libre", req.ubicacion or "", pid))
+    else:
+        conn.execute("""
+        INSERT INTO parqueaderos (id, conjunto_id, numero, tipo_vehiculo, clasificacion, apto, titular, placa, estado, ubicacion)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (pid, cid, req.numero, req.tipo_vehiculo, req.clasificacion, req.apto or "", req.titular or "", req.placa or "", req.estado or "Libre", req.ubicacion or ""))
+    conn.commit()
+    conn.close()
+    return {"status": "ok", "id": pid, "message": "Parqueadero guardado exitosamente"}
+
+@app.delete("/api/parqueaderos/{parqueadero_id}")
+def eliminar_parqueadero_api(parqueadero_id: str):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM parqueaderos WHERE id=?", (parqueadero_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "ok", "message": "Parqueadero eliminado exitosamente"}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))

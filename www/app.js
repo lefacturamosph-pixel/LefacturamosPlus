@@ -19282,6 +19282,8 @@ const MENUS_POR_ROL = {
 
       { id: "visitantes", label: "Visitas", icono: "car" },
 
+      { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
+
       { id: "saldos", label: "Base de Saldos", icono: "wallet" },
 
       { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
@@ -22004,6 +22006,10 @@ if (tabId && tabId.startsWith("manual-")) {
 
     activeTab.style.display = "block";
 
+  }
+
+  if (tabId === "parqueaderos") {
+    cargarParqueaderosDesdeBackend();
   }
 
   // Garantizar que tab-superadmin quede 100% oculto si no estamos en superadmin
@@ -66004,4 +66010,687 @@ function renderizarVisitasAdmin() {
     `;
   }).join("");
   safeCreateIcons();
+}
+
+
+// ==============================================================================
+// MÓDULO DE INVENTARIO DE PARQUEADEROS (PQ MOTO / CARRO - LEY 675)
+// ==============================================================================
+let listaParqueaderos = [];
+let filtroParqueaderosTipo = "Todos";
+
+function inicializarParqueaderosPorDefecto() {
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  const pks = [];
+  const samplePlacasCarro = ["ABC-123", "KLO-892", "XYZ-456", "MTX-901", "HYU-332", "BBN-511", "JHG-740", "QWE-182", "MKL-903", "ZTR-621", "FRT-449", "VBN-802", "PPL-310", "CXW-555", "DSA-112"];
+  const samplePlacasMoto = ["NMQ-12D", "WTR-88F", "JIK-04C", "HBG-55E", "TYU-19A", "XDE-77B", "OPL-33C", "BVN-91E", "MKO-22F", "LAK-66D"];
+
+  const aptosRef = (typeof listaApartamentosOriginal !== "undefined" && Array.isArray(listaApartamentosOriginal) && listaApartamentosOriginal.length > 0)
+    ? listaApartamentosOriginal
+    : (typeof listaApartamentos !== "undefined" && Array.isArray(listaApartamentos) && listaApartamentos.length > 0)
+    ? listaApartamentos
+    : [];
+
+  // 1. Propios - Carros (40 celdas P-01 a P-40)
+  for (let i = 1; i <= 40; i++) {
+    const num = `P-${String(i).padStart(2, "0")}`;
+    const aptoObj = aptosRef[i - 1];
+    const aptoNum = aptoObj ? aptoObj.numero : String(100 + i);
+    const titular = aptoObj ? (aptoObj.propietario || aptoObj.nombre || `Propietario Apto ${aptoNum}`) : `Propietario Apto ${aptoNum}`;
+    const placa = samplePlacasCarro[(i - 1) % samplePlacasCarro.length];
+    pks.push({
+      id: `pk_${cjCod}_carro_${String(i).padStart(2, "0")}`,
+      conjunto_id: cid,
+      numero: num,
+      tipo_vehiculo: "Carro",
+      clasificacion: "Propio",
+      apto: `Apto ${aptoNum}`,
+      titular: titular,
+      placa: placa,
+      estado: "Libre",
+      ubicacion: "Sótano 1 - Torre Residencial"
+    });
+  }
+
+  // 2. Propios - Motos (10 celdas PM-01 a PM-10)
+  for (let i = 1; i <= 10; i++) {
+    const num = `PM-${String(i).padStart(2, "0")}`;
+    const aptoObj = aptosRef[40 + i - 1];
+    const aptoNum = aptoObj ? aptoObj.numero : String(200 + i);
+    const titular = aptoObj ? (aptoObj.propietario || aptoObj.nombre || `Propietario Apto ${aptoNum}`) : `Propietario Apto ${aptoNum}`;
+    const placa = samplePlacasMoto[(i - 1) % samplePlacasMoto.length];
+    pks.push({
+      id: `pk_${cjCod}_moto_${String(i).padStart(2, "0")}`,
+      conjunto_id: cid,
+      numero: num,
+      tipo_vehiculo: "Moto",
+      clasificacion: "Propio",
+      apto: `Apto ${aptoNum}`,
+      titular: titular,
+      placa: placa,
+      estado: "Libre",
+      ubicacion: "Bahía Motos Propietarios"
+    });
+  }
+
+  // 3. De Visita - Carros (10 celdas V-01 a V-10)
+  for (let i = 1; i <= 10; i++) {
+    const num = `V-${String(i).padStart(2, "0")}`;
+    pks.push({
+      id: `pk_${cjCod}_visita_carro_${String(i).padStart(2, "0")}`,
+      conjunto_id: cid,
+      numero: num,
+      tipo_vehiculo: "Carro",
+      clasificacion: "Visita",
+      apto: "Zona Común (Visitantes)",
+      titular: "Visitantes Rotativos",
+      placa: "Rotativo",
+      estado: "Libre",
+      ubicacion: "Bahía Exterior Visitantes"
+    });
+  }
+
+  // 4. De Visita - Motos (5 celdas VM-01 a VM-05)
+  for (let i = 1; i <= 5; i++) {
+    const num = `VM-${String(i).padStart(2, "0")}`;
+    pks.push({
+      id: `pk_${cjCod}_visita_moto_${String(i).padStart(2, "0")}`,
+      conjunto_id: cid,
+      numero: num,
+      tipo_vehiculo: "Moto",
+      clasificacion: "Visita",
+      apto: "Zona Común (Visitantes)",
+      titular: "Visitantes Rotativos",
+      placa: "Rotativo",
+      estado: "Libre",
+      ubicacion: "Bahía Exterior Visitantes"
+    });
+  }
+
+  return pks;
+}
+
+async function cargarParqueaderosDesdeBackend() {
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  // 1. Cargar desde LocalStorage si existe
+  try {
+    const cached = localStorage.getItem(`lefacturamos_pks_${cid}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        listaParqueaderos = parsed;
+      }
+    }
+  } catch (e) {}
+
+  // Si aún no hay, inicializar con el inventario por defecto
+  if (!listaParqueaderos || listaParqueaderos.length === 0) {
+    listaParqueaderos = inicializarParqueaderosPorDefecto();
+    try {
+      localStorage.setItem(`lefacturamos_pks_${cid}`, JSON.stringify(listaParqueaderos));
+    } catch (e) {}
+  }
+
+  // 2. Intentar sincronizar con Backend oficial si está disponible
+  try {
+    const bases = (typeof obtenerUrlsBaseBackend === "function") ? obtenerUrlsBaseBackend() : ["http://localhost:8000"];
+    for (const base of bases) {
+      try {
+        const resp = await fetch(`${base}/api/conjuntos/${cid}/parqueaderos`, { signal: AbortSignal.timeout(3000) });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && Array.isArray(data.parqueaderos) && data.parqueaderos.length > 0) {
+            listaParqueaderos = data.parqueaderos;
+            localStorage.setItem(`lefacturamos_pks_${cid}`, JSON.stringify(listaParqueaderos));
+            break;
+          }
+        }
+      } catch (err) {}
+    }
+  } catch (e) {}
+
+  // Sincronizar ocupación de parqueaderos de visita con los visitantes adentro en Portería
+  if (typeof visitantesRecinto !== "undefined" && Array.isArray(visitantesRecinto)) {
+    const visitasAdentro = visitantesRecinto.filter(v => v.estado === "En Recinto");
+    let vCarroIdx = 0;
+    let vMotoIdx = 0;
+
+    listaParqueaderos.forEach(pk => {
+      if (pk.clasificacion === "Visita") {
+        if (pk.tipo_vehiculo === "Carro") {
+          const vis = visitasAdentro.filter(v => (v.tipoVehiculo || v.vehiculo || "").toLowerCase().includes("carro") || !(v.tipoVehiculo || v.vehiculo || "").toLowerCase().includes("moto"))[vCarroIdx];
+          if (vis) {
+            pk.estado = "Ocupado";
+            pk.titular = `${vis.nombre || 'Visitante'} (${vis.documento || ''})`;
+            pk.placa = vis.placa || "Ocupado";
+            pk.apto = vis.apto ? `Apto ${vis.apto}` : "Zona Común";
+            vCarroIdx++;
+          } else {
+            pk.estado = "Libre";
+            pk.titular = "Visitantes Rotativos";
+            pk.placa = "Rotativo";
+            pk.apto = "Zona Común (Visitantes)";
+          }
+        } else if (pk.tipo_vehiculo === "Moto") {
+          const vis = visitasAdentro.filter(v => (v.tipoVehiculo || v.vehiculo || "").toLowerCase().includes("moto"))[vMotoIdx];
+          if (vis) {
+            pk.estado = "Ocupado";
+            pk.titular = `${vis.nombre || 'Visitante'} (${vis.documento || ''})`;
+            pk.placa = vis.placa || "Ocupado";
+            pk.apto = vis.apto ? `Apto ${vis.apto}` : "Zona Común";
+            vMotoIdx++;
+          } else {
+            pk.estado = "Libre";
+            pk.titular = "Visitantes Rotativos";
+            pk.placa = "Rotativo";
+            pk.apto = "Zona Común (Visitantes)";
+          }
+        }
+      }
+    });
+  }
+
+  renderizarInventarioParqueaderos();
+}
+
+function filtrarParqueaderosPorTipo(tipo, btnEl) {
+  filtroParqueaderosTipo = tipo;
+  document.querySelectorAll(".btn-filtro-pk").forEach(b => {
+    b.className = "btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-950 border border-slate-800 hover:text-white transition-all shrink-0 cursor-pointer";
+  });
+  if (btnEl) {
+    btnEl.className = "btn-filtro-pk px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-sm shrink-0 cursor-pointer";
+  }
+  renderizarInventarioParqueaderos();
+}
+
+function filtrarParqueaderos() {
+  renderizarInventarioParqueaderos();
+}
+
+function renderizarInventarioParqueaderos() {
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  if (!listaParqueaderos || listaParqueaderos.length === 0) {
+    listaParqueaderos = inicializarParqueaderosPorDefecto();
+  }
+
+  // 1. Calcular KPIs Totales
+  const total = listaParqueaderos.length;
+  const propios = listaParqueaderos.filter(p => p.clasificacion === "Propio");
+  const visitas = listaParqueaderos.filter(p => p.clasificacion === "Visita");
+  const carros = listaParqueaderos.filter(p => p.tipo_vehiculo === "Carro");
+  const motos = listaParqueaderos.filter(p => p.tipo_vehiculo === "Moto");
+  const carrosPropios = propios.filter(p => p.tipo_vehiculo === "Carro");
+  const motosPropias = propios.filter(p => p.tipo_vehiculo === "Moto");
+  const carrosVisitas = visitas.filter(p => p.tipo_vehiculo === "Carro");
+  const motosVisitas = visitas.filter(p => p.tipo_vehiculo === "Moto");
+  const libres = listaParqueaderos.filter(p => p.estado === "Libre");
+  const ocupados = listaParqueaderos.filter(p => p.estado === "Ocupado");
+
+  // Actualizar KPIs superiores
+  const elBadgeTot = document.getElementById("parqueaderos-badge-total");
+  const elKpiTot = document.getElementById("kpi-pk-total");
+  const elKpiProp = document.getElementById("kpi-pk-propios");
+  const elKpiPropSub = document.getElementById("kpi-pk-propios-sub");
+  const elKpiVis = document.getElementById("kpi-pk-visitas");
+  const elKpiVisSub = document.getElementById("kpi-pk-visitas-sub");
+  const elKpiDisp = document.getElementById("kpi-pk-disponibles");
+  const elKpiOcupSub = document.getElementById("kpi-pk-ocupados-sub");
+
+  if (elBadgeTot) elBadgeTot.innerText = `${total} celdas`;
+  if (elKpiTot) elKpiTot.innerText = total;
+  if (elKpiProp) elKpiProp.innerText = propios.length;
+  if (elKpiPropSub) elKpiPropSub.innerText = `${carrosPropios.length} Carros • ${motosPropias.length} Motos`;
+  if (elKpiVis) elKpiVis.innerText = visitas.length;
+  if (elKpiVisSub) elKpiVisSub.innerText = `${carrosVisitas.length} Carros • ${motosVisitas.length} Motos`;
+  if (elKpiDisp) elKpiDisp.innerText = `${libres.length} Libres`;
+  if (elKpiOcupSub) elKpiOcupSub.innerText = `${ocupados.length} Ocupados`;
+
+  // Actualizar badges en filtros
+  const bTodos = document.getElementById("pk-badge-todos");
+  const bProp = document.getElementById("pk-badge-propios");
+  const bVis = document.getElementById("pk-badge-visitas");
+  const bCar = document.getElementById("pk-badge-carros");
+  const bMot = document.getElementById("pk-badge-motos");
+  const bLib = document.getElementById("pk-badge-libres");
+  const bOcu = document.getElementById("pk-badge-ocupados");
+
+  if (bTodos) bTodos.innerText = total;
+  if (bProp) bProp.innerText = propios.length;
+  if (bVis) bVis.innerText = visitas.length;
+  if (bCar) bCar.innerText = carros.length;
+  if (bMot) bMot.innerText = motos.length;
+  if (bLib) bLib.innerText = libres.length;
+  if (bOcu) bOcu.innerText = ocupados.length;
+
+  // 2. Filtrado dinámico
+  const query = (document.getElementById("filtro-busqueda-parqueaderos")?.value || "").toLowerCase().trim();
+  let filtrados = [...listaParqueaderos];
+
+  if (filtroParqueaderosTipo === "Propio") {
+    filtrados = filtrados.filter(p => p.clasificacion === "Propio");
+  } else if (filtroParqueaderosTipo === "Visita") {
+    filtrados = filtrados.filter(p => p.clasificacion === "Visita");
+  } else if (filtroParqueaderosTipo === "Carro") {
+    filtrados = filtrados.filter(p => p.tipo_vehiculo === "Carro");
+  } else if (filtroParqueaderosTipo === "Moto") {
+    filtrados = filtrados.filter(p => p.tipo_vehiculo === "Moto");
+  } else if (filtroParqueaderosTipo === "Libre") {
+    filtrados = filtrados.filter(p => p.estado === "Libre");
+  } else if (filtroParqueaderosTipo === "Ocupado") {
+    filtrados = filtrados.filter(p => p.estado === "Ocupado");
+  }
+
+  if (query) {
+    filtrados = filtrados.filter(p => 
+      (p.numero && p.numero.toLowerCase().includes(query)) ||
+      (p.apto && p.apto.toLowerCase().includes(query)) ||
+      (p.titular && p.titular.toLowerCase().includes(query)) ||
+      (p.placa && p.placa.toLowerCase().includes(query)) ||
+      (p.tipo_vehiculo && p.tipo_vehiculo.toLowerCase().includes(query)) ||
+      (p.clasificacion && p.clasificacion.toLowerCase().includes(query)) ||
+      (p.ubicacion && p.ubicacion.toLowerCase().includes(query))
+    );
+  }
+
+  // 3. Renderizar Tabla Estilo Hoja de Excel
+  const cont = document.getElementById("contenedor-tabla-parqueaderos");
+  if (!cont) return;
+
+  if (filtrados.length === 0) {
+    cont.innerHTML = `
+      <div class="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-2">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center">
+          <i data-lucide="car" class="w-6 h-6"></i>
+        </div>
+        <p class="text-sm font-bold text-white">No se encontraron parqueaderos</p>
+        <p class="text-xs text-slate-400">No hay celdas que coincidan con el criterio de búsqueda o filtro seleccionado.</p>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
+
+  const rowsHtml = filtrados.map((p, idx) => {
+    const isPropio = p.clasificacion === "Propio";
+    const isCarro = p.tipo_vehiculo === "Carro";
+    const isLibre = p.estado === "Libre";
+
+    const badgeTipo = isCarro 
+      ? `<span class="px-2 py-0.5 rounded-full bg-blue-950 border border-blue-800 text-blue-300 font-bold text-[10px] inline-flex items-center gap-1">🚗 Carro</span>`
+      : `<span class="px-2 py-0.5 rounded-full bg-amber-950 border border-amber-800 text-amber-300 font-bold text-[10px] inline-flex items-center gap-1">🏍️ Moto</span>`;
+
+    const badgeClasif = isPropio
+      ? `<span class="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-bold text-[10px] inline-flex items-center gap-1">🟢 Propio (Propietario)</span>`
+      : `<span class="px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold text-[10px] inline-flex items-center gap-1">🔵 Visitante (Uso Común)</span>`;
+
+    const badgeEstado = isLibre
+      ? `<span class="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800 text-emerald-400 font-mono font-bold text-[10px]">Libre</span>`
+      : `<span class="px-2 py-0.5 rounded-full bg-rose-950/80 border border-rose-800 text-rose-300 font-mono font-bold text-[10px]">Ocupado</span>`;
+
+    const zebraCls = (idx % 2 === 0) ? "bg-slate-900/40" : "bg-slate-950/70";
+
+    return `
+      <tr class="${zebraCls} hover:bg-slate-800/60 transition-colors border-b border-slate-800/60">
+        <td class="py-2.5 px-3 text-center text-[11px] font-mono text-slate-500 font-bold">${idx + 1}</td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          <span class="px-2.5 py-1 rounded-xl bg-slate-900 border border-blue-700/60 text-blue-300 font-mono font-black text-xs shadow-sm">
+            ${p.numero}
+          </span>
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          ${badgeTipo}
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          ${badgeClasif}
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-slate-200 font-mono font-bold text-xs">
+            ${p.apto || (isPropio ? 'Sin Asignar' : 'Zona Común')}
+          </span>
+        </td>
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-white text-xs">${p.titular || (isPropio ? 'Propietario' : 'Visitantes Rotativos')}</div>
+          <span class="text-[10px] text-slate-400 block">${p.ubicacion || 'Sector General'}</span>
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded-md bg-slate-950 border border-slate-800 text-amber-300 font-mono font-bold text-[11px]">
+            ${p.placa || '---'}
+          </span>
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          ${badgeEstado}
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <button type="button" onclick="abrirModalParqueadero('${p.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm">
+            <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
+            <span>Editar</span>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  cont.innerHTML = `
+    <!-- Encabezado de la Hoja -->
+    <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="w-7 h-7 rounded-lg bg-blue-950/80 border border-blue-800 text-blue-400 flex items-center justify-center shrink-0">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+        </div>
+        <span class="text-xs font-black text-white uppercase tracking-wider">
+          Inventario Oficial de Celdas y Parqueaderos
+        </span>
+        <span class="px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800 text-[10px] font-mono font-bold">
+          ${filtrados.length} celda(s) listadas
+        </span>
+      </div>
+      <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>Ley 675 / RPH Registrado</span>
+      </div>
+    </div>
+
+    <!-- Tabla Cuadriculada Estilo Hoja de Excel -->
+    <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/90 shadow-xl">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-900/90 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-800">
+            <th class="py-3 px-3 w-10 text-center font-mono">#</th>
+            <th class="py-3 px-3 w-24">Celda / N°</th>
+            <th class="py-3 px-3 w-28">Tipo Vehículo</th>
+            <th class="py-3 px-3 w-40">Clasificación</th>
+            <th class="py-3 px-3 w-32">Inmueble Asignado</th>
+            <th class="py-3 px-3 min-w-[200px]">Titular / Residente</th>
+            <th class="py-3 px-3 w-28">Placa Vehículo</th>
+            <th class="py-3 px-3 w-24 text-center">Estado</th>
+            <th class="py-3 px-3 w-24 text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 font-sans">
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  safeCreateIcons();
+}
+
+function abrirModalParqueadero(id = null) {
+  const modal = document.getElementById("modal-parqueadero");
+  if (!modal) return;
+
+  const fId = document.getElementById("pk-form-id");
+  const fNum = document.getElementById("pk-form-numero");
+  const fTipo = document.getElementById("pk-form-tipo");
+  const fClas = document.getElementById("pk-form-clasificacion");
+  const fApto = document.getElementById("pk-form-apto");
+  const fTit = document.getElementById("pk-form-titular");
+  const fPla = document.getElementById("pk-form-placa");
+  const fEst = document.getElementById("pk-form-estado");
+  const fUbi = document.getElementById("pk-form-ubicacion");
+  const titModal = document.getElementById("modal-pk-titulo");
+  const btnElim = document.getElementById("btn-eliminar-pk");
+
+  if (id) {
+    const item = listaParqueaderos.find(p => p.id === id);
+    if (item) {
+      if (fId) fId.value = item.id;
+      if (fNum) fNum.value = item.numero;
+      if (fTipo) fTipo.value = item.tipo_vehiculo;
+      if (fClas) fClas.value = item.clasificacion;
+      if (fApto) fApto.value = item.apto || "";
+      if (fTit) fTit.value = item.titular || "";
+      if (fPla) fPla.value = item.placa || "";
+      if (fEst) fEst.value = item.estado || "Libre";
+      if (fUbi) fUbi.value = item.ubicacion || "";
+      if (titModal) titModal.innerText = `Editar Parqueadero ${item.numero}`;
+      if (btnElim) btnElim.classList.remove("hidden");
+    }
+  } else {
+    if (fId) fId.value = "";
+    if (fNum) fNum.value = "";
+    if (fTipo) fTipo.value = "Carro";
+    if (fClas) fClas.value = "Propio";
+    if (fApto) fApto.value = "";
+    if (fTit) fTit.value = "";
+    if (fPla) fPla.value = "";
+    if (fEst) fEst.value = "Libre";
+    if (fUbi) fUbi.value = "Sótano 1";
+    if (titModal) titModal.innerText = "Registrar Parqueadero";
+    if (btnElim) btnElim.classList.add("hidden");
+  }
+
+  modal.classList.remove("hidden");
+  safeCreateIcons();
+}
+
+function cerrarModalParqueadero() {
+  document.getElementById("modal-parqueadero")?.classList.add("hidden");
+}
+
+function actualizarCamposClasificacionPK(val) {
+  const fApto = document.getElementById("pk-form-apto");
+  const fTit = document.getElementById("pk-form-titular");
+  const fPla = document.getElementById("pk-form-placa");
+  const fUbi = document.getElementById("pk-form-ubicacion");
+
+  if (val === "Visita") {
+    if (fApto && !fApto.value) fApto.value = "Zona Común (Visitantes)";
+    if (fTit && !fTit.value) fTit.value = "Visitantes Rotativos";
+    if (fPla && !fPla.value) fPla.value = "Rotativo";
+    if (fUbi && !fUbi.value) fUbi.value = "Bahía Exterior Visitantes";
+  } else {
+    if (fApto && fApto.value.includes("Zona Común")) fApto.value = "";
+    if (fTit && fTit.value.includes("Visitantes")) fTit.value = "";
+    if (fPla && fPla.value.includes("Rotativo")) fPla.value = "";
+  }
+}
+
+async function guardarParqueadero() {
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  const id = document.getElementById("pk-form-id")?.value;
+  const numero = document.getElementById("pk-form-numero")?.value.trim().toUpperCase();
+  const tipo_vehiculo = document.getElementById("pk-form-tipo")?.value || "Carro";
+  const clasificacion = document.getElementById("pk-form-clasificacion")?.value || "Propio";
+  const apto = document.getElementById("pk-form-apto")?.value.trim() || (clasificacion === "Visita" ? "Zona Común (Visitantes)" : "Sin Asignar");
+  const titular = document.getElementById("pk-form-titular")?.value.trim() || (clasificacion === "Visita" ? "Visitantes Rotativos" : "Propietario");
+  const placa = document.getElementById("pk-form-placa")?.value.trim().toUpperCase() || (clasificacion === "Visita" ? "Rotativo" : "");
+  const estado = document.getElementById("pk-form-estado")?.value || "Libre";
+  const ubicacion = document.getElementById("pk-form-ubicacion")?.value.trim() || "Sector General";
+
+  if (!numero) {
+    mostrarToast("Ingrese el número o celda del parqueadero.", true);
+    return;
+  }
+
+  const nuevoItem = {
+    id: id || `pk_${cjCod}_${Date.now()}`,
+    conjunto_id: cid,
+    numero,
+    tipo_vehiculo,
+    clasificacion,
+    apto,
+    titular,
+    placa,
+    estado,
+    ubicacion
+  };
+
+  const idx = listaParqueaderos.findIndex(p => p.id === nuevoItem.id || (p.numero === nuevoItem.numero && (!id || p.id === id)));
+  if (idx !== -1) {
+    listaParqueaderos[idx] = nuevoItem;
+  } else {
+    listaParqueaderos.unshift(nuevoItem);
+  }
+
+  try {
+    localStorage.setItem(`lefacturamos_pks_${cid}`, JSON.stringify(listaParqueaderos));
+  } catch (e) {}
+
+  // Sincronizar en segundo plano con backend
+  try {
+    const bases = (typeof obtenerUrlsBaseBackend === "function") ? obtenerUrlsBaseBackend() : ["http://localhost:8000"];
+    for (const base of bases) {
+      try {
+        await fetch(`${base}/api/conjuntos/${cid}/parqueaderos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevoItem),
+          signal: AbortSignal.timeout(3000)
+        });
+        break;
+      } catch (err) {}
+    }
+  } catch (e) {}
+
+  cerrarModalParqueadero();
+  renderizarInventarioParqueaderos();
+  mostrarToast(`Parqueadero ${numero} guardado exitosamente.`);
+}
+
+async function eliminarParqueaderoActual() {
+  const id = document.getElementById("pk-form-id")?.value;
+  if (!id) return;
+  const item = listaParqueaderos.find(p => p.id === id);
+  if (!confirm(`¿Desea eliminar la celda de parqueadero ${item?.numero || id}?`)) return;
+
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cid = `cj_${cjCod}`;
+
+  listaParqueaderos = listaParqueaderos.filter(p => p.id !== id);
+  try {
+    localStorage.setItem(`lefacturamos_pks_${cid}`, JSON.stringify(listaParqueaderos));
+  } catch (e) {}
+
+  try {
+    const bases = (typeof obtenerUrlsBaseBackend === "function") ? obtenerUrlsBaseBackend() : ["http://localhost:8000"];
+    for (const base of bases) {
+      try {
+        await fetch(`${base}/api/parqueaderos/${id}`, { method: "DELETE", signal: AbortSignal.timeout(3000) });
+        break;
+      } catch (err) {}
+    }
+  } catch (e) {}
+
+  cerrarModalParqueadero();
+  renderizarInventarioParqueaderos();
+  mostrarToast("Parqueadero eliminado del inventario.");
+}
+
+function exportarParqueaderosCSV() {
+  const cjCod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  let csv = "\uFEFF#,Numero_Celda,Tipo_Vehiculo,Clasificacion,Inmueble_Asignado,Titular_Propietario,Placa_Vehiculo,Estado,Ubicacion\n";
+
+  listaParqueaderos.forEach((p, idx) => {
+    const tit = (p.titular || "").replace(/"/g, '""');
+    const ubi = (p.ubicacion || "").replace(/"/g, '""');
+    csv += `"${idx + 1}","${p.numero}","${p.tipo_vehiculo}","${p.clasificacion}","${p.apto || ''}","${tit}","${p.placa || ''}","${p.estado || 'Libre'}","${ubi}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `INVENTARIO_PARQUEADEROS_${cjCod}_${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  mostrarToast(`Inventario (${listaParqueaderos.length} celdas) exportado a Excel CSV.`);
+}
+
+function imprimirParqueaderos() {
+  const cAct = listaCopropiedadesSuperadmin.find(c => c.codigo === AppState.codigoEdificio);
+  const edificio = cAct ? cAct.nombre : "EDIFICIO ROBLE ALTO P.H.";
+  const fechaHoy = new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const propios = listaParqueaderos.filter(p => p.clasificacion === "Propio");
+  const visitas = listaParqueaderos.filter(p => p.clasificacion === "Visita");
+
+  const filas = listaParqueaderos.map((p, idx) => `
+    <tr>
+      <td style="padding: 6px; border: 1px solid #ccc; text-align: center; font-family: monospace; font-size: 11px;">${idx + 1}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; font-weight: bold; font-family: monospace; font-size: 12px;">${p.numero}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; font-size: 11px;">${p.tipo_vehiculo}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; font-weight: bold; font-size: 11px;">${p.clasificacion === "Propio" ? "PROPIO (PROPIETARIO)" : "DE VISITA (USO COMÚN)"}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; font-size: 11px;">${p.apto || ''}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; font-size: 11px;">${p.titular || ''}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; font-family: monospace; font-size: 11px;">${p.placa || ''}</td>
+      <td style="padding: 6px; border: 1px solid #ccc; text-align: center; font-size: 11px;">${p.estado || 'Libre'}</td>
+    </tr>
+  `).join("");
+
+  const ventana = window.open("", "_blank");
+  if (!ventana) {
+    mostrarToast("Habilite las ventanas emergentes para imprimir el inventario.", true);
+    return;
+  }
+
+  ventana.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Inventario Oficial de Parqueaderos - ${edificio}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 25px; color: #111; }
+        h1 { font-size: 18px; margin: 0 0 4px 0; }
+        h2 { font-size: 14px; margin: 0 0 10px 0; color: #444; }
+        .kpis { display: flex; gap: 15px; margin: 15px 0; font-size: 12px; }
+        .kpi-box { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; background: #f9f9f9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f0f0f0; padding: 8px; border: 1px solid #ccc; font-size: 11px; text-align: left; }
+        .firmas { margin-top: 50px; display: flex; justify-content: space-between; }
+      </style>
+    </head>
+    <body>
+      <h1>${edificio} - Inventario de Parqueaderos (Moto & Carro)</h1>
+      <h2>Certificado Oficial de Asignación Propietarios vs Visitantes • Ley 675 de 2001</h2>
+      <p style="font-size: 12px; color: #555;">Fecha de Certificación: ${fechaHoy}</p>
+      
+      <div class="kpis">
+        <div class="kpi-box"><strong>Total Parqueaderos:</strong> ${listaParqueaderos.length} celdas</div>
+        <div class="kpi-box"><strong>Propios (Propietarios):</strong> ${propios.length} celdas</div>
+        <div class="kpi-box"><strong>De Visita (Visitantes):</strong> ${visitas.length} celdas</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Celda</th>
+            <th>Tipo Vehículo</th>
+            <th>Clasificación</th>
+            <th>Inmueble</th>
+            <th>Titular / Residente</th>
+            <th>Placa</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filas}
+        </tbody>
+      </table>
+
+      <div class="firmas">
+        <div>__________________________________<br>Firma Administración / Representante Legal PH</div>
+        <div>__________________________________<br>Firma Interventoría / Comité de Convivencia</div>
+      </div>
+      <script>
+        window.onload = function() { window.print(); };
+      </script>
+    </body>
+    </html>
+  `);
+  ventana.document.close();
 }
