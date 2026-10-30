@@ -19344,9 +19344,9 @@ const MENUS_POR_ROL = {
 
     items: [
 
-      { id: "porteria", label: "Minuta Digital & Puesto 24/7", icono: "book-open" },
+      { id: "porteria", label: "Minuta Digital & Puesto 24/7", icono: "book-open", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('minuta');" },
 
-      { id: "visitantes", label: "Control de Visitantes & QR", icono: "scan-line" },
+      { id: "accesos-porteria", label: "Control de Visitantes & QR", icono: "scan-line", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('accesos');" },
 
       { id: "comunicados", label: "Alertas y Novedades", icono: "megaphone" },
 
@@ -20863,6 +20863,10 @@ function loginPantallaEntrada() {
   const inputEdif = document.getElementById("login-edificio-codigo");
 
   let codigoEdificio = inputEdif?.value.trim() || "";
+
+  const codLimpioGlobal = String(codigoEdificio || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  AppState.codigoEdificio = codLimpioGlobal;
+  AppState.conjuntoId = "cj_" + codLimpioGlobal;
 
   const inputCodUsuario = document.getElementById("login-codigo-usuario");
 
@@ -47487,9 +47491,11 @@ function generarQRAnticipado() {
   }
   const postUrls = [...new Set(candidatosPost.map(u => (u || "").replace(/\/$/, "")))];
 
+  const codRawVis = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cjIdVis = `cj_${codRawVis}`;
   const payloadAutorizar = {
-    conjunto_id: `cj_${AppState.codigoEdificio || "4901"}`,
-    unidad_id: `u_${AppState.codigoEdificio || "4901"}_${aptoActual}`,
+    conjunto_id: cjIdVis,
+    unidad_id: `u_${codRawVis}_${aptoActual}`,
     residente_nombre: nombreResidente,
     visitante_nombre: nombre,
     visitante_doc: doc,
@@ -47933,7 +47939,9 @@ function actualizarContadoresPorteria() {
 }
 
 async function sincronizarVisitantesDesdeServidor() {
-  const cod = AppState.codigoEdificio || "4901";
+  const codRaw = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+  const cjId = `cj_${codRaw}`;
+  const cod = codRaw;
   const isHttps = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
   const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
@@ -47956,7 +47964,7 @@ async function sincronizarVisitantesDesdeServidor() {
   let listaServidor = [];
   for (const base of basesUnicas) {
     try {
-      const url = `${base}/api/conjuntos/cj_${cod}/visitantes`;
+      const url = `${base}/api/conjuntos/${cjId}/visitantes`;
       const ctrl = new AbortController();
       const tid = setTimeout(() => ctrl.abort(), 4000);
       const res = await fetch(url, { signal: ctrl.signal });
@@ -48055,7 +48063,7 @@ async function sincronizarVisitantesDesdeServidor() {
   let minutaServidor = [];
   for (const base of basesUnicas) {
     try {
-      const urlMin = `${base}/api/conjuntos/cj_${cod}/minuta?limit=50`;
+      const urlMin = `${base}/api/conjuntos/${cjId}/minuta?limit=50`;
       const ctrlMin = new AbortController();
       const tidMin = setTimeout(() => ctrlMin.abort(), 4000);
       const resMin = await fetch(urlMin, { signal: ctrlMin.signal });
@@ -48094,6 +48102,11 @@ async function sincronizarVisitantesDesdeServidor() {
     });
 
     const minutaFusionada = Array.from(mapaMin.values());
+    minutaFusionada.sort((a, b) => {
+      const da = new Date(`${a.fecha} ${a.hora}`).getTime() || 0;
+      const db = new Date(`${b.fecha} ${b.hora}`).getTime() || 0;
+      return db - da;
+    });
     const sonIgualesMin = (typeof minutaPorteria !== "undefined" && Array.isArray(minutaPorteria)) &&
       (minutaFusionada.length === minutaPorteria.length) &&
       (minutaFusionada[0]?.id === minutaPorteria[0]?.id);
@@ -48414,6 +48427,69 @@ function buscarMinuta() {
 
 
 
+
+// VISUALIZADOR Y MODAL DE FOLIO OFICIAL DE MINUTA
+function abrirDetalleMinuta(id) {
+  const item = (typeof minutaPorteria !== "undefined") ? minutaPorteria.find(m => String(m.id) === String(id)) : null;
+  if (!item) {
+    if (typeof mostrarToast === "function") mostrarToast("No se encontró el registro seleccionado.", true);
+    return;
+  }
+  const elTipo = document.getElementById("det-min-tipo");
+  const elFecha = document.getElementById("det-min-fechahora");
+  const elInm = document.getElementById("det-min-inmueble");
+  const elEst = document.getElementById("det-min-estado");
+  const elPort = document.getElementById("det-min-portero");
+  const elTit = document.getElementById("det-min-titulo");
+  const elDesc = document.getElementById("det-min-descripcion");
+  const boxTok = document.getElementById("det-min-box-token");
+  const elTok = document.getElementById("det-min-token");
+
+  if (elTipo) elTipo.innerText = item.tipo || "Suceso";
+  if (elFecha) elFecha.innerText = `${item.fecha} • ${item.hora}`;
+  if (elInm) elInm.innerText = item.inmueble || "Portería Principal";
+  if (elEst) elEst.innerText = item.estado || "Registrado";
+  if (elPort) elPort.innerText = item.portero || "Carlos Mario Gómez";
+  if (elTit) elTit.innerText = item.titulo || "Suceso Registrado";
+  if (elDesc) elDesc.innerText = item.descripcion || "";
+
+  if (boxTok && elTok) {
+    if (item.token_qr) {
+      boxTok.classList.remove("hidden");
+      elTok.innerText = item.token_qr;
+    } else {
+      boxTok.classList.add("hidden");
+    }
+  }
+
+  const modal = document.getElementById("modal-detalle-minuta");
+  if (modal) {
+    modal.classList.remove("hidden");
+    safeCreateIcons();
+  }
+}
+
+function cerrarDetalleMinuta() {
+  const modal = document.getElementById("modal-detalle-minuta");
+  if (modal) modal.classList.add("hidden");
+}
+
+function copiarDetalleToken() {
+  const elTok = document.getElementById("det-min-token");
+  if (elTok && elTok.innerText) {
+    const val = elTok.innerText.trim();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(val).then(() => {
+        mostrarToast(`Código ${val} copiado al portapapeles.`);
+      }).catch(() => {
+        mostrarToast(`Token: ${val}`);
+      });
+    } else {
+      mostrarToast(`Token: ${val}`);
+    }
+  }
+}
+
 function renderizarMinutaLista(items) {
 
   const cont = document.getElementById("contenedor-minuta-lista");
@@ -48508,7 +48584,7 @@ function renderizarMinutaLista(items) {
 
     return `
 
-      <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl space-y-3 text-xs hover:border-slate-700 transition-all shadow-sm">
+      <div onclick="abrirDetalleMinuta('${item.id}')" class="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl space-y-3 text-xs hover:border-amber-500/60 transition-all shadow-sm cursor-pointer group">
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
 
@@ -48571,7 +48647,10 @@ function renderizarMinutaLista(items) {
           </span>
 
           <div class="flex items-center gap-2">
-
+            <button type="button" onclick="event.stopPropagation(); abrirDetalleMinuta('${item.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white font-bold flex items-center gap-1 text-[11px] shadow-sm transition-all cursor-pointer">
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+              <span>Abrir Folio</span>
+            </button>
             ${item.tipo === "Paquetería" && item.estado === "En Custodia" ? `
 
               <button onclick="entregarPaquetePorMinuta('${item.id}', '${item.inmueble}')" class="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold flex items-center gap-1 text-[11px] shadow-sm transition-all">
@@ -50724,19 +50803,78 @@ async function validarQRPorteria() {
     }
 
     // Registrar en minuta digital de portería
+    const nuevaEntradaMin = {
+      id: `min-${Date.now()}`,
+      tipo: "Ingresos",
+      fecha: new Date().toISOString().split("T")[0],
+      hora: new Date().toLocaleTimeString(),
+      inmueble: `Apto ${aptoVis}`,
+      portero: (typeof porteroActivo !== "undefined") ? `${porteroActivo.nombre} (${porteroActivo.turno})` : "Carlos Mario Gómez (Puesto 24/7)",
+      titulo: `Ingreso de Visitante Autorizado con QR (${tok})`,
+      descripcion: `Acceso concedido a ${nombreVis} (${docVis}) hacia Apto ${aptoVis}. Vehículo: ${placaVis}. Talanquera levantada.`,
+      estado: "En Recinto",
+      token_qr: tok
+    };
     if (typeof minutaPorteria !== "undefined") {
-      minutaPorteria.unshift({
-        id: `min-${Date.now()}`,
-        tipo: "Ingresos",
-        fecha: new Date().toISOString().split("T")[0],
-        hora: new Date().toLocaleTimeString(),
-        inmueble: `Apto ${aptoVis}`,
-        portero: (typeof porteroActivo !== "undefined") ? `${porteroActivo.nombre} (${porteroActivo.turno})` : "Carlos Mario Gómez (Puesto 24/7)",
-        titulo: `Ingreso de Visitante Autorizado con QR (${tok})`,
-        descripcion: `Acceso concedido a ${nombreVis} (${docVis}) hacia Apto ${aptoVis}. Vehículo: ${placaVis}. Talanquera levantada.`,
-        estado: "En Recinto"
-      });
+      minutaPorteria.unshift(nuevaEntradaMin);
     }
+
+    // Despachar inmediatamente al backend oficial para que aparezca en el navegador PC en vivo
+    const codRawSync = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^(cj_)+/, "").trim() || "4901";
+    const cjIdSync = `cj_${codRawSync}`;
+    (async () => {
+      for (const base of urlsUnicas) {
+        try {
+          // Si el backend no tenía la autorización, registrarla primero
+          if (!backendData) {
+            await fetch(`${base}/api/visitantes/autorizar`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                conjunto_id: cjIdSync,
+                unidad_id: `u_${codRawSync}_${aptoVis}`,
+                residente_nombre: resVis,
+                visitante_nombre: nombreVis,
+                visitante_doc: rawDoc,
+                visitante_telefono: visitanteEncontrado.tel || "",
+                fecha_esperada: new Date().toISOString().split("T")[0],
+                hora_esperada: new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }),
+                placa_vehiculo: placaVis,
+                tipo_visita: "Visitante",
+                token_qr: tok,
+                observaciones: "Validado en portería"
+              })
+            }).catch(() => {});
+            await fetch(`${base}/api/visitantes/validar-qr-porteria`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                token_qr: tok,
+                guardia_nombre: (typeof porteroActivo !== "undefined" && porteroActivo.nombre) ? porteroActivo.nombre : "Carlos Mario Gómez"
+              })
+            }).catch(() => {});
+          }
+
+          // Registrar el suceso en la minuta del servidor
+          const resMinPost = await fetch(`${base}/api/conjuntos/${cjIdSync}/minuta`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: nuevaEntradaMin.id,
+              tipo: nuevaEntradaMin.tipo,
+              inmueble: nuevaEntradaMin.inmueble,
+              titulo: nuevaEntradaMin.titulo,
+              descripcion: nuevaEntradaMin.descripcion,
+              portero: nuevaEntradaMin.portero,
+              estado: nuevaEntradaMin.estado,
+              token_qr: tok
+            })
+          });
+          if (resMinPost.ok) break;
+        } catch(e) {}
+      }
+      setTimeout(sincronizarVisitantesDesdeServidor, 500);
+    })();
 
     // Marcar como INGRESADO en lista local
     if (typeof listaVisitantesAutorizados !== "undefined" && Array.isArray(listaVisitantesAutorizados)) {

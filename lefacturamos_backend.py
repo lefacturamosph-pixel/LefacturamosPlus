@@ -43,6 +43,7 @@ Cumple 100% con los requerimientos:
 
 
 import os
+import re
 
 import sys
 
@@ -2626,51 +2627,37 @@ def autorizar_visitante(request: VisitanteAutorizacionRequest):
     Crea link para compartir directamente por WhatsApp con el visitante.
 
     """
-
     conn = get_db_connection()
 
     token_qr = request.token_qr.strip().upper() if (request.token_qr and request.token_qr.strip()) else f"QR-{uuid.uuid4().hex[:8].upper()}"
-
     vis_id = f"vis_{uuid.uuid4().hex[:8]}"
 
-    
+    cj_clean = re.sub(r'^(cj_)+', '', str(request.conjunto_id or '4901')).strip() or '4901'
+    cj_std = f"cj_{cj_clean}"
 
-    u_row = conn.execute("SELECT numero_unidad FROM unidades WHERE id = ?", (request.unidad_id,)).fetchone()
+    u_clean = re.sub(r'^u_(cj_)+', 'u_', str(request.unidad_id or '0301'))
+    apto_part = u_clean.split("_")[-1] if "_" in u_clean else u_clean
+    u_std = f"u_{cj_clean}_{apto_part}"
 
-    apto_str = u_row["numero_unidad"] if u_row else (request.unidad_id.split("_")[-1] if "_" in request.unidad_id else "0103")
-
-
+    u_row = conn.execute("SELECT numero_unidad FROM unidades WHERE id = ? OR id = ? OR id = ?", (request.unidad_id, u_std, u_clean)).fetchone()
+    apto_str = u_row["numero_unidad"] if u_row else apto_part
 
     conn.execute("""
-
     INSERT INTO visitantes_autorizaciones (
-
         id, conjunto_id, unidad_id, residente_nombre, visitante_nombre,
-
         visitante_doc, visitante_telefono, fecha_esperada, hora_esperada,
-
         duracion_estimada_horas, placa_vehiculo, numero_acompanantes,
-
         tipo_visita, observaciones, token_qr, estado
-
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'AUTORIZADO')
-
     """, (
-
-        vis_id, request.conjunto_id, request.unidad_id, request.residente_nombre,
-
+        vis_id, cj_std, u_std, request.residente_nombre,
         request.visitante_nombre, request.visitante_doc, request.visitante_telefono,
-
         request.fecha_esperada, request.hora_esperada, request.duracion_estimada_horas,
-
         request.placa_vehiculo or "Peatonal", request.numero_acompanantes,
-
         request.tipo_visita, request.observaciones, token_qr
-
     ))
 
     conn.commit()
-
     conn.close()
 
 
@@ -2946,7 +2933,14 @@ def listar_minuta(conjunto_id: str, limit: int = 50):
             creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
-        rows = conn.execute("SELECT * FROM minuta_porteria WHERE conjunto_id = ? ORDER BY rowid DESC LIMIT ?", (conjunto_id, limit)).fetchall()
+        cj_clean = re.sub(r'^(cj_)+', '', str(conjunto_id or '4901')).strip() or '4901'
+        cj_with = f"cj_{cj_clean}"
+        cj_without = cj_clean
+        cj_double = f"cj_cj_{cj_clean}"
+        rows = conn.execute(
+            "SELECT * FROM minuta_porteria WHERE (conjunto_id = ? OR conjunto_id = ? OR conjunto_id = ?) ORDER BY rowid DESC LIMIT ?",
+            (cj_with, cj_without, cj_double, limit)
+        ).fetchall()
         minuta = [dict(r) for r in rows]
     except Exception:
         minuta = []
@@ -2955,7 +2949,17 @@ def listar_minuta(conjunto_id: str, limit: int = 50):
 
 
 @app.post("/api/conjuntos/{conjunto_id}/minuta")
-def crear_entrada_minuta(conjunto_id: str, tipo: str = Body(..., embed=True), inmueble: str = Body(..., embed=True), titulo: str = Body(..., embed=True), descripcion: str = Body(..., embed=True), portero: str = Body("Guardia de Turno", embed=True), estado: str = Body("Registrado", embed=True)):
+def crear_entrada_minuta(
+    conjunto_id: str,
+    tipo: str = Body(..., embed=True),
+    inmueble: str = Body(..., embed=True),
+    titulo: str = Body(..., embed=True),
+    descripcion: str = Body(..., embed=True),
+    portero: str = Body("Guardia de Turno", embed=True),
+    estado: str = Body("Registrado", embed=True),
+    token_qr: Optional[str] = Body(None, embed=True),
+    id: Optional[str] = Body(None, embed=True)
+):
     conn = get_db_connection()
     conn.execute("""
     CREATE TABLE IF NOT EXISTS minuta_porteria (
@@ -2973,50 +2977,46 @@ def crear_entrada_minuta(conjunto_id: str, tipo: str = Body(..., embed=True), in
         creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
-    min_id = f"min_{uuid.uuid4().hex[:8]}"
+    cj_clean = re.sub(r'^(cj_)+', '', str(conjunto_id or '4901')).strip() or '4901'
+    cj_std = f"cj_{cj_clean}"
+    min_id = id if (id and str(id).strip()) else f"min_{uuid.uuid4().hex[:8]}"
     fecha_hoy = datetime.now().strftime("%Y-%m-%d")
     hora_bonita = datetime.now().strftime("%I:%M:%S %p")
+    tok_clean = token_qr.strip().upper() if (token_qr and str(token_qr).strip()) else None
     conn.execute("""
-    INSERT INTO minuta_porteria (id, conjunto_id, tipo, fecha, hora, inmueble, portero, titulo, descripcion, estado)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (min_id, conjunto_id, tipo, fecha_hoy, hora_bonita, inmueble, portero, titulo, descripcion, estado))
+    INSERT OR REPLACE INTO minuta_porteria (id, conjunto_id, tipo, fecha, hora, inmueble, portero, titulo, descripcion, estado, token_qr)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (min_id, cj_std, tipo, fecha_hoy, hora_bonita, inmueble, portero, titulo, descripcion, estado, tok_clean))
     conn.commit()
     conn.close()
-    return {"status": "guardado", "id": min_id}
-
+    return {"status": "guardado", "id": min_id, "conjunto_id": cj_std}
 
 
 @app.get("/api/conjuntos/{conjunto_id}/visitantes")
-
 def listar_visitantes(conjunto_id: str, fecha: Optional[str] = None):
-
     conn = get_db_connection()
+    cj_clean = re.sub(r'^(cj_)+', '', str(conjunto_id or '4901')).strip() or '4901'
+    cj_with = f"cj_{cj_clean}"
+    cj_without = cj_clean
+    cj_double = f"cj_cj_{cj_clean}"
 
     query = """
     SELECT v.*, COALESCE(u.numero_unidad, substr(v.unidad_id, instr(v.unidad_id, '_')+1), '0301') as numero_unidad
     FROM visitantes_autorizaciones v
     LEFT JOIN unidades u ON v.unidad_id = u.id
-    WHERE v.conjunto_id = ?
+    WHERE (v.conjunto_id = ? OR v.conjunto_id = ? OR v.conjunto_id = ?)
     """
-
-    params = [conjunto_id]
+    params = [cj_with, cj_without, cj_double]
 
     if fecha:
-
         query += " AND v.fecha_esperada = ?"
-
         params.append(fecha)
 
     query += " ORDER BY v.creado_en DESC"
 
-    
-
     rows = conn.execute(query, params).fetchall()
-
     visitantes = [dict(r) for r in rows]
-
     conn.close()
-
     return {"total": len(visitantes), "visitantes": visitantes}
 
 
