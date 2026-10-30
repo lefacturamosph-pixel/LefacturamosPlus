@@ -21536,123 +21536,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Soporte de enlace directo a Superadministrador vía URL (?rol=superadmin o #superadmin)
 
-  try {
+  function verificarRutaDirectaUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rawHash = (window.location.hash || "").replace("#", "").replace(/^\/+/, "").toLowerCase().trim();
+      const rolUrl = (params.get("rol") || rawHash || "").toLowerCase().trim();
 
-    const params = new URLSearchParams(window.location.search);
+      const pantallaEntrada = document.getElementById("pantalla-entrada");
+      const appPrincipal = document.getElementById("app-principal");
 
-    const hash = (window.location.hash || "").replace("#", "").toLowerCase();
-
-    const rolUrl = (params.get("rol") || hash || "").toLowerCase();
-
-    if (rolUrl === "superadmin") {
-
-      if (pantallaEntrada) {
-
-        pantallaEntrada.classList.add("hidden");
-
-        pantallaEntrada.style.display = "none";
-
+      if (rolUrl === "superadmin" || rolUrl.includes("superadmin")) {
+        if (pantallaEntrada) {
+          pantallaEntrada.classList.add("hidden");
+          pantallaEntrada.style.display = "none";
+        }
+        if (appPrincipal) {
+          appPrincipal.classList.remove("hidden");
+          appPrincipal.style.display = "flex";
+        }
+        if (typeof inicializarDatos === "function") inicializarDatos();
+        cambiarRolActivo("superadmin");
+        cambiarPestana("superadmin");
+        mostrarToast("👑 Acceso directo a Consola de Superadministrador concedido.");
+        return true;
+      } else if (rolUrl === "porteria" || rolUrl.includes("porteria") || rolUrl.startsWith("port-")) {
+        if (pantallaEntrada) {
+          pantallaEntrada.classList.add("hidden");
+          pantallaEntrada.style.display = "none";
+        }
+        if (appPrincipal) {
+          appPrincipal.classList.remove("hidden");
+          appPrincipal.style.display = "flex";
+        }
+        const codEdif = params.get("edificio") || params.get("codigo") || AppState.codigoEdificio || "4901";
+        AppState.codigoEdificio = codEdif;
+        if (typeof inicializarDatos === "function") inicializarDatos();
+        cambiarRolActivo("porteria");
+        cambiarPestana("porteria");
+        if (typeof cambiarSubtabPorteria === "function") {
+          cambiarSubtabPorteria("accesos");
+        }
+        mostrarToast("🛡️ Acceso directo a Pantalla de Portería y Control de Acceso.");
+        return true;
+      } else if (rolUrl === "admin" || rolUrl === "administrador" || rolUrl.includes("admin")) {
+        if (pantallaEntrada) {
+          pantallaEntrada.classList.add("hidden");
+          pantallaEntrada.style.display = "none";
+        }
+        if (appPrincipal) {
+          appPrincipal.classList.remove("hidden");
+          appPrincipal.style.display = "flex";
+        }
+        if (typeof inicializarDatos === "function") inicializarDatos();
+        cambiarRolActivo("admin");
+        cambiarPestana("admin");
+        mostrarToast("🏢 Acceso directo a Panel de Administración concedido.");
+        return true;
       }
-
-      if (appPrincipal) {
-
-        appPrincipal.classList.remove("hidden");
-
-        appPrincipal.style.display = "flex";
-
-      }
-
-      inicializarDatos();
-
-      cambiarRolActivo("superadmin");
-
-      cambiarPestana("superadmin");
-
-      mostrarToast("👑 Acceso directo a Consola de Superadministrador concedido.");
-
-      return;
-
-    } else if (rolUrl === "porteria") {
-
-      if (pantallaEntrada) {
-
-        pantallaEntrada.classList.add("hidden");
-
-        pantallaEntrada.style.display = "none";
-
-      }
-
-      if (appPrincipal) {
-
-        appPrincipal.classList.remove("hidden");
-
-        appPrincipal.style.display = "flex";
-
-      }
-
-      const codEdif = params.get("edificio") || params.get("codigo") || AppState.codigoEdificio || "4901";
-
-      AppState.codigoEdificio = codEdif;
-
-      inicializarDatos();
-
-      cambiarRolActivo("porteria");
-
-      cambiarPestana("porteria");
-
-      if (typeof cambiarSubtabPorteria === "function") {
-
-        cambiarSubtabPorteria("accesos");
-
-      }
-
-      mostrarToast("🛡️ Acceso directo a Pantalla de Portería y Control de Acceso.");
-      return;
-    } else if (rolUrl === "admin" || rolUrl === "administrador") {
-      if (pantallaEntrada) {
-        pantallaEntrada.classList.add("hidden");
-        pantallaEntrada.style.display = "none";
-      }
-      if (appPrincipal) {
-        appPrincipal.classList.remove("hidden");
-        appPrincipal.style.display = "flex";
-      }
-      const codEdif = params.get("edificio") || params.get("codigo") || AppState.codigoEdificio || "4901";
-      AppState.codigoEdificio = codEdif;
-      inicializarDatos();
-      cambiarRolActivo("admin");
-      cambiarPestana("admin");
-      mostrarToast(`🏢 Acceso a Panel de Administración - Copropiedad #${codEdif}`);
-      return;
-    }
-
-  } catch (e) {
-
-    console.warn("Aviso leyendo parámetros de URL:", e);
-
+    } catch (e) {}
+    return false;
   }
 
-
-
-  // Asegurar que la aplicación en APK o Web SIEMPRE inicie en la Pantalla de Entrada a la Copropiedad
-
-  if (pantallaEntrada) {
-
-    pantallaEntrada.classList.remove("hidden");
-
-    pantallaEntrada.style.display = "";
-
-  }
-
-  if (appPrincipal) {
-
-    appPrincipal.classList.add("hidden");
-
-    appPrincipal.style.display = "none";
-
-  }
-
-  try { window.scrollTo({ top: 0, behavior: "instant" }); } catch (e) {}
+  window.addEventListener("hashchange", verificarRutaDirectaUrl);
+  if (verificarRutaDirectaUrl()) return;
 
 
 

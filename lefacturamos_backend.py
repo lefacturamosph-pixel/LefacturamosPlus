@@ -154,6 +154,16 @@ def serve_superadmin_direct():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/?rol=superadmin")
 
+@app.get("/admin")
+def serve_admin_direct():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/?rol=admin")
+
+@app.get("/porteria")
+def serve_porteria_direct():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/?rol=porteria")
+
 @app.get("/app.js")
 def serve_app_js_root():
     if os.path.exists("./www/app.js"):
