@@ -47295,11 +47295,12 @@ function enviarWhatsAppVisitante() {
   // 2. Construir enlace directo oficial de WhatsApp hacia el número del visitante
   const msgTexto = construirMensajeWhatsAppVisitante();
   const msgWa = encodeURIComponent(msgTexto);
-  const waUrl = fullPhone 
-    ? `https://api.whatsapp.com/send?phone=${fullPhone}&text=${msgWa}` 
-    : `https://api.whatsapp.com/send?text=${msgWa}`;
+  const esMovil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+  const waUrl = esMovil
+    ? (fullPhone ? `https://api.whatsapp.com/send?phone=${fullPhone}&text=${msgWa}` : `https://api.whatsapp.com/send?text=${msgWa}`)
+    : (fullPhone ? `https://web.whatsapp.com/send?phone=${fullPhone}&text=${msgWa}` : `https://web.whatsapp.com/send?text=${msgWa}`);
 
-  // 3. Abrir WhatsApp para que el mensaje efectivamente salga hacia el celular del destinatario
+  // 3. Abrir WhatsApp (En PC va directo a WhatsApp Web sin pantallas intermedias; en móvil abre la App de WhatsApp)
   window.open(waUrl, "_blank");
 
   if (btnWa) {
