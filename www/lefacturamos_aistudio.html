@@ -5868,7 +5868,7 @@
 
             <i data-lucide="qr-code" class="w-4 h-4"></i>
 
-            <span>Generar Código QR y Enlace WhatsApp</span>
+            <span>Generar Código QR</span>
 
           </button>
 
@@ -9404,7 +9404,7 @@
 
 
 
-  <!-- FOOTER OFICIAL LEFACTURAMOS (SEGÚN SCREENSHOT) -->
+  <!-- FOOTER OFICIAL LEFACTURAMOS -->
 
   <footer class="bg-slate-950/90 border-t border-slate-900 mt-12 py-6 px-4 sm:px-8 text-xs text-slate-400">
 
@@ -9427,38 +9427,6 @@
           <p class="text-[10px] text-slate-400">Cumplimiento normativo estricto Ley 675 de 2001 • República de Colombia</p>
 
         </div>
-
-      </div>
-
-
-
-      <!-- Links y Accesos Rápidos según Screenshot -->
-
-      <div class="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-2 text-[11px]">
-
-        <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 font-bold border border-purple-500/30 text-[10px]">SUPERADMIN</span>
-
-        <button type="button" onclick="cambiarPestana('ley675')" class="hover:text-emerald-400 transition-colors">Normativa Ley 675</button>
-
-        <span class="text-slate-700">•</span>
-
-        <button type="button" onclick="abrirModalMigradorPython()" class="hover:text-emerald-400 transition-colors">Migrador Python (Windows/Móvil)</button>
-
-        <span class="text-slate-700">•</span>
-
-        <button type="button" onclick="abrirModalCompilarApp()" class="hover:text-emerald-400 transition-colors text-emerald-400 font-semibold">Compilar App Móvil (Android/iOS)</button>
-
-        <span class="text-slate-700">•</span>
-
-        <button type="button" onclick="abrirModalPlantillasExcel()" class="hover:text-emerald-400 transition-colors">Plantillas Excel</button>
-
-        <span class="text-slate-700">•</span>
-
-        <button type="button" onclick="abrirModalInformesListados()" class="hover:text-emerald-400 transition-colors">Informes y Listados</button>
-
-        <span class="text-slate-700">•</span>
-
-        <button type="button" onclick="abrirManualRol(typeof AppState !== 'undefined' ? AppState.rol : 'admin')" class="hover:text-emerald-400 transition-colors flex items-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-400"></i><span>Manual del Módulo</span></button>
 
       </div>
 
@@ -65694,13 +65662,8 @@ function generarQRAnticipado() {
     resBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  // Abrir WhatsApp directamente en nueva pestaña
-  try {
-    window.open(waUrl, "_blank");
-  } catch (e) {}
-
   safeCreateIcons();
-  mostrarToast(`✅ Código QR ${tokenGeneradoActual} generado y WhatsApp activado.`);
+  mostrarToast(`✅ Código QR ${tokenGeneradoActual} generado exitosamente.`);
 
   // Registrar autorización en memoria local y localStorage persistente para portería
   const nuevoVisitante = {

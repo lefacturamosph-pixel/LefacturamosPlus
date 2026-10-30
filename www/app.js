@@ -47320,13 +47320,8 @@ function generarQRAnticipado() {
     resBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  // Abrir WhatsApp directamente en nueva pestaña
-  try {
-    window.open(waUrl, "_blank");
-  } catch (e) {}
-
   safeCreateIcons();
-  mostrarToast(`✅ Código QR ${tokenGeneradoActual} generado y WhatsApp activado.`);
+  mostrarToast(`✅ Código QR ${tokenGeneradoActual} generado exitosamente.`);
 
   // Registrar autorización en memoria local y localStorage persistente para portería
   const nuevoVisitante = {
