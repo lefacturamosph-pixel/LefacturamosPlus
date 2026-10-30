@@ -22130,6 +22130,22 @@ if (tabId && tabId.startsWith("manual-")) {
     else if (tabId === "reservas") {
       inicializarModuloReservas();
     }
+    else if (tabId === "visitantes") {
+      const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin"));
+      const seccionGeneradorQR = document.getElementById("seccion-generador-qr-residente");
+      if (seccionGeneradorQR) {
+        if (esAdmin) {
+          seccionGeneradorQR.classList.add("hidden");
+          seccionGeneradorQR.style.display = "none";
+        } else {
+          seccionGeneradorQR.classList.remove("hidden");
+          seccionGeneradorQR.style.display = "block";
+        }
+      }
+      if (esAdmin && typeof renderizarVisitasAdmin === "function") {
+        renderizarVisitasAdmin();
+      }
+    }
 
     else if (tabId === "documentos") renderizarModuloDocumentosDrive();
 
@@ -23030,21 +23046,28 @@ function actualizarVisibilidadPorRol(rol) {
   if (btnManualNuevoArt) btnManualNuevoArt.classList.toggle("hidden", !esAdmin);
 
   // 4.2 Vista de Control de Visitas del Administrador (EXCLUSIVO ADMINISTRADOR)
-
   const seccionAdminVisitas = document.getElementById("seccion-admin-control-visitas");
-
   if (seccionAdminVisitas) {
-
     if (esAdmin) {
-
       seccionAdminVisitas.classList.remove("hidden");
-
+      seccionAdminVisitas.style.display = "block";
+      if (typeof renderizarVisitasAdmin === "function") renderizarVisitasAdmin();
     } else {
-
       seccionAdminVisitas.classList.add("hidden");
-
+      seccionAdminVisitas.style.display = "none";
     }
+  }
 
+  // Cuadro de Autorizacion Digital de Visitantes con Codigo QR (EXCLUSIVO RESIDENTES - OCULTO EN ADMINISTRACION)
+  const seccionGeneradorQR = document.getElementById("seccion-generador-qr-residente");
+  if (seccionGeneradorQR) {
+    if (esAdmin) {
+      seccionGeneradorQR.classList.add("hidden");
+      seccionGeneradorQR.style.display = "none";
+    } else {
+      seccionGeneradorQR.classList.remove("hidden");
+      seccionGeneradorQR.style.display = "block";
+    }
   }
 
   // 4.3 Navegador de Documentos / Facturas (Copropietario vs Administrador)
@@ -65741,4 +65764,165 @@ function registrarIngresoZonaComunMinuta(resId) {
   } else {
     mostrarToast(`✓ Reserva verificada para Apto ${r.apto}.`);
   }
+}
+
+
+// ==============================================================================
+// GESTION DE VISITAS EN ADMINISTRACION (SOLO INGRESADOS EN EL DIA)
+// ==============================================================================
+
+function renderizarVisitasAdmin() {
+  const cont = document.getElementById("lista-visitas-admin-dia");
+  const badgeCount = document.getElementById("badge-visitas-admin-count");
+  const tituloTxt = document.getElementById("titulo-control-visitas-admin");
+  const fechaBadge = document.getElementById("fecha-hoy-visitas-admin");
+  if (!cont) return;
+
+  const hoyStr = new Date().toISOString().split("T")[0];
+  const hoyObj = new Date();
+  const fechaFmt = hoyObj.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
+  if (fechaBadge) fechaBadge.textContent = fechaFmt;
+
+  const visitasDelDia = [];
+  const tokensVistos = new Set();
+
+  // 1. Minuta de porteria: Entradas del dia
+  if (typeof minutaPorteria !== "undefined" && Array.isArray(minutaPorteria)) {
+    minutaPorteria.forEach(m => {
+      if (!m) return;
+      const esFechaHoy = (!m.fecha || m.fecha === hoyStr);
+      const esIngreso = (m.tipo === "Ingresos" || (m.titulo && m.titulo.toLowerCase().includes("ingreso")));
+      
+      if (esFechaHoy && esIngreso) {
+        let nombre = "Visitante";
+        let vehiculo = "Peatonal";
+        let apto = m.inmueble || "Apto";
+        let doc = "";
+
+        if (m.descripcion) {
+          const matchNom = m.descripcion.match(/Acceso concedido a\s+([^(\n]+?)(?:\s*\(([^)]+)\))?\s+hacia/i);
+          if (matchNom) {
+            nombre = matchNom[1].trim();
+            if (matchNom[2]) doc = matchNom[2].trim();
+          }
+          const matchVeh = m.descripcion.match(/Veh[íi]culo:\s*([^.\n]+)/i);
+          if (matchVeh) {
+            vehiculo = matchVeh[1].trim();
+          }
+        }
+        if (nombre === "Visitante" && m.titulo) {
+          const matchTit = m.titulo.match(/Visitante:\s*([^(\n]+)/i);
+          if (matchTit) nombre = matchTit[1].trim();
+        }
+
+        const clave = m.token_qr || m.id || (nombre + "_" + m.hora);
+        if (!tokensVistos.has(clave)) {
+          tokensVistos.add(clave);
+          visitasDelDia.push({
+            id: m.id,
+            nombre: nombre,
+            documento: doc,
+            apto: apto,
+            vehiculo: vehiculo,
+            hora: m.hora || "Hoy",
+            estado: (m.estado === "Salida Confirmada" || m.estado === "Completado") ? "Completado" : "Autorizado",
+            tipo: "Visitante",
+            token: m.token_qr || ""
+          });
+        }
+      }
+    });
+  }
+
+  // 2. Visitantes en recinto actualmente
+  if (typeof visitantesRecinto !== "undefined" && Array.isArray(visitantesRecinto)) {
+    visitantesRecinto.forEach(v => {
+      if (!v) return;
+      const clave = v.token || v.id || v.documento;
+      if (clave && !tokensVistos.has(clave)) {
+        tokensVistos.add(clave);
+        visitasDelDia.push({
+          id: v.id || `rec-${Date.now()}`,
+          nombre: v.nombre || "Visitante",
+          documento: v.documento || "",
+          apto: v.apto ? (v.apto.startsWith("Apto") ? v.apto : `Apto ${v.apto}`) : "Apto",
+          vehiculo: v.vehiculo || "Peatonal",
+          hora: v.horaIngreso || "Hoy",
+          estado: "Autorizado",
+          tipo: "Visitante",
+          token: v.token || ""
+        });
+      }
+    });
+  }
+
+  // 3. Visitantes de listaVisitantesAutorizados ingresados hoy
+  if (typeof listaVisitantesAutorizados !== "undefined" && Array.isArray(listaVisitantesAutorizados)) {
+    listaVisitantesAutorizados.forEach(va => {
+      if (!va) return;
+      const esHoy = (!va.fecha || va.fecha === hoyStr || va.fechaIngreso === hoyStr);
+      const fueIngresado = (va.estado === "INGRESADO" || va.estado === "En Recinto" || va.ingresado === true);
+      const clave = va.token || va.id;
+      if (esHoy && fueIngresado && clave && !tokensVistos.has(clave)) {
+        tokensVistos.add(clave);
+        visitasDelDia.push({
+          id: va.id || `va-${Date.now()}`,
+          nombre: va.nombre || "Visitante",
+          documento: va.doc || va.documento || "",
+          apto: va.apto ? (va.apto.startsWith("Apto") ? va.apto : `Apto ${va.apto}`) : "Apto",
+          vehiculo: va.placa || "Peatonal",
+          hora: va.horaIngreso || va.hora || "Hoy",
+          estado: "Autorizado",
+          tipo: "Visitante",
+          token: va.token || ""
+        });
+      }
+    });
+  }
+
+  // Actualizar contadores del encabezado
+  if (badgeCount) badgeCount.textContent = `(${visitasDelDia.length})`;
+  if (tituloTxt) tituloTxt.textContent = `Control de Visitas & Portería (${visitasDelDia.length})`;
+
+  if (visitasDelDia.length === 0) {
+    cont.innerHTML = `
+      <div class="py-10 text-center text-xs text-slate-400 space-y-2">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-800/80 border border-slate-700/80 text-slate-400 flex items-center justify-center shadow">
+          <i data-lucide="car" class="w-6 h-6"></i>
+        </div>
+        <p class="font-bold text-white text-sm">No se registran ingresos de visitas en el día de hoy</p>
+        <p class="text-[11px] text-slate-500 max-w-md mx-auto">
+          Los visitantes y vehículos autorizados por los copropietarios que ingresen hoy por la portería se reflejarán aquí automáticamente en tiempo real.
+        </p>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
+
+  cont.innerHTML = visitasDelDia.map((v, i) => {
+    const esAutorizado = (v.estado === "Autorizado" || v.estado === "En Recinto");
+    const ptClass = (i === 0) ? "pt-0 first:pt-0" : "pt-4";
+    const badgeBg = esAutorizado 
+      ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800/80" 
+      : "bg-blue-950/80 text-blue-400 border border-blue-800/80";
+
+    return `
+      <div class="${ptClass} flex items-center justify-between gap-3">
+        <div class="space-y-1">
+          <h4 class="font-black text-white text-sm flex items-center gap-1.5">
+            <span>${v.nombre}</span>
+            <span class="text-xs text-slate-400 font-normal">(${v.tipo || 'Visitante'})</span>
+          </h4>
+          <div class="text-xs text-slate-400 font-medium">
+            ${v.apto} • Placa: <span class="font-semibold text-slate-300 font-mono">${v.vehiculo || 'Peatonal'}</span> • Ingreso: <span class="text-slate-300">${v.hora}</span>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-full ${badgeBg} text-[10px] font-bold shrink-0">
+          ${v.estado}
+        </span>
+      </div>
+    `;
+  }).join("");
+  safeCreateIcons();
 }

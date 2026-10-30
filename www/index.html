@@ -5702,109 +5702,36 @@
 
         
 
-        <!-- VISTA OFICIAL ADMINISTRADOR: CONTROL DE VISITAS & PORTERÍA (3) (EXACTA AL PANTALLAZO) -->
-
+        <!-- VISTA OFICIAL ADMINISTRADOR: CONTROL DE VISITAS & PORTERÍA (SOLO INGRESADOS EN EL DÍA) -->
         <div id="seccion-admin-control-visitas" class="space-y-4">
-
           <!-- 1. Encabezado Tarjeta Superior -->
-
-          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl flex items-center gap-3">
-
-            <div class="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-800 text-purple-400 flex items-center justify-center shadow-md shrink-0">
-
-              <i data-lucide="car" class="w-5 h-5"></i>
-
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-800 text-purple-400 flex items-center justify-center shadow-md shrink-0">
+                <i data-lucide="car" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span id="titulo-control-visitas-admin">Control de Visitas & Portería</span>
+                  <span id="badge-visitas-admin-count" class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-mono font-bold">(0)</span>
+                </h2>
+                <p class="text-xs text-slate-400 font-medium">Registro de accesos vehiculares y peatonales autorizados e ingresados en el día</p>
+              </div>
             </div>
 
-            <div>
-
-              <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-
-                <span>Control de Visitas & Portería (3)</span>
-
-              </h2>
-
-              <p class="text-xs text-slate-400 font-medium">Registro de accesos vehiculares y peatonales autorizados</p>
-
+            <div class="flex items-center gap-2">
+              <span id="filtro-hoy-badge-admin" class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-emerald-300 font-semibold flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span id="fecha-hoy-visitas-admin">Hoy</span>
+              </span>
             </div>
-
           </div>
 
-
-
-          <!-- 2. Tarjeta con Listado Oficial de Visitas del Pantallazo -->
-
-          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl divide-y divide-slate-800/80 space-y-4">
-
-            <!-- Item 1: Carlos Martinez -->
-
-            <div class="pt-0 first:pt-0 flex items-center justify-between gap-3">
-
-              <div class="space-y-1">
-
-                <h4 class="font-black text-white text-sm">Carlos Martinez (Visitante)</h4>
-
-                <div class="text-xs text-slate-400 font-medium">
-
-                  Apto 0202 • Placa: <span class="font-semibold text-slate-300 font-mono">ABC-123</span> • Ingreso: <span class="text-slate-300">Hace 1 hora</span>
-
-                </div>
-
-              </div>
-
-              <span class="px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 text-[10px] font-bold shrink-0">Autorizado</span>
-
-            </div>
-
-
-
-            <!-- Item 2: Servicio Encomienda Servientrega -->
-
-            <div class="pt-4 flex items-center justify-between gap-3">
-
-              <div class="space-y-1">
-
-                <h4 class="font-black text-white text-sm">Servicio Encomienda Servientrega</h4>
-
-                <div class="text-xs text-slate-400 font-medium">
-
-                  Apto 0101 • Entrega paquete • <span class="text-slate-300">Hace 3 horas</span>
-
-                </div>
-
-              </div>
-
-              <span class="px-2.5 py-1 rounded-full bg-blue-950/80 text-blue-400 border border-blue-800/80 text-[10px] font-bold shrink-0">Completado</span>
-
-            </div>
-
-
-
-            <!-- Item 3: Técnico Claro Internet -->
-
-            <div class="pt-4 flex items-center justify-between gap-3">
-
-              <div class="space-y-1">
-
-                <h4 class="font-black text-white text-sm">Técnico Claro Internet</h4>
-
-                <div class="text-xs text-slate-400 font-medium">
-
-                  Apto 0502 • Mantenimiento fibra óptica • <span class="text-slate-300">Hace 4 horas</span>
-
-                </div>
-
-              </div>
-
-              <span class="px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 text-[10px] font-bold shrink-0">Autorizado</span>
-
-            </div>
-
+          <!-- 2. Contenedor Dinámico con Listado de Visitas Ingresadas en el Día -->
+          <div id="lista-visitas-admin-dia" class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl divide-y divide-slate-800/80 space-y-4">
+            <!-- Renderizado dinámico mediante renderizarVisitasAdmin() -->
           </div>
-
         </div>
-
-
 
         <!-- GENERADOR DE QR PARA COPROPIETARIOS / RESIDENTES -->
 
