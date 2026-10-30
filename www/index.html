@@ -7662,33 +7662,47 @@
 
           <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-sm">
 
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
 
               <div class="relative flex-1">
-
                 <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
-
                 <input type="text" id="filtro-busqueda-minuta" oninput="buscarMinuta()" placeholder="Buscar en el reporte por descripción, apartamento, visitante, placa o portero..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
-
               </div>
 
-              <input type="date" id="filtro-fecha-minuta" onchange="buscarMinuta()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+              <!-- Selector Rápido de Días: Hoy, Ayer, Todos los Días, Calendario -->
+              <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                <button type="button" id="btn-fecha-minuta-hoy" onclick="establecerFechaMinuta('hoy')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white shadow-sm flex items-center gap-1 shrink-0 cursor-pointer transition-all">
+                  <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                  <span>Hoy</span>
+                </button>
+                <button type="button" id="btn-fecha-minuta-ayer" onclick="establecerFechaMinuta('ayer')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-950 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1 shrink-0 cursor-pointer transition-all">
+                  <span>Ayer</span>
+                </button>
+                <button type="button" id="btn-fecha-minuta-todos" onclick="establecerFechaMinuta('todos')" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-950 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1 shrink-0 cursor-pointer transition-all">
+                  <span>Todos los Días</span>
+                </button>
+                <div class="flex items-center gap-1 bg-slate-950 px-2 py-1.5 rounded-xl border border-slate-800 shrink-0">
+                  <button type="button" onclick="navegarDiaMinuta(-1)" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer transition-all" title="Día anterior">
+                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <span class="text-[10px] text-slate-400 font-mono">Día:</span>
+                  <input type="date" id="filtro-fecha-minuta" onchange="establecerFechaMinuta('custom')" class="bg-transparent text-xs text-white focus:outline-none cursor-pointer" title="Seleccionar fecha específica">
+                  <button type="button" onclick="navegarDiaMinuta(1)" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer transition-all" title="Día siguiente">
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </div>
 
-              <button onclick="imprimirMinutaPorteria()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer">
-
-                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-
-                <span>Imprimir Reporte</span>
-
-              </button>
-
-              <button onclick="exportarMinutaCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer">
-
-                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
-
-                <span>Excel CSV</span>
-
-              </button>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="imprimirMinutaPorteria()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                  <span class="hidden sm:inline">Imprimir</span>
+                </button>
+                <button onclick="exportarMinutaCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-md">
+                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                  <span>Excel CSV</span>
+                </button>
+              </div>
 
             </div>
 

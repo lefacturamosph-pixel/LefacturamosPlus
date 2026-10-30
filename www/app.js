@@ -48393,6 +48393,8 @@ function cambiarSubtabPorteria(subtab) {
           sincronizarVisitantesDesdeServidor();
         } else if (item.id === "reservas") {
           renderizarReservasPorteria();
+        } else if (item.id === "minuta") {
+          establecerFechaMinuta("hoy");
         }
 
       } else {
@@ -48443,259 +48445,338 @@ function filtrarMinutaPorTipo(tipo, btnEl = null) {
 
 
 
-function buscarMinuta() {
-
-  const query = (document.getElementById("filtro-busqueda-minuta")?.value || "").toLowerCase().trim();
-
-  const fechaFiltro = document.getElementById("filtro-fecha-minuta")?.value || "";
-
-
-
-  let filtrados = minutaPorteria;
-
-
-
-  if (filtroTipoMinuta !== "Todos") {
-
-    filtrados = filtrados.filter(item => item.tipo === filtroTipoMinuta);
-
+function normalizarFechaMinuta(f) {
+  if (!f) return "";
+  const str = String(f).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return str.substring(0, 10);
   }
-
-
-
-  if (fechaFiltro) {
-
-    filtrados = filtrados.filter(item => item.fecha === fechaFiltro);
-
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(str)) {
+    const parts = str.split("/");
+    const dia = parts[0].padStart(2, "0");
+    const mes = parts[1].padStart(2, "0");
+    const anio = parts[2].substring(0, 4);
+    return `${anio}-${mes}-${dia}`;
   }
-
-
-
-  if (query) {
-
-    filtrados = filtrados.filter(item => 
-
-      item.descripcion.toLowerCase().includes(query) ||
-
-      item.titulo.toLowerCase().includes(query) ||
-
-      item.inmueble.toLowerCase().includes(query) ||
-
-      item.portero.toLowerCase().includes(query) ||
-
-      item.tipo.toLowerCase().includes(query)
-
-    );
-
-  }
-
-
-
-  renderizarMinutaLista(filtrados);
-
+  return str;
 }
 
+function navegarDiaMinuta(deltaDias) {
+  const inpFecha = document.getElementById("filtro-fecha-minuta");
+  let baseFechaStr = inpFecha?.value;
+  if (!baseFechaStr) {
+    baseFechaStr = new Date().toISOString().split("T")[0];
+  }
+  const partes = baseFechaStr.split("-");
+  const anio = parseInt(partes[0], 10);
+  const mes = parseInt(partes[1], 10) - 1;
+  const dia = parseInt(partes[2], 10);
+  const d = new Date(anio, mes, dia);
+  d.setDate(d.getDate() + deltaDias);
 
+  const nAnio = d.getFullYear();
+  const nMes = String(d.getMonth() + 1).padStart(2, "0");
+  const nDia = String(d.getDate()).padStart(2, "0");
+  const nuevaFechaStr = `${nAnio}-${nMes}-${nDia}`;
 
+  if (inpFecha) {
+    inpFecha.value = nuevaFechaStr;
+  }
+  establecerFechaMinuta("custom");
+}
 
+function establecerFechaMinuta(modo) {
+  const inpFecha = document.getElementById("filtro-fecha-minuta");
+  const btnHoy = document.getElementById("btn-fecha-minuta-hoy");
+  const btnAyer = document.getElementById("btn-fecha-minuta-ayer");
+  const btnTodos = document.getElementById("btn-fecha-minuta-todos");
 
-function renderizarMinutaLista(items) {
+  const actCls = "px-3 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white shadow-sm flex items-center gap-1 shrink-0 cursor-pointer transition-all";
+  const inactCls = "px-3 py-2 rounded-xl text-xs font-semibold bg-slate-950 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1 shrink-0 cursor-pointer transition-all";
 
-  const cont = document.getElementById("contenedor-minuta-lista");
+  const hoyStr = new Date().toISOString().split("T")[0];
+  const dAyer = new Date();
+  dAyer.setDate(dAyer.getDate() - 1);
+  const ayerStr = dAyer.toISOString().split("T")[0];
 
-  if (!cont) return;
-
-
-
-  if (items.length === 0) {
-
-    cont.innerHTML = `
-
-      <div class="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-2">
-
-        <i data-lucide="book-open" class="w-8 h-8 text-slate-600 mx-auto"></i>
-
-        <p class="text-xs text-slate-400 font-semibold">No se encontraron sucesos registrados para este criterio de búsqueda.</p>
-
-      </div>
-
-    `;
-
-    safeCreateIcons();
-
-    return;
-
+  if (modo === "hoy") {
+    if (inpFecha) {
+      inpFecha.value = hoyStr;
+      delete inpFecha.dataset.modoTodos;
+    }
+    if (btnHoy) btnHoy.className = actCls;
+    if (btnAyer) btnAyer.className = inactCls;
+    if (btnTodos) btnTodos.className = inactCls;
+  } else if (modo === "ayer") {
+    if (inpFecha) {
+      inpFecha.value = ayerStr;
+      delete inpFecha.dataset.modoTodos;
+    }
+    if (btnHoy) btnHoy.className = inactCls;
+    if (btnAyer) btnAyer.className = actCls;
+    if (btnTodos) btnTodos.className = inactCls;
+  } else if (modo === "todos") {
+    if (inpFecha) {
+      inpFecha.value = "";
+      inpFecha.dataset.modoTodos = "true";
+    }
+    if (btnHoy) btnHoy.className = inactCls;
+    if (btnAyer) btnAyer.className = inactCls;
+    if (btnTodos) btnTodos.className = actCls;
+  } else { // "custom"
+    if (inpFecha && inpFecha.value) {
+      delete inpFecha.dataset.modoTodos;
+      if (btnHoy) btnHoy.className = (inpFecha.value === hoyStr) ? actCls : inactCls;
+      if (btnAyer) btnAyer.className = (inpFecha.value === ayerStr) ? actCls : inactCls;
+      if (btnTodos) btnTodos.className = inactCls;
+    } else {
+      if (btnHoy) btnHoy.className = inactCls;
+      if (btnAyer) btnAyer.className = inactCls;
+      if (btnTodos) btnTodos.className = actCls;
+    }
   }
 
+  buscarMinuta();
+}
 
+function buscarMinuta() {
+  const query = (document.getElementById("filtro-busqueda-minuta")?.value || "").toLowerCase().trim();
+  const inpFecha = document.getElementById("filtro-fecha-minuta");
+  
+  // Por defecto, mostrar todo lo acontecido en el dia (Hoy)
+  const hoyStr = new Date().toISOString().split("T")[0];
+  if (inpFecha && !inpFecha.value && !inpFecha.dataset.modoTodos) {
+    inpFecha.value = hoyStr;
+  }
+  
+  const fechaFiltro = inpFecha?.value || "";
 
-  cont.innerHTML = items.map(item => {
+  let filtrados = Array.isArray(minutaPorteria) ? [...minutaPorteria] : [];
 
+  if (filtroTipoMinuta !== "Todos") {
+    filtrados = filtrados.filter(item => item.tipo === filtroTipoMinuta);
+  }
+
+  if (fechaFiltro) {
+    filtrados = filtrados.filter(item => {
+      if (!item.fecha) return true;
+      return normalizarFechaMinuta(item.fecha) === fechaFiltro;
+    });
+  }
+
+  if (query) {
+    filtrados = filtrados.filter(item => 
+      (item.descripcion && item.descripcion.toLowerCase().includes(query)) ||
+      (item.titulo && item.titulo.toLowerCase().includes(query)) ||
+      (item.inmueble && item.inmueble.toLowerCase().includes(query)) ||
+      (item.portero && item.portero.toLowerCase().includes(query)) ||
+      (item.tipo && item.tipo.toLowerCase().includes(query))
+    );
+  }
+
+  // Actualizar contador del filtro "Todos"
+  const countTodosEl = document.getElementById("count-filtro-todos");
+  if (countTodosEl) {
+    if (fechaFiltro) {
+      const delDia = (minutaPorteria || []).filter(item => !item.fecha || normalizarFechaMinuta(item.fecha) === fechaFiltro);
+      countTodosEl.innerText = delDia.length;
+    } else {
+      countTodosEl.innerText = (minutaPorteria || []).length;
+    }
+  }
+
+  renderizarMinutaLista(filtrados, fechaFiltro);
+}
+
+function renderizarMinutaLista(items, fechaFiltro = "") {
+  const cont = document.getElementById("contenedor-minuta-lista");
+  if (!cont) return;
+
+  const hoyStr = new Date().toISOString().split("T")[0];
+  const dAyer = new Date();
+  dAyer.setDate(dAyer.getDate() - 1);
+  const ayerStr = dAyer.toISOString().split("T")[0];
+
+  let fechaTitulo = "Hoy";
+  if (!fechaFiltro) {
+    fechaTitulo = "Historial Completo (Todos los días)";
+  } else if (fechaFiltro === hoyStr) {
+    const hoyObj = new Date();
+    fechaTitulo = `Hoy (${hoyObj.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric" })})`;
+  } else if (fechaFiltro === ayerStr) {
+    fechaTitulo = `Ayer (${fechaFiltro})`;
+  } else {
+    fechaTitulo = `Fecha: ${fechaFiltro}`;
+  }
+
+  if (!items || items.length === 0) {
+    cont.innerHTML = `
+      <div class="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center shadow">
+          <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+        </div>
+        <p class="text-sm font-bold text-white">No hay acontecimientos registrados para ${fechaTitulo}</p>
+        <p class="text-xs text-slate-400 max-w-md mx-auto">
+          No se encontraron registros en el libro para esta fecha. Puedes seleccionar los días anteriores con las flechas o pulsar "Todos los Días" para consultar el historial completo.
+        </p>
+        <div class="flex items-center justify-center gap-2 pt-2">
+          <button type="button" onclick="navegarDiaMinuta(-1)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 cursor-pointer">
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            <span>Ver Día Anterior</span>
+          </button>
+          <button type="button" onclick="establecerFechaMinuta('todos')" class="px-3 py-1.5 rounded-xl bg-amber-600/90 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1 cursor-pointer">
+            <i data-lucide="list" class="w-3.5 h-3.5"></i>
+            <span>Ver Todos los Días</span>
+          </button>
+        </div>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
+
+  // Estilo Hoja de Excel (Spreadsheet Cuadriculado Oficial)
+  const rowsHtml = items.map((item, index) => {
     let badgeCls = "bg-slate-800 text-slate-300 border-slate-700";
-
     let badgeIcon = "info";
-
     let tagLabel = item.tipo;
 
-
-
     if (item.tipo === "Relevos") {
-
-      badgeCls = "bg-cyan-950/80 text-cyan-300 border-cyan-800/80";
-
+      badgeCls = "bg-cyan-950/90 text-cyan-300 border-cyan-800/80";
       badgeIcon = "repeat";
-
-      tagLabel = "Relevo de Turno";
-
+      tagLabel = "Relevo";
     } else if (item.tipo === "Paquetería") {
-
-      badgeCls = "bg-amber-950/80 text-amber-300 border-amber-800/80";
-
+      badgeCls = "bg-purple-950/90 text-purple-300 border-purple-800/80";
       badgeIcon = "package";
-
-      tagLabel = "Paquete / Encomienda";
-
+      tagLabel = "Paquetería";
     } else if (item.tipo === "Ingresos") {
-
-      badgeCls = "bg-emerald-950/80 text-emerald-300 border-emerald-800/80";
-
+      badgeCls = "bg-emerald-950/90 text-emerald-300 border-emerald-800/80";
       badgeIcon = "user-check";
-
-      tagLabel = "Ingreso Visitante";
-
+      tagLabel = "Ingreso";
     } else if (item.tipo === "Salidas") {
-
-      badgeCls = "bg-slate-800 text-slate-300 border-slate-700";
-
+      badgeCls = "bg-slate-800/90 text-slate-300 border-slate-700";
       badgeIcon = "user-x";
-
-      tagLabel = "Salida Visitante";
-
+      tagLabel = "Salida";
     } else if (item.tipo === "Incidencias") {
-
-      badgeCls = "bg-orange-950/80 text-orange-300 border-orange-800/80";
-
+      badgeCls = "bg-orange-950/90 text-orange-300 border-orange-800/80";
       badgeIcon = "wrench";
-
       tagLabel = "Incidencia";
-
     } else if (item.tipo === "Alertas") {
-
-      badgeCls = "bg-rose-950/80 text-rose-300 border-rose-800/80";
-
+      badgeCls = "bg-rose-950/90 text-rose-300 border-rose-800/80";
       badgeIcon = "alert-triangle";
-
-      tagLabel = "Alerta de Seguridad";
-
+      tagLabel = "Alerta SOS";
     }
 
+    const estadoCls = (item.estado === "En Recinto" || item.estado === "En Curso" || item.estado === "En Custodia")
+      ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/80"
+      : (item.estado === "Salida Confirmada" || item.estado === "Entregado al Residente" || item.estado === "Registrado")
+      ? "bg-slate-800/80 text-slate-300 border-slate-700"
+      : "bg-blue-950/80 text-blue-300 border-blue-800/80";
 
+    const zebraCls = (index % 2 === 0) ? "bg-slate-900/40" : "bg-slate-950/70";
+
+    // Acciones operativas directas
+    let actionBtn = "";
+    if (item.tipo === "Ingresos" && item.estado === "En Recinto") {
+      actionBtn = `
+        <button onclick="registrarSalidaPorMinuta('${item.id}', '${item.inmueble}')" class="px-2 py-0.5 rounded-lg bg-cyan-900/80 hover:bg-cyan-800 text-cyan-200 border border-cyan-700/80 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm" title="Registrar salida de visitante">
+          <i data-lucide="log-out" class="w-2.5 h-2.5"></i>
+          <span>Salida</span>
+        </button>
+      `;
+    } else if (item.tipo === "Paquetería" && item.estado === "En Custodia") {
+      actionBtn = `
+        <button onclick="entregarPaquetePorMinuta('${item.id}', '${item.inmueble}')" class="px-2 py-0.5 rounded-lg bg-purple-900/80 hover:bg-purple-800 text-purple-200 border border-purple-700/80 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm" title="Marcar como entregado al residente">
+          <i data-lucide="check-check" class="w-2.5 h-2.5"></i>
+          <span>Entregar</span>
+        </button>
+      `;
+    }
 
     return `
-
-      <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl space-y-3 text-xs hover:border-slate-700 transition-all shadow-sm">
-
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-
-          <div class="flex items-center gap-2 flex-wrap">
-
-            <span class="px-2.5 py-0.5 rounded-full ${badgeCls} border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-
-              <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
-
-              <span>${tagLabel}</span>
-
-            </span>
-
-            <span class="text-amber-400 font-mono text-[11px] flex items-center gap-1 font-semibold">
-
-              <i data-lucide="clock" class="w-3 h-3"></i>
-
-              <span>${item.fecha} • ${item.hora}</span>
-
-            </span>
-
-            <span class="px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 text-[10px] font-bold flex items-center gap-1">
-
-              <i data-lucide="map-pin" class="w-3 h-3"></i>
-
-              <span>Inmueble: ${item.inmueble}</span>
-
-            </span>
-
+      <tr class="${zebraCls} hover:bg-slate-800/60 transition-colors border-b border-slate-800/60">
+        <td class="py-2.5 px-3 text-center text-[11px] font-mono text-slate-500 font-bold">${index + 1}</td>
+        <td class="py-2.5 px-3 text-amber-300 font-mono text-[11px] font-semibold whitespace-nowrap">
+          <div class="flex items-center gap-1">
+            <i data-lucide="clock" class="w-3 h-3 text-amber-400 shrink-0"></i>
+            <span>${item.hora || '--:--'}</span>
           </div>
-
-          <span class="text-[11px] text-slate-400 flex items-center gap-1">
-
-            <i data-lucide="shield" class="w-3 h-3 text-slate-500"></i>
-
-            <span>Registrado por: <strong class="text-slate-300">${item.portero}</strong></span>
-
+          ${item.fecha ? `<span class="block text-[9px] text-slate-500 font-mono">${item.fecha}</span>` : ""}
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded-full ${badgeCls} border text-[10px] font-bold tracking-wider inline-flex items-center gap-1">
+            <i data-lucide="${badgeIcon}" class="w-2.5 h-2.5"></i>
+            <span>${tagLabel}</span>
           </span>
-
-        </div>
-
-
-
-        <div>
-
-          <h4 class="font-bold text-sm text-white mb-1">${item.titulo}</h4>
-
-          <p class="text-slate-300 leading-relaxed text-xs">${item.descripcion}</p>
-
-        </div>
-
-
-
-        <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between flex-wrap gap-2 text-[11px]">
-
-          <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 font-mono font-semibold">
-
-            Estado: <strong class="text-slate-200">${item.estado}</strong>
-
+        </td>
+        <td class="py-2.5 px-3 whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700/80 text-emerald-400 font-mono font-bold text-[11px]">
+            ${item.inmueble || 'General'}
           </span>
-
-          <div class="flex items-center gap-2">
-            ${item.tipo === "Paquetería" && item.estado === "En Custodia" ? `
-
-              <button onclick="entregarPaquetePorMinuta('${item.id}', '${item.inmueble}')" class="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold flex items-center gap-1 text-[11px] shadow-sm transition-all">
-
-                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-
-                <span>Marcar como Entregado</span>
-
-              </button>
-
-            ` : ""}
-
-            ${item.tipo === "Ingresos" && item.estado === "En Recinto" ? `
-
-              <button onclick="registrarSalidaPorMinuta('${item.id}', '${item.inmueble}')" class="px-3 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold flex items-center gap-1 text-[11px] shadow-sm transition-all">
-
-                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-
-                <span>Registrar Salida</span>
-
-              </button>
-
-            ` : ""}
-
+        </td>
+        <td class="py-2.5 px-4 text-xs">
+          <div class="font-bold text-white text-xs">${item.titulo || ''}</div>
+          <div class="text-[11px] text-slate-300 leading-snug pt-0.5">${item.descripcion || ''}</div>
+        </td>
+        <td class="py-2.5 px-3 text-[11px] text-slate-300 whitespace-nowrap">
+          <div class="font-semibold text-slate-200">${item.portero ? item.portero.split('(')[0].trim() : 'Carlos Mario Gómez'}</div>
+          <span class="text-[9px] text-slate-500 block">Vigilancia 24/7</span>
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <div class="flex items-center justify-center gap-1.5 flex-wrap">
+            <span class="px-2 py-0.5 rounded-full ${estadoCls} border text-[10px] font-bold font-mono inline-block">
+              ${item.estado || 'Registrado'}
+            </span>
+            ${actionBtn}
           </div>
-
-        </div>
-
-      </div>
-
+        </td>
+      </tr>
     `;
-
   }).join("");
 
+  cont.innerHTML = `
+    <!-- Encabezado de la Hoja de Minuta Excel -->
+    <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-400 flex items-center justify-center shrink-0">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+        </div>
+        <span class="text-xs font-black text-white uppercase tracking-wider">
+          Hoja Oficial de Novedades & Minuta
+        </span>
+        <span class="text-xs text-emerald-400 font-semibold">• ${fechaTitulo}</span>
+        <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-mono font-bold">
+          ${items.length} acontecimiento(s)
+        </span>
+      </div>
+      <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>Libro Foliado Digital Ley 675 / Supervigilancia</span>
+      </div>
+    </div>
 
-
-
+    <!-- Tabla Cuadriculada Estilo Hoja de Excel -->
+    <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/90 shadow-xl">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-900/90 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-800">
+            <th class="py-3 px-3 w-10 text-center font-mono">#</th>
+            <th class="py-3 px-3 w-28 font-mono">Hora</th>
+            <th class="py-3 px-3 w-28">Tipo / Evento</th>
+            <th class="py-3 px-3 w-24">Inmueble</th>
+            <th class="py-3 px-4 min-w-[340px]">Novedad y Acontecimiento Detallado</th>
+            <th class="py-3 px-3 w-36">Guarda en Turno</th>
+            <th class="py-3 px-3 w-36 text-center">Estado / Control</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 font-sans">
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
 
   safeCreateIcons();
-
 }
 
 
@@ -50046,16 +50127,21 @@ async function registrarSalidaPorMinuta(minId, inmueble) {
 
 
 function imprimirMinutaPorteria() {
+  const inpFecha = document.getElementById("filtro-fecha-minuta");
+  const fechaFiltro = inpFecha?.value || "";
+  let itemsAImprimir = Array.isArray(minutaPorteria) ? [...minutaPorteria] : [];
+  if (fechaFiltro && !inpFecha?.dataset?.modoTodos) {
+    itemsAImprimir = itemsAImprimir.filter(m => (!m.fecha || normalizarFechaMinuta(m.fecha) === fechaFiltro));
+  }
+  if (filtroTipoMinuta !== "Todos") {
+    itemsAImprimir = itemsAImprimir.filter(m => m.tipo === filtroTipoMinuta);
+  }
 
   const fechaHoy = new Date().toLocaleDateString();
-
   const cAct = listaCopropiedadesSuperadmin.find(c => c.codigo === AppState.codigoEdificio);
-
   const edificio = cAct ? cAct.nombre : "EDIFICIO ROBLE ALTO P.H.";
 
-
-
-  const filas = minutaPorteria.map(m => `
+  const filas = itemsAImprimir.map(m => `
 
     <tr>
 
@@ -50164,41 +50250,34 @@ function imprimirMinutaPorteria() {
 
 
 function exportarMinutaCSV() {
+  const inpFecha = document.getElementById("filtro-fecha-minuta");
+  const fechaFiltro = inpFecha?.value || "";
+  let itemsAExportar = Array.isArray(minutaPorteria) ? [...minutaPorteria] : [];
+  if (fechaFiltro && !inpFecha?.dataset?.modoTodos) {
+    itemsAExportar = itemsAExportar.filter(m => (!m.fecha || normalizarFechaMinuta(m.fecha) === fechaFiltro));
+  }
+  if (filtroTipoMinuta !== "Todos") {
+    itemsAExportar = itemsAExportar.filter(m => m.tipo === filtroTipoMinuta);
+  }
 
-  let csv = "\uFEFFFecha,Hora,Tipo,Inmueble,Titulo,Descripcion,Portero,Estado\n";
-
-  minutaPorteria.forEach(m => {
-
+  let csv = "\uFEFF#,Fecha,Hora,Tipo,Inmueble,Titulo,Descripcion,Portero,Estado\n";
+  itemsAExportar.forEach((m, idx) => {
     const descLimpia = (m.descripcion || "").replace(/"/g, '""');
-
     const titLimpio = (m.titulo || "").replace(/"/g, '""');
-
-    csv += `"${m.fecha}","${m.hora}","${m.tipo}","${m.inmueble}","${titLimpio}","${descLimpia}","${m.portero}","${m.estado}"\n`;
-
+    csv += `"${idx + 1}","${m.fecha || ''}","${m.hora || ''}","${m.tipo || ''}","${m.inmueble || ''}","${titLimpio}","${descLimpia}","${m.portero || ''}","${m.estado || ''}"\n`;
   });
 
-
-
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
-
   a.href = url;
-
-  a.download = `MINUTA_DIGITAL_PORTERIA_${new Date().toISOString().split("T")[0]}.csv`;
-
+  const sufijo = fechaFiltro ? fechaFiltro : "COMPLETO";
+  a.download = `HOJA_MINUTA_PORTERIA_${sufijo}.csv`;
   document.body.appendChild(a);
-
   a.click();
-
   document.body.removeChild(a);
-
   URL.revokeObjectURL(url);
-
-  mostrarToast("Minuta digital exportada a CSV exitosamente.");
-
+  mostrarToast(`Hoja de minuta (${itemsAExportar.length} registros) exportada a Excel CSV exitosamente.`);
 }
 
 
