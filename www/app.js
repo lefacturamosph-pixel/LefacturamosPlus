@@ -21545,7 +21545,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const pantallaEntrada = document.getElementById("pantalla-entrada");
       const appPrincipal = document.getElementById("app-principal");
 
-      if (rolUrl === "superadmin" || rolUrl.includes("superadmin")) {
+      if (rawHash === "parqueaderos" || rawHash === "pq" || rolUrl === "parqueaderos") {
+        if (pantallaEntrada) {
+          pantallaEntrada.classList.add("hidden");
+          pantallaEntrada.style.display = "none";
+        }
+        if (appPrincipal) {
+          appPrincipal.classList.remove("hidden");
+          appPrincipal.style.display = "flex";
+        }
+        if (typeof inicializarDatos === "function") inicializarDatos();
+        cambiarRolActivo("admin");
+        cambiarPestana("parqueaderos");
+        mostrarToast("🚗 Acceso directo a Inventario de Parqueaderos (PQ Moto / Carro).");
+        return true;
+      } else if (rolUrl === "superadmin" || rolUrl.includes("superadmin")) {
         if (pantallaEntrada) {
           pantallaEntrada.classList.add("hidden");
           pantallaEntrada.style.display = "none";
@@ -21944,17 +21958,22 @@ if (tabId && tabId.startsWith("manual-")) {
 
   });
 
-    const activeTab = document.getElementById(`tab-${tabId}`);
+  const activeTab = document.getElementById(`tab-${tabId}`);
   if (activeTab) {
     activeTab.classList.add("active");
     activeTab.classList.remove("hidden");
+    activeTab.style.removeProperty("display");
     activeTab.style.display = "block";
   }
 
   if (tabId === "parqueaderos") {
-    renderizarInventarioParqueaderos();
-    poblarDatalistAptosParqueaderos();
-    cargarParqueaderosDesdeBackend();
+    try {
+      renderizarInventarioParqueaderos();
+      poblarDatalistAptosParqueaderos();
+      cargarParqueaderosDesdeBackend();
+    } catch (e) {
+      console.error("Error al renderizar parqueaderos:", e);
+    }
   }
 
   // Garantizar que tab-superadmin quede 100% oculto si no estamos en superadmin

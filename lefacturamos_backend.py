@@ -149,6 +149,11 @@ def serve_index_root():
         return FileResponse("./www/index.html", headers=NO_CACHE_HEADERS)
     return {"app": "LEFACTURAMOS PH", "version": "4.0.0"}
 
+@app.get("/parqueaderos")
+def serve_parqueaderos_direct():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/#parqueaderos", status_code=302)
+
 @app.get("/superadmin")
 def serve_superadmin_direct():
     from fastapi.responses import RedirectResponse
