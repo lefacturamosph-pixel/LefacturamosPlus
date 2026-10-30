@@ -5625,7 +5625,7 @@
 
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
 
-              <h3 class="text-xs font-black uppercase text-slate-300">Reservas Confirmadas en la Copropiedad</h3>
+              <h3 id="titulo-seccion-reservas-residente" class="text-xs font-black uppercase text-slate-300">Mis Reservas Confirmadas</h3>
 
               <span class="text-[10px] text-brand-400 font-medium">Actualizado en tiempo real</span>
 
@@ -7670,6 +7670,11 @@
 
           </button>
 
+          <button id="subtab-btn-reservas" onclick="cambiarSubtabPorteria('reservas')" class="px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer shrink-0">
+            <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i>
+            <span>Reservas Zonas Comunes (<span id="badge-count-reservas-porteria">0</span>)</span>
+          </button>
+
           <button id="subtab-btn-inventario" onclick="cambiarSubtabPorteria('inventario')" class="px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer shrink-0">
 
             <i data-lucide="clipboard-check" class="w-4 h-4 text-emerald-400"></i>
@@ -8057,7 +8062,70 @@
           <div id="contenedor-grid-inventario-puesto" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             <!-- Renderizado dinámicamente con renderizarInventarioPuestoGrid() -->
           </div>
+        </div>
 
+        <!-- CONTENIDO SUBTAB 5: RESERVAS DE ZONAS COMUNES EN PORTERÍA -->
+        <div id="subtab-view-reservas" class="hidden space-y-4">
+          <!-- Encabezado del módulo con buscador y filtros para el guarda -->
+          <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-md">
+                <i data-lucide="calendar-check" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                    CONTROL DE ZONAS COMUNES
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-medium border border-slate-700">
+                    Vigilancia & Control de Acceso
+                  </span>
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-white mt-1">Reservas Confirmadas de la Copropiedad</h3>
+                <p class="text-xs text-slate-400">Verificación operativa de turnos y copropietarios autorizados para el uso de áreas comunes (BBQ, Salón Social, Canchas, etc.).</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-[11px] text-slate-400">Fecha:</span>
+                <input type="date" id="filtro-fecha-reservas-porteria" onchange="renderizarReservasPorteria()" class="bg-transparent text-xs text-white focus:outline-none">
+                <button type="button" onclick="limpiarFiltroReservasPorteria()" class="text-slate-400 hover:text-white transition-colors cursor-pointer" title="Ver todas las fechas">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro rápido: Hoy / Próximas / Todas y Buscador -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <button type="button" id="btn-filtro-res-port-hoy" onclick="filtrarReservasPorteria('hoy')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 shadow flex items-center gap-1.5 cursor-pointer shrink-0">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span>Hoy</span>
+                <span id="badge-port-res-hoy" class="px-1.5 py-0.2 rounded-full bg-emerald-800/60 text-[10px] font-mono">0</span>
+              </button>
+              <button type="button" id="btn-filtro-res-port-proximas" onclick="filtrarReservasPorteria('proximas')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1.5 cursor-pointer shrink-0">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                <span>Próximos Días</span>
+                <span id="badge-port-res-proximas" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">0</span>
+              </button>
+              <button type="button" id="btn-filtro-res-port-todas" onclick="filtrarReservasPorteria('todas')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1.5 cursor-pointer shrink-0">
+                <span>Todas</span>
+                <span id="badge-port-res-todas" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">0</span>
+              </button>
+            </div>
+
+            <div class="relative flex-1 max-w-xs">
+              <input type="text" id="busqueda-reservas-porteria" oninput="renderizarReservasPorteria()" placeholder="Buscar por apto, nombre o zona..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <!-- Contenedor dinámico de reservas para la guardia -->
+          <div id="lista-reservas-porteria" class="space-y-3">
+            <!-- Render dinámico con renderizarReservasPorteria() -->
+          </div>
         </div>
 
 
@@ -37698,6 +37766,8 @@ const MENUS_POR_ROL = {
 
       { id: "accesos-porteria", label: "Control de Visitantes & QR", icono: "scan-line", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('accesos');" },
 
+      { id: "reservas-porteria", label: "Reservas Zonas Comunes", icono: "calendar", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('reservas');" },
+
       { id: "comunicados", label: "Alertas y Novedades", icono: "megaphone" },
 
       { id: "pqr", label: "PQR (Solo Lectura)", icono: "message-square" },
@@ -65203,6 +65273,7 @@ function cancelarReserva(rid) {
   actualizarHorariosOcupados();
   cargarMisReservas();
   renderizarReservasCopropietarios();
+  if (typeof renderizarReservasPorteria === 'function') renderizarReservasPorteria();
   safeCreateIcons();
 }
 
@@ -65285,7 +65356,7 @@ function actualizarHorariosOcupados() {
             <div class="flex flex-wrap gap-1.5 pt-0.5">
               ${ocupadas.map(o => `
                 <span class="px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800/80 text-rose-300 font-mono text-[10px] font-bold">
-                  ⛔ ${o.horaIni} - ${o.horaFin} (Apto ${o.apto})
+                  ⛔ ${o.horaIni} - ${o.horaFin} (Horario Ocupado)
                 </span>
               `).join("")}
             </div>
@@ -65386,23 +65457,67 @@ function cargarMisReservas() {
   const cont = document.getElementById("lista-reservas-usuario");
   if (!cont) return;
 
-  if (listaReservasCopropiedad.length === 0) {
+  const esAdmin = (typeof AppState !== "undefined" && (AppState.rol === "admin" || AppState.rol === "superadmin" || AppState.rol === "administrador"));
+  const esPortero = (typeof AppState !== "undefined" && (AppState.rol === "porteria" || AppState.rol === "vigilante"));
+  
+  const aptoActualNorm = String(AppState?.aptoNumero || "").replace(/\D/g, "");
+  const propActualNorm = String(AppState?.propietario || "").trim().toLowerCase();
+
+  const tituloEl = document.getElementById("titulo-seccion-reservas-residente");
+  if (tituloEl) {
+    if (AppState?.aptoNumero) {
+      tituloEl.textContent = `Mis Reservas Confirmadas (Apto ${AppState.aptoNumero})`;
+    } else {
+      tituloEl.textContent = "Mis Reservas Confirmadas";
+    }
+  }
+
+  // Filtrar estrictamente:
+  // Si es residente, SOLO se muestran las reservas de su propio apartamento / usuario
+  // Las demas reservas de la copropiedad solo las pueden ver el Administrador y en Porteria
+  let misReservas = [];
+  if (esAdmin || esPortero) {
+    misReservas = [...listaReservasCopropiedad];
+  } else {
+    misReservas = listaReservasCopropiedad.filter(r => {
+      const rAptoNorm = String(r.apto || "").replace(/\D/g, "");
+      const rPropNorm = String(r.residente || "").trim().toLowerCase();
+
+      // Coincidencia por numero de apartamento
+      if (aptoActualNorm && rAptoNorm && (aptoActualNorm === rAptoNorm || parseInt(aptoActualNorm, 10) === parseInt(rAptoNorm, 10))) {
+        return true;
+      }
+      // Coincidencia por nombre de residente/propietario
+      if (propActualNorm && rPropNorm && (propActualNorm === rPropNorm || propActualNorm.includes(rPropNorm) || rPropNorm.includes(propActualNorm))) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  if (misReservas.length === 0) {
     cont.innerHTML = `
-      <div class="p-4 text-center text-xs text-slate-400">
-        No hay reservas registradas en este momento.
+      <div class="py-8 px-4 text-center rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
+        <div class="w-10 h-10 mx-auto rounded-full bg-slate-800 text-slate-400 flex items-center justify-center">
+          <i data-lucide="calendar" class="w-5 h-5 text-slate-400"></i>
+        </div>
+        <p class="font-bold text-slate-300 text-xs">No tienes reservas activas en este momento</p>
+        <p class="text-[11px] text-slate-500 max-w-sm mx-auto">
+          Selecciona una zona común, fecha y horario en el formulario superior para registrar tu reserva.
+        </p>
       </div>
     `;
+    safeCreateIcons();
     return;
   }
 
-  cont.innerHTML = listaReservasCopropiedad.map(r => {
-    const esMiApto = (r.apto === AppState.aptoNumero || r.residente === AppState.propietario || AppState.rol === "admin" || AppState.rol === "superadmin");
+  cont.innerHTML = misReservas.map(r => {
     return `
       <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-all">
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-white">${r.zona}</span>
-            <span class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-brand-400">Apto ${r.apto}</span>
+            <span class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-emerald-400">Apto ${r.apto}</span>
             ${r.residente ? `<span class="text-[10px] text-slate-400">(${r.residente})</span>` : ""}
           </div>
           <span class="text-[11px] text-slate-400">${r.fecha} • ${r.horario} • ${r.personas || 4} pers.</span>
@@ -65410,12 +65525,10 @@ function cargarMisReservas() {
         <div class="text-right flex flex-col items-end gap-1">
           <div class="flex items-center gap-1.5">
             <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold text-[10px] block">${r.estado}</span>
-            ${esMiApto ? `
-              <button type="button" onclick="cancelarReserva('${r.id}')" title="Cancelar y liberar esta reserva" class="px-2 py-0.5 rounded bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all">
-                <i data-lucide="x" class="w-3 h-3 text-rose-400"></i>
-                <span>Cancelar</span>
-              </button>
-            ` : ""}
+            <button type="button" onclick="cancelarReserva('${r.id}')" title="Cancelar y liberar esta reserva" class="px-2 py-0.5 rounded bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all">
+              <i data-lucide="x" class="w-3 h-3 text-rose-400"></i>
+              <span>Cancelar</span>
+            </button>
           </div>
           <span class="text-[11px] font-mono font-bold text-slate-300">${r.costo}</span>
         </div>
@@ -65529,6 +65642,7 @@ function confirmarReserva() {
 
   actualizarHorariosOcupados();
   cargarMisReservas();
+  if (typeof renderizarReservasPorteria === 'function') renderizarReservasPorteria();
   safeCreateIcons();
   mostrarToast(`¡Reserva #${rid} confirmada. Valor: ${costoTexto}.`);
 }
@@ -66610,6 +66724,16 @@ function renderizarPorteria() {
 
   renderizarPaquetesLista();
 
+  const bRes = document.getElementById("badge-count-reservas-porteria");
+  if (bRes) {
+    const hoyStr = new Date().toISOString().split("T")[0];
+    const vigentes = (typeof listaReservasCopropiedad !== "undefined" ? listaReservasCopropiedad : []).filter(r => r.fecha >= hoyStr && r.estado === "Confirmada");
+    bRes.innerText = vigentes.length;
+  }
+  if (typeof renderizarReservasPorteria === "function" && typeof subtabPorteriaActiva !== "undefined" && subtabPorteriaActiva === "reservas") {
+    renderizarReservasPorteria();
+  }
+
   const bInv = document.getElementById("badge-count-inventario");
   if (bInv && typeof inventarioPuesto !== "undefined") bInv.innerText = inventarioPuesto.length;
   if (typeof renderizarInventarioPuestoGrid === "function") renderizarInventarioPuestoGrid();
@@ -66627,34 +66751,23 @@ function cambiarSubtabPorteria(subtab) {
 
 
   const btnMin = document.getElementById("subtab-btn-minuta");
-
   const btnAcc = document.getElementById("subtab-btn-accesos");
-
   const btnPaq = document.getElementById("subtab-btn-paqueteria");
-
-
+  const btnRes = document.getElementById("subtab-btn-reservas");
+  const btnInv = document.getElementById("subtab-btn-inventario");
 
   const viewMin = document.getElementById("subtab-view-minuta");
-
   const viewAcc = document.getElementById("subtab-view-accesos");
-
   const viewPaq = document.getElementById("subtab-view-paqueteria");
-
-
-
-  const btnInv = document.getElementById("subtab-btn-inventario");
+  const viewRes = document.getElementById("subtab-view-reservas");
   const viewInv = document.getElementById("subtab-view-inventario");
 
   const subtabs = [
-
     { id: "minuta", btn: btnMin, view: viewMin, color: "bg-amber-600" },
-
     { id: "accesos", btn: btnAcc, view: viewAcc, color: "bg-cyan-600" },
-
     { id: "paqueteria", btn: btnPaq, view: viewPaq, color: "bg-purple-600" },
-
-    { id: "inventario", btn: btnInv, view: viewInv, color: "bg-emerald-600" }
-
+    { id: "reservas", btn: btnRes, view: viewRes, color: "bg-emerald-600" },
+    { id: "inventario", btn: btnInv, view: viewInv, color: "bg-teal-600" }
   ];
 
 
@@ -66673,6 +66786,8 @@ function cambiarSubtabPorteria(subtab) {
           const inp = document.getElementById("porteria-qr-input");
           if (inp) setTimeout(() => inp.focus(), 150);
           sincronizarVisitantesDesdeServidor();
+        } else if (item.id === "reservas") {
+          renderizarReservasPorteria();
         }
 
       } else {
@@ -83881,6 +83996,169 @@ function mostrarTodosLosEdificiosSuperadmin() {
 
 async function cargarTokensDinamicosPorteria() {
   await sincronizarVisitantesDesdeServidor();
+}
+
+
+// ==============================================================================
+// GESTION OPERATIVA DE RESERVAS DE ZONAS COMUNES EN PORTERIA (VIGILANCIA 24/7)
+// ==============================================================================
+
+let filtroTiempoReservasPorteria = "hoy"; // "hoy", "proximas", "todas"
+
+function filtrarReservasPorteria(tipo) {
+  filtroTiempoReservasPorteria = tipo;
+  const btnHoy = document.getElementById("btn-filtro-res-port-hoy");
+  const btnProx = document.getElementById("btn-filtro-res-port-proximas");
+  const btnTod = document.getElementById("btn-filtro-res-port-todas");
+
+  if (btnHoy && btnProx && btnTod) {
+    const actCls = "px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 shadow flex items-center gap-1.5 cursor-pointer shrink-0";
+    const inactCls = "px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1.5 cursor-pointer shrink-0";
+    btnHoy.className = tipo === "hoy" ? actCls : inactCls;
+    btnProx.className = tipo === "proximas" ? actCls : inactCls;
+    btnTod.className = tipo === "todas" ? actCls : inactCls;
+  }
+  renderizarReservasPorteria();
+}
+
+function limpiarFiltroReservasPorteria() {
+  const inp = document.getElementById("filtro-fecha-reservas-porteria");
+  if (inp) inp.value = "";
+  renderizarReservasPorteria();
+}
+
+function renderizarReservasPorteria() {
+  const cont = document.getElementById("lista-reservas-porteria");
+  if (!cont) return;
+
+  const hoyStr = new Date().toISOString().split("T")[0];
+  const fechaInput = document.getElementById("filtro-fecha-reservas-porteria")?.value;
+  const busqueda = (document.getElementById("busqueda-reservas-porteria")?.value || "").toLowerCase().trim();
+
+  const todas = (typeof listaReservasCopropiedad !== "undefined" ? listaReservasCopropiedad : []);
+  const resHoy = todas.filter(r => r.fecha === hoyStr);
+  const resProx = todas.filter(r => r.fecha > hoyStr);
+
+  const bHoy = document.getElementById("badge-port-res-hoy");
+  const bProx = document.getElementById("badge-port-res-proximas");
+  const bTod = document.getElementById("badge-port-res-todas");
+  const bSubtab = document.getElementById("badge-count-reservas-porteria");
+
+  if (bHoy) bHoy.innerText = resHoy.length;
+  if (bProx) bProx.innerText = resProx.length;
+  if (bTod) bTod.innerText = todas.length;
+  if (bSubtab) bSubtab.innerText = resHoy.length > 0 ? resHoy.length : todas.length;
+
+  let filtradas = [];
+  if (fechaInput) {
+    filtradas = todas.filter(r => r.fecha === fechaInput);
+  } else if (filtroTiempoReservasPorteria === "hoy") {
+    filtradas = [...resHoy].sort((a, b) => (a.horaIni || "").localeCompare(b.horaIni || ""));
+  } else if (filtroTiempoReservasPorteria === "proximas") {
+    filtradas = [...resProx].sort((a, b) => (a.fecha + (a.horaIni || "")).localeCompare(b.fecha + (b.horaIni || "")));
+  } else {
+    filtradas = [...todas].sort((a, b) => (b.fecha + (b.horaIni || "")).localeCompare(a.fecha + (a.horaIni || "")));
+  }
+
+  if (busqueda) {
+    filtradas = filtradas.filter(r => 
+      (r.apto && String(r.apto).toLowerCase().includes(busqueda)) ||
+      (r.residente && r.residente.toLowerCase().includes(busqueda)) ||
+      (r.zona && r.zona.toLowerCase().includes(busqueda)) ||
+      (r.id && r.id.toLowerCase().includes(busqueda))
+    );
+  }
+
+  if (filtradas.length === 0) {
+    cont.innerHTML = `
+      <div class="py-10 text-center rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center shadow">
+          <i data-lucide="calendar-x" class="w-6 h-6"></i>
+        </div>
+        <p class="font-bold text-white text-sm">No hay reservas programadas ${fechaInput ? 'para la fecha ' + fechaInput : (filtroTiempoReservasPorteria === 'hoy' ? 'para el turno de hoy' : '')}</p>
+        <p class="text-xs text-slate-400 max-w-md mx-auto">
+          Cuando un copropietario reserve zonas comunes (BBQ, Salón Social, Canchas, Sauna, etc.), aparecerá aquí automáticamente para el control de la portería.
+        </p>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
+
+  cont.innerHTML = filtradas.map(r => {
+    const esDeHoy = (r.fecha === hoyStr);
+    return `
+      <div class="p-4 rounded-2xl bg-slate-900 border ${esDeHoy ? 'border-emerald-600/60 bg-emerald-950/10' : 'border-slate-800'} flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md hover:border-slate-700 transition-all">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-1 rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-800 font-black text-xs">
+              ${r.zona}
+            </span>
+            <span class="px-2 py-0.5 rounded-lg bg-slate-800 text-white font-mono font-bold text-xs">
+              Apto ${r.apto}
+            </span>
+            ${esDeHoy ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/40 animate-pulse">TURNO DE HOY</span>` : ""}
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-mono">${r.id}</span>
+          </div>
+          <div class="text-xs text-slate-300 flex items-center gap-2 flex-wrap">
+            <span class="font-bold text-white">${r.residente || 'Copropietario'}</span>
+            <span>•</span>
+            <span class="text-slate-400 flex items-center gap-1">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-400"></i>
+              ${r.fecha}
+            </span>
+            <span>•</span>
+            <span class="text-amber-300 font-mono font-semibold flex items-center gap-1">
+              <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
+              ${r.horario || `${r.horaIni} - ${r.horaFin}`}
+            </span>
+            <span>•</span>
+            <span class="text-slate-400 flex items-center gap-1">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-cyan-400"></i>
+              Aforo: ${r.personas || 4} pers.
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 self-end md:self-center shrink-0">
+          <span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-bold text-xs">
+            ${r.estado || 'Confirmada'}
+          </span>
+          <button type="button" onclick="registrarIngresoZonaComunMinuta('${r.id}')" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95" title="Registrar ingreso en Minuta de Vigilancia">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>Registrar en Minuta</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+  safeCreateIcons();
+}
+
+function registrarIngresoZonaComunMinuta(resId) {
+  const r = (typeof listaReservasCopropiedad !== "undefined" ? listaReservasCopropiedad : []).find(item => item.id === resId);
+  if (!r) return;
+  const porteroNom = (typeof porteroActivo !== "undefined" && porteroActivo.nombre) ? `${porteroActivo.nombre} (${porteroActivo.turno})` : "Carlos Mario Gómez (Turno Vigilancia)";
+  
+  if (typeof minutaPorteria !== "undefined") {
+    minutaPorteria.unshift({
+      id: `min-${Date.now()}`,
+      tipo: "Ingresos",
+      fecha: new Date().toISOString().split("T")[0],
+      hora: new Date().toLocaleTimeString(),
+      inmueble: `Apto ${r.apto}`,
+      portero: porteroNom,
+      titulo: `Uso Autorizado Zona Común: ${r.zona}`,
+      descripcion: `Ingreso autorizado a ${r.zona} para el Apto ${r.apto} (${r.residente || 'Copropietario'}). Horario: ${r.horario || `${r.horaIni} - ${r.horaFin}`}, aforo reportado: ${r.personas || 4} personas. Uso bajo reglamento interno de copropiedad Ley 675.`,
+      estado: "En Uso"
+    });
+    if (typeof guardarEstadoPorteriaLocal === "function") guardarEstadoPorteriaLocal();
+    if (typeof renderizarPorteria === "function") renderizarPorteria();
+    mostrarToast(`✓ Ingreso a ${r.zona} (Apto ${r.apto}) registrado en el Libro de Minuta.`);
+    cambiarSubtabPorteria("minuta");
+  } else {
+    mostrarToast(`✓ Reserva verificada para Apto ${r.apto}.`);
+  }
 }
 
 </script>

@@ -5625,7 +5625,7 @@
 
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
 
-              <h3 class="text-xs font-black uppercase text-slate-300">Reservas Confirmadas en la Copropiedad</h3>
+              <h3 id="titulo-seccion-reservas-residente" class="text-xs font-black uppercase text-slate-300">Mis Reservas Confirmadas</h3>
 
               <span class="text-[10px] text-brand-400 font-medium">Actualizado en tiempo real</span>
 
@@ -7670,6 +7670,11 @@
 
           </button>
 
+          <button id="subtab-btn-reservas" onclick="cambiarSubtabPorteria('reservas')" class="px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer shrink-0">
+            <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i>
+            <span>Reservas Zonas Comunes (<span id="badge-count-reservas-porteria">0</span>)</span>
+          </button>
+
           <button id="subtab-btn-inventario" onclick="cambiarSubtabPorteria('inventario')" class="px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer shrink-0">
 
             <i data-lucide="clipboard-check" class="w-4 h-4 text-emerald-400"></i>
@@ -8057,7 +8062,70 @@
           <div id="contenedor-grid-inventario-puesto" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             <!-- Renderizado dinámicamente con renderizarInventarioPuestoGrid() -->
           </div>
+        </div>
 
+        <!-- CONTENIDO SUBTAB 5: RESERVAS DE ZONAS COMUNES EN PORTERÍA -->
+        <div id="subtab-view-reservas" class="hidden space-y-4">
+          <!-- Encabezado del módulo con buscador y filtros para el guarda -->
+          <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-md">
+                <i data-lucide="calendar-check" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                    CONTROL DE ZONAS COMUNES
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-medium border border-slate-700">
+                    Vigilancia & Control de Acceso
+                  </span>
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-white mt-1">Reservas Confirmadas de la Copropiedad</h3>
+                <p class="text-xs text-slate-400">Verificación operativa de turnos y copropietarios autorizados para el uso de áreas comunes (BBQ, Salón Social, Canchas, etc.).</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-[11px] text-slate-400">Fecha:</span>
+                <input type="date" id="filtro-fecha-reservas-porteria" onchange="renderizarReservasPorteria()" class="bg-transparent text-xs text-white focus:outline-none">
+                <button type="button" onclick="limpiarFiltroReservasPorteria()" class="text-slate-400 hover:text-white transition-colors cursor-pointer" title="Ver todas las fechas">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro rápido: Hoy / Próximas / Todas y Buscador -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <button type="button" id="btn-filtro-res-port-hoy" onclick="filtrarReservasPorteria('hoy')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 shadow flex items-center gap-1.5 cursor-pointer shrink-0">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span>Hoy</span>
+                <span id="badge-port-res-hoy" class="px-1.5 py-0.2 rounded-full bg-emerald-800/60 text-[10px] font-mono">0</span>
+              </button>
+              <button type="button" id="btn-filtro-res-port-proximas" onclick="filtrarReservasPorteria('proximas')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1.5 cursor-pointer shrink-0">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                <span>Próximos Días</span>
+                <span id="badge-port-res-proximas" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">0</span>
+              </button>
+              <button type="button" id="btn-filtro-res-port-todas" onclick="filtrarReservasPorteria('todas')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white flex items-center gap-1.5 cursor-pointer shrink-0">
+                <span>Todas</span>
+                <span id="badge-port-res-todas" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">0</span>
+              </button>
+            </div>
+
+            <div class="relative flex-1 max-w-xs">
+              <input type="text" id="busqueda-reservas-porteria" oninput="renderizarReservasPorteria()" placeholder="Buscar por apto, nombre o zona..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <!-- Contenedor dinámico de reservas para la guardia -->
+          <div id="lista-reservas-porteria" class="space-y-3">
+            <!-- Render dinámico con renderizarReservasPorteria() -->
+          </div>
         </div>
 
 
