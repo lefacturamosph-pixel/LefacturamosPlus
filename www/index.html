@@ -5894,11 +5894,19 @@
 
               <div class="flex flex-wrap gap-2 pt-2">
 
-                <button id="vis-btn-whatsapp" type="button" onclick="enviarWhatsAppPorDebajo()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 cursor-pointer transition-all">
+                <button id="vis-btn-whatsapp" type="button" onclick="enviarWhatsAppVisitante()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 cursor-pointer transition-all">
 
                   <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
 
                   <span>Enviar por WhatsApp</span>
+
+                </button>
+
+                <button type="button" onclick="copiarMensajeCompletoWhatsApp()" class="px-3.5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-teal-950/40 cursor-pointer transition-all">
+
+                  <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
+
+                  <span>Copiar Mensaje</span>
 
                 </button>
 
@@ -18339,7 +18347,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="app.js?v=20261030_1105"></script>
+  <script src="app.js?v=20261030_1125"></script>
 
 
   <!-- MODAL: VISOR DE FOTO / EVIDENCIA EN TAMAÑO COMPLETO -->

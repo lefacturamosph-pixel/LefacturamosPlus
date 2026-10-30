@@ -47197,7 +47197,55 @@ try {
 
 
 
-async function enviarWhatsAppPorDebajo() {
+function construirMensajeWhatsAppVisitante() {
+  const elNombre = document.getElementById("vis-nombre");
+  const elDoc = document.getElementById("vis-doc");
+  const elPlaca = document.getElementById("vis-placa");
+  const elFecha = document.getElementById("vis-fecha");
+  const nom = elNombre && elNombre.value.trim() ? elNombre.value.trim() : "Visitante";
+  const doc = elDoc && elDoc.value.trim() ? elDoc.value.trim() : "";
+  const placa = elPlaca && elPlaca.value.trim() ? elPlaca.value.trim() : "Peatonal";
+  const fecha = elFecha && elFecha.value ? elFecha.value : new Date().toISOString().split("T")[0];
+  const aptoActual = AppState.aptoNumero || "0103";
+  const edifNombre = (typeof EDIFICIOS_CATALOGO_DRIVE !== "undefined" && EDIFICIOS_CATALOGO_DRIVE[AppState.codigoEdificio]
+    ? EDIFICIOS_CATALOGO_DRIVE[AppState.codigoEdificio].nombre
+    : "EDIFICIO ROBLE ALTO P.H.");
+  const nombreResidente = AppState.propietario || "Copropietario";
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(tokenGeneradoActual)}`;
+
+  return (
+    `*AUTORIZACIÓN DIGITAL DE VISITA - LEFACTURAMOS PH*\n\n` +
+    `👋 Hola *${nom}* (Doc: ${doc}):\n` +
+    `Tienes autorización para ingresar a *${edifNombre}*.\n\n` +
+    `🏠 *Apartamento:* ${aptoActual}\n` +
+    `👤 *Autorizado por:* ${nombreResidente}\n` +
+    `🚗 *Vehículo/Placa:* ${placa}\n` +
+    `📅 *Fecha de Ingreso:* ${fecha}\n` +
+    `🔑 *Código QR:* *${tokenGeneradoActual}*\n\n` +
+    `📸 *Ver imagen del Código QR en tu celular:*\n` +
+    `${qrImageUrl}\n\n` +
+    `⚡ Presenta este código en la portería para validación en 2 segundos.`
+  );
+}
+
+function copiarMensajeCompletoWhatsApp() {
+  if (!tokenGeneradoActual) {
+    mostrarToast("Genere primero una autorización con código QR.", true);
+    return;
+  }
+  const texto = construirMensajeWhatsAppVisitante();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texto).then(() => {
+      mostrarToast("📋 ¡Mensaje completo con enlace copiado! Puedes pegarlo (Ctrl+V) en WhatsApp.");
+    }).catch(() => {
+      mostrarToast("Copie manualmente el código de autorización.", true);
+    });
+  } else {
+    mostrarToast("Portapapeles no soportado directamente en este navegador.", true);
+  }
+}
+
+function enviarWhatsAppVisitante() {
   if (!tokenGeneradoActual) {
     mostrarToast("Genere primero una autorización con código QR.", true);
     return;
@@ -47209,7 +47257,10 @@ async function enviarWhatsAppPorDebajo() {
   const nom = elNombre && elNombre.value.trim() ? elNombre.value.trim() : "Visitante";
   const tel = elTel && elTel.value.trim() ? elTel.value.trim() : "";
 
-  // Despacho a backend en segundo plano sin abrir navegador web
+  const cleanTel = tel.replace(/\D/g, "");
+  const fullPhone = cleanTel ? (cleanTel.startsWith("57") ? cleanTel : (cleanTel.length === 10 ? `57${cleanTel}` : cleanTel)) : "";
+
+  // 1. Auditoría en servidor en segundo plano
   const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
   const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
@@ -47241,16 +47292,34 @@ async function enviarWhatsAppPorDebajo() {
     }
   })();
 
+  // 2. Construir enlace directo oficial de WhatsApp hacia el número del visitante
+  const msgTexto = construirMensajeWhatsAppVisitante();
+  const msgWa = encodeURIComponent(msgTexto);
+  const waUrl = fullPhone 
+    ? `https://api.whatsapp.com/send?phone=${fullPhone}&text=${msgWa}` 
+    : `https://api.whatsapp.com/send?text=${msgWa}`;
+
+  // 3. Abrir WhatsApp para que el mensaje efectivamente salga hacia el celular del destinatario
+  window.open(waUrl, "_blank");
+
   if (btnWa) {
     btnWa.innerHTML = `
-      <i data-lucide="check-check" class="w-3.5 h-3.5 text-white"></i>
-      <span>Enviado por WhatsApp</span>
+      <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+      <span>Abriendo WhatsApp...</span>
     `;
-    btnWa.className = "px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md cursor-default pointer-events-none";
+    setTimeout(() => {
+      if (btnWa) {
+        btnWa.innerHTML = `
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+          <span>Reenviar por WhatsApp</span>
+        `;
+        safeCreateIcons();
+      }
+    }, 3000);
     safeCreateIcons();
   }
 
-  mostrarToast(`✅ Código QR (${tokenGeneradoActual}) enviado por WhatsApp a ${nom} (${tel || "destino"}) exitosamente.`);
+  mostrarToast(`📲 Abriendo WhatsApp para enviar a ${nom} (${tel || "destino"}). Presione Enviar en el chat.`);
 }
 
 function generarQRAnticipado() {
@@ -47359,7 +47428,7 @@ function generarQRAnticipado() {
     btnWa.className = "px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 cursor-pointer transition-all";
     btnWa.onclick = function(e) {
       if (e) e.preventDefault();
-      enviarWhatsAppPorDebajo();
+      enviarWhatsAppVisitante();
     };
   }
 
@@ -47614,7 +47683,7 @@ async function compartirImagenQRWhatsApp() {
   copiarImagenQRPortapapeles();
 
   // 3. Despacho silencioso por debajo sin abrir navegador
-  enviarWhatsAppPorDebajo();
+  enviarWhatsAppVisitante();
   mostrarToast("📲 Imagen descargada y copiada al portapapeles. Notificación WhatsApp enviada.");
 }
 
