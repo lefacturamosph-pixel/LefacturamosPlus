@@ -19234,9 +19234,7 @@ const MENUS_POR_ROL = {
 
       { id: "votaciones", label: "Asamblea Ley 675", icono: "vote" },
 
-      { id: "ley675", label: "Consultar Ley 675", icono: "search" },
-
-      { id: "volver-admin", label: "Volver a Administración", icono: "building-2", action: "cambiarRolActivo('admin')" }
+      { id: "ley675", label: "Consultar Ley 675", icono: "search" }
 
     ]
 
