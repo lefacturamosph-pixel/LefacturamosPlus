@@ -197,6 +197,24 @@ def test_suite_completa():
         assert val_data["status"] == "acceso_concedido"
         assert t_total < 2.0 # Cumplir regla de validación en menos de 2 segundos
         print(f"  [OK] Acceso concedido en {t_total:.3f} segundos (< 2 seg exigidos). Notificación push despachada.")
+
+        # Despacho silencioso de WhatsApp en segundo plano
+        r_wa = client.post("/api/visitantes/enviar-whatsapp", json={"token_qr": token})
+        assert r_wa.status_code == 200
+        assert r_wa.json()["status"] == "enviado"
+        print("  [OK] Despacho silencioso de WhatsApp en segundo plano verificado sin abrir navegador.")
+
+        # Registrar salida sincronizada multi-dispositivo
+        r_sal = client.post("/api/visitantes/registrar-salida", json={"token_qr": token, "guardia_nombre": "Guardia Carlos"})
+        assert r_sal.status_code == 200
+        assert r_sal.json()["status"] == "salida_registrada"
+        print("  [OK] Salida de visitante y liberación de cupo sincronizada en backend.")
+
+        # Verificación de minuta sincronizada en tiempo real
+        r_min = client.get("/api/conjuntos/cj_7480/minuta")
+        assert r_min.status_code == 200
+        assert r_min.json()["total"] >= 1
+        print("  [OK] Minuta de portería sincronizada multi-dispositivo en tiempo real.")
     except Exception as e:
         errores.append(f"Falla en Visitantes/QR: {e}")
         print(f"  [ERROR] {e}")

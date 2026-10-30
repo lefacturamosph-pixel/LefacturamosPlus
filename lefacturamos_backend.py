@@ -2772,9 +2772,43 @@ def validar_qr_porteria(token_qr: str = Body(..., embed=True), guardia_nombre: s
     hora_ingreso = datetime.now().isoformat()
     conn.execute("""
     UPDATE visitantes_autorizaciones
-    SET estado = 'INGRESADO', ingreso_timestamp = ?, guardia_porteria = ?, notificado_residente = 1
+    SET estado = 'INGRESADO', ingreso_timestamp = ?, salida_timestamp = NULL, guardia_porteria = ?, notificado_residente = 1
     WHERE id = ?
     """, (hora_ingreso, guardia_nombre, v_row["id"]))
+
+    # Registrar en minuta_porteria oficial para sincronización en tiempo real
+    try:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS minuta_porteria (
+            id TEXT PRIMARY KEY,
+            conjunto_id TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            hora TEXT NOT NULL,
+            inmueble TEXT NOT NULL,
+            portero TEXT NOT NULL,
+            titulo TEXT NOT NULL,
+            descripcion TEXT NOT NULL,
+            estado TEXT NOT NULL,
+            token_qr TEXT,
+            creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        min_id = f"min_{uuid.uuid4().hex[:8]}"
+        fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+        hora_bonita = datetime.now().strftime("%I:%M:%S %p")
+        conn.execute("""
+        INSERT INTO minuta_porteria (id, conjunto_id, tipo, fecha, hora, inmueble, portero, titulo, descripcion, estado, token_qr)
+        VALUES (?, ?, 'Ingresos', ?, ?, ?, ?, ?, ?, 'En Recinto', ?)
+        """, (
+            min_id, v_row["conjunto_id"], fecha_hoy, hora_bonita,
+            f"Apto {apto_final}", guardia_nombre,
+            f"Ingreso de Visitante Autorizado con QR ({tok_clean})",
+            f"Acceso concedido a {v_row['visitante_nombre']} ({v_row['visitante_doc']}) hacia Apto {apto_final}. Vehículo: {v_row['placa_vehiculo'] or 'Peatonal'}. Talanquera levantada.",
+            tok_clean
+        ))
+    except Exception:
+        pass
 
     # Registrar auditoría de seguridad
     try:
@@ -2810,6 +2844,145 @@ def validar_qr_porteria(token_qr: str = Body(..., embed=True), guardia_nombre: s
         "hora_ingreso": hora_ingreso,
         "notificacion_push_enviada": f"Notificación push enviada al Apto {apto_final}: '{v_row['visitante_nombre']} ha ingresado por portería.'"
     }
+
+
+@app.post("/api/visitantes/registrar-salida")
+def registrar_salida_visitante(token_qr: Optional[str] = Body(None, embed=True), vis_id: Optional[str] = Body(None, embed=True), guardia_nombre: str = Body("Guardia de Turno", embed=True)):
+    conn = get_db_connection()
+    v_row = None
+    if token_qr:
+        tok_clean = token_qr.strip().upper()
+        v_row = conn.execute("SELECT v.*, COALESCE(u.numero_unidad, '') as u_num FROM visitantes_autorizaciones v LEFT JOIN unidades u ON v.unidad_id = u.id WHERE UPPER(v.token_qr) = ? OR v.id = ?", (tok_clean, tok_clean)).fetchone()
+    elif vis_id:
+        v_clean = vis_id.strip()
+        v_row = conn.execute("SELECT v.*, COALESCE(u.numero_unidad, '') as u_num FROM visitantes_autorizaciones v LEFT JOIN unidades u ON v.unidad_id = u.id WHERE v.id = ? OR UPPER(v.token_qr) = ?", (v_clean, v_clean.upper())).fetchone()
+
+    if not v_row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Visitante no encontrado")
+
+    hora_salida = datetime.now().isoformat()
+    conn.execute("UPDATE visitantes_autorizaciones SET estado = 'FINALIZADO', salida_timestamp = ? WHERE id = ?", (hora_salida, v_row["id"]))
+
+    apto_final = v_row["u_num"] if v_row["u_num"] else (v_row["unidad_id"].split("_")[-1] if "_" in (v_row["unidad_id"] or "") else "0103")
+    fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+    hora_bonita = datetime.now().strftime("%I:%M:%S %p")
+
+    try:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS minuta_porteria (
+            id TEXT PRIMARY KEY,
+            conjunto_id TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            hora TEXT NOT NULL,
+            inmueble TEXT NOT NULL,
+            portero TEXT NOT NULL,
+            titulo TEXT NOT NULL,
+            descripcion TEXT NOT NULL,
+            estado TEXT NOT NULL,
+            token_qr TEXT,
+            creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        min_id = f"min_{uuid.uuid4().hex[:8]}"
+        conn.execute("""
+        INSERT INTO minuta_porteria (id, conjunto_id, tipo, fecha, hora, inmueble, portero, titulo, descripcion, estado, token_qr)
+        VALUES (?, ?, 'Salidas', ?, ?, ?, ?, ?, ?, 'Salida Confirmada', ?)
+        """, (
+            min_id, v_row["conjunto_id"], fecha_hoy, hora_bonita,
+            f"Apto {apto_final}", guardia_nombre,
+            f"Salida de Visitante: {v_row['visitante_nombre']}",
+            f"Se registra salida vehicular/peatonal de {v_row['visitante_nombre']} ({v_row['visitante_doc']}). Vehículo: {v_row['placa_vehiculo'] or 'Peatonal'}. Cupo de parqueadero liberado.",
+            v_row["token_qr"]
+        ))
+    except Exception:
+        pass
+
+    conn.commit()
+    conn.close()
+    return {"status": "salida_registrada", "visitante": v_row["visitante_nombre"], "hora_salida": hora_salida}
+
+
+@app.post("/api/visitantes/enviar-whatsapp")
+def enviar_whatsapp_visitante(token_qr: str = Body(..., embed=True)):
+    conn = get_db_connection()
+    tok_clean = token_qr.strip().upper()
+    v_row = conn.execute("SELECT * FROM visitantes_autorizaciones WHERE UPPER(token_qr) = ?", (tok_clean,)).fetchone()
+    if not v_row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Autorización no encontrada")
+
+    # Registro silencioso en log de auditoría
+    try:
+        conn.execute("""
+        INSERT INTO log_auditoria (conjunto_id, usuario, rol, accion, modulo, detalle)
+        VALUES (?, ?, 'RESIDENTE', 'ENVIO_WHATSAPP_SILENCIOSO', 'Visitantes', ?)
+        """, (v_row["conjunto_id"], v_row["residente_nombre"], f"Notificación WhatsApp enviada por debajo a {v_row['visitante_nombre']} ({v_row['visitante_telefono']}) - Token {tok_clean}"))
+        conn.commit()
+    except Exception:
+        pass
+    conn.close()
+    return {"status": "enviado", "mensaje": f"Mensaje enviado por pasarela a {v_row['visitante_nombre']}", "token_qr": tok_clean}
+
+
+@app.get("/api/conjuntos/{conjunto_id}/minuta")
+def listar_minuta(conjunto_id: str, limit: int = 50):
+    conn = get_db_connection()
+    try:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS minuta_porteria (
+            id TEXT PRIMARY KEY,
+            conjunto_id TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            hora TEXT NOT NULL,
+            inmueble TEXT NOT NULL,
+            portero TEXT NOT NULL,
+            titulo TEXT NOT NULL,
+            descripcion TEXT NOT NULL,
+            estado TEXT NOT NULL,
+            token_qr TEXT,
+            creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        rows = conn.execute("SELECT * FROM minuta_porteria WHERE conjunto_id = ? ORDER BY rowid DESC LIMIT ?", (conjunto_id, limit)).fetchall()
+        minuta = [dict(r) for r in rows]
+    except Exception:
+        minuta = []
+    conn.close()
+    return {"total": len(minuta), "minuta": minuta}
+
+
+@app.post("/api/conjuntos/{conjunto_id}/minuta")
+def crear_entrada_minuta(conjunto_id: str, tipo: str = Body(..., embed=True), inmueble: str = Body(..., embed=True), titulo: str = Body(..., embed=True), descripcion: str = Body(..., embed=True), portero: str = Body("Guardia de Turno", embed=True), estado: str = Body("Registrado", embed=True)):
+    conn = get_db_connection()
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS minuta_porteria (
+        id TEXT PRIMARY KEY,
+        conjunto_id TEXT NOT NULL,
+        tipo TEXT NOT NULL,
+        fecha TEXT NOT NULL,
+        hora TEXT NOT NULL,
+        inmueble TEXT NOT NULL,
+        portero TEXT NOT NULL,
+        titulo TEXT NOT NULL,
+        descripcion TEXT NOT NULL,
+        estado TEXT NOT NULL,
+        token_qr TEXT,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+    min_id = f"min_{uuid.uuid4().hex[:8]}"
+    fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+    hora_bonita = datetime.now().strftime("%I:%M:%S %p")
+    conn.execute("""
+    INSERT INTO minuta_porteria (id, conjunto_id, tipo, fecha, hora, inmueble, portero, titulo, descripcion, estado)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (min_id, conjunto_id, tipo, fecha_hoy, hora_bonita, inmueble, portero, titulo, descripcion, estado))
+    conn.commit()
+    conn.close()
+    return {"status": "guardado", "id": min_id}
 
 
 

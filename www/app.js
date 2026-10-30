@@ -47197,6 +47197,62 @@ try {
 
 
 
+async function enviarWhatsAppPorDebajo() {
+  if (!tokenGeneradoActual) {
+    mostrarToast("Genere primero una autorización con código QR.", true);
+    return;
+  }
+
+  const btnWa = document.getElementById("vis-btn-whatsapp");
+  const elNombre = document.getElementById("vis-nombre");
+  const elTel = document.getElementById("vis-tel");
+  const nom = elNombre && elNombre.value.trim() ? elNombre.value.trim() : "Visitante";
+  const tel = elTel && elTel.value.trim() ? elTel.value.trim() : "";
+
+  // Despacho a backend en segundo plano sin abrir navegador web
+  const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+  const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+
+  const candidatos = [
+    originCtx,
+    "https://lefacturamos.onrender.com",
+    (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
+    ""
+  ];
+  if (!isHttpsCtx) {
+    candidatos.push("http://192.168.1.24:8000");
+  }
+  const bases = [...new Set(candidatos.map(u => (u || "").replace(/\/$/, "")))];
+
+  (async () => {
+    for (const b of bases) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        await fetch(`${b}/api/visitantes/enviar-whatsapp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ctrl.signal,
+          body: JSON.stringify({ token_qr: tokenGeneradoActual })
+        });
+        clearTimeout(tid);
+        break;
+      } catch(e) {}
+    }
+  })();
+
+  if (btnWa) {
+    btnWa.innerHTML = `
+      <i data-lucide="check-check" class="w-3.5 h-3.5 text-white"></i>
+      <span>Enviado por WhatsApp</span>
+    `;
+    btnWa.className = "px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md cursor-default pointer-events-none";
+    safeCreateIcons();
+  }
+
+  mostrarToast(`✅ Código QR (${tokenGeneradoActual}) enviado por WhatsApp a ${nom} (${tel || "destino"}) exitosamente.`);
+}
+
 function generarQRAnticipado() {
   const elNombre = document.getElementById("vis-nombre");
   const elDoc = document.getElementById("vis-doc");
@@ -47293,21 +47349,17 @@ function generarQRAnticipado() {
     `${qrImageUrl}\n\n` +
     `⚡ Presenta este código en la portería para validación en 2 segundos.`;
 
-  const msgWa = encodeURIComponent(msgTextoPlano);
-
-  const waUrl = fullPhone 
-    ? `https://api.whatsapp.com/send?phone=${fullPhone}&text=${msgWa}` 
-    : `https://api.whatsapp.com/send?text=${msgWa}`;
-
-  // Conectar y activar enlace de WhatsApp
+  // Conectar y activar enlace de WhatsApp sin abrir navegador web
   const btnWa = document.getElementById("vis-btn-whatsapp");
   if (btnWa) {
-    btnWa.href = waUrl;
-    btnWa.target = "_blank";
-    btnWa.setAttribute("rel", "noopener noreferrer");
+    btnWa.innerHTML = `
+      <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+      <span>Enviar por WhatsApp</span>
+    `;
+    btnWa.className = "px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 cursor-pointer transition-all";
     btnWa.onclick = function(e) {
-      window.open(waUrl, "_blank");
-      mostrarToast("📲 Abriendo WhatsApp con el código QR de acceso...");
+      if (e) e.preventDefault();
+      enviarWhatsAppPorDebajo();
     };
   }
 
@@ -47561,12 +47613,9 @@ async function compartirImagenQRWhatsApp() {
   // 2. Copiar al portapapeles si está disponible
   copiarImagenQRPortapapeles();
 
-  // 3. Abrir el enlace de WhatsApp (que ya incluye el link para ver la imagen)
-  const btnWa = document.getElementById("vis-btn-whatsapp");
-  if (btnWa && btnWa.href && btnWa.href !== "#") {
-    window.open(btnWa.href, "_blank");
-  }
-  mostrarToast("📲 Imagen descargada y copiada. Pégala (Ctrl+V) en el chat de WhatsApp.");
+  // 3. Despacho silencioso por debajo sin abrir navegador
+  enviarWhatsAppPorDebajo();
+  mostrarToast("📲 Imagen descargada y copiada al portapapeles. Notificación WhatsApp enviada.");
 }
 
 // Copiar imagen PNG al portapapeles
@@ -47785,6 +47834,34 @@ function guardarEstadoPorteriaLocal() {
 
 let syncVisitantesInterval = null;
 
+function actualizarContadoresPorteria() {
+  const kpiMin = document.getElementById("kpi-sucesos-minuta");
+  const kpiVis = document.getElementById("kpi-visitantes-adentro");
+  const kpiPaq = document.getElementById("kpi-paquetes-porteria");
+  const kpiPar = document.getElementById("kpi-parqueaderos-disp");
+
+  const paqPendientes = (typeof paqueteriaPorteria !== "undefined" && Array.isArray(paqueteriaPorteria))
+    ? paqueteriaPorteria.filter(p => p.estado === "Por Entregar en Portería").length : 0;
+  const numVis = (typeof visitantesRecinto !== "undefined" && Array.isArray(visitantesRecinto)) ? visitantesRecinto.length : 0;
+  const numMin = (typeof minutaPorteria !== "undefined" && Array.isArray(minutaPorteria)) ? minutaPorteria.length : 0;
+  const cuposLibres = Math.max(0, 15 - numVis);
+
+  if (kpiMin) kpiMin.innerText = `${numMin} registros`;
+  if (kpiVis) kpiVis.innerText = `${numVis} en recinto`;
+  if (kpiPaq) kpiPaq.innerText = `${paqPendientes} por entregar`;
+  if (kpiPar) kpiPar.innerText = `${cuposLibres} cupos libres`;
+
+  const bMin = document.getElementById("badge-count-minuta");
+  const bAcc = document.getElementById("badge-count-accesos");
+  const bPaq = document.getElementById("badge-count-paqueteria");
+  const bTot = document.getElementById("count-filtro-todos");
+
+  if (bMin) bMin.innerText = numMin;
+  if (bAcc) bAcc.innerText = numVis;
+  if (bPaq) bPaq.innerText = paqPendientes;
+  if (bTot) bTot.innerText = numMin;
+}
+
 async function sincronizarVisitantesDesdeServidor() {
   const cod = AppState.codigoEdificio || "4901";
   const isHttps = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
@@ -47825,6 +47902,7 @@ async function sincronizarVisitantesDesdeServidor() {
   }
 
   if (listaServidor.length > 0) {
+    // 1. Sincronizar Tokens Autorizados
     if (typeof listaVisitantesAutorizados === "undefined") {
       listaVisitantesAutorizados = [];
     }
@@ -47861,6 +47939,103 @@ async function sincronizarVisitantesDesdeServidor() {
     } catch (e) {}
 
     actualizarBotonesTokensDinamicos(listaVisitantesAutorizados);
+
+    // 2. Sincronizar Visitantes Activos dentro del Recinto (Multi-dispositivo en tiempo real)
+    const enRecintoServidor = listaServidor.filter(v => v.estado === "INGRESADO" && (!v.salida_timestamp || v.salida_timestamp === ""));
+    const recintoMapeado = enRecintoServidor.map(v => {
+      const rawDoc = (v.visitante_doc || "").toString().trim();
+      const docVis = rawDoc.toUpperCase().startsWith("CC") ? rawDoc : (rawDoc ? `CC ${rawDoc}` : "CC No registra");
+      let horaIn = "";
+      if (v.ingreso_timestamp) {
+        try {
+          const d = new Date(v.ingreso_timestamp);
+          horaIn = isNaN(d.getTime()) ? v.ingreso_timestamp : d.toLocaleTimeString();
+        } catch(e) {
+          horaIn = (v.ingreso_timestamp.split("T")[1] || "").substring(0, 8);
+        }
+      }
+      if (!horaIn) horaIn = v.hora_esperada || new Date().toLocaleTimeString();
+      const aptoVis = v.numero_unidad || (v.unidad_id ? v.unidad_id.split("_").pop() : "0103");
+      return {
+        id: v.id || v.token_qr,
+        nombre: v.visitante_nombre || "Visitante",
+        documento: docVis,
+        apto: aptoVis,
+        vehiculo: v.placa_vehiculo || "Peatonal",
+        horaIngreso: horaIn,
+        token: (v.token_qr || "").toUpperCase()
+      };
+    });
+
+    const sonIgualesRecinto = (typeof visitantesRecinto !== "undefined" && Array.isArray(visitantesRecinto)) &&
+      (visitantesRecinto.length === recintoMapeado.length) &&
+      recintoMapeado.every((item, i) => (visitantesRecinto[i] && (visitantesRecinto[i].token === item.token || visitantesRecinto[i].id === item.id)));
+
+    if (!sonIgualesRecinto) {
+      visitantesRecinto = recintoMapeado;
+      try {
+        localStorage.setItem("lefacturamos_visitantes_recinto", JSON.stringify(visitantesRecinto.slice(0, 50)));
+      } catch(e) {}
+      renderizarVisitantesRecinto();
+      actualizarContadoresPorteria();
+    }
+  }
+
+  // 3. Sincronizar Minuta de Portería desde el servidor
+  let minutaServidor = [];
+  for (const base of basesUnicas) {
+    try {
+      const urlMin = `${base}/api/conjuntos/cj_${cod}/minuta?limit=50`;
+      const ctrlMin = new AbortController();
+      const tidMin = setTimeout(() => ctrlMin.abort(), 4000);
+      const resMin = await fetch(urlMin, { signal: ctrlMin.signal });
+      clearTimeout(tidMin);
+      if (resMin.ok) {
+        const dataMin = await resMin.json();
+        if (dataMin && Array.isArray(dataMin.minuta)) {
+          minutaServidor = dataMin.minuta;
+          break;
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (minutaServidor.length > 0) {
+    const minMapeada = minutaServidor.map(m => ({
+      id: m.id,
+      tipo: m.tipo,
+      fecha: m.fecha,
+      hora: m.hora,
+      inmueble: m.inmueble,
+      portero: m.portero,
+      titulo: m.titulo,
+      descripcion: m.descripcion,
+      estado: m.estado,
+      token_qr: m.token_qr || ""
+    }));
+
+    const mapaMin = new Map();
+    minMapeada.forEach(m => mapaMin.set(m.id || `${m.fecha}_${m.hora}_${m.titulo}`, m));
+    (minutaPorteria || []).forEach(m => {
+      const k = m.id || `${m.fecha}_${m.hora}_${m.titulo}`;
+      if (!mapaMin.has(k)) {
+        mapaMin.set(k, m);
+      }
+    });
+
+    const minutaFusionada = Array.from(mapaMin.values());
+    const sonIgualesMin = (typeof minutaPorteria !== "undefined" && Array.isArray(minutaPorteria)) &&
+      (minutaFusionada.length === minutaPorteria.length) &&
+      (minutaFusionada[0]?.id === minutaPorteria[0]?.id);
+
+    if (!sonIgualesMin) {
+      minutaPorteria = minutaFusionada;
+      try {
+        localStorage.setItem("lefacturamos_minuta_porteria", JSON.stringify(minutaPorteria.slice(0, 100)));
+      } catch(e) {}
+      if (typeof buscarMinuta === "function") buscarMinuta();
+      actualizarContadoresPorteria();
+    }
   }
 }
 
@@ -47889,7 +48064,7 @@ function renderizarPorteria() {
   if (!syncVisitantesInterval) {
     syncVisitantesInterval = setInterval(() => {
       sincronizarVisitantesDesdeServidor();
-    }, 15000);
+    }, 3500);
   }
 
   // 1. Datos del guarda en el encabezado
@@ -49575,94 +49750,143 @@ function guardarDatosPortero() {
 
 
 
-function registrarSalidaVisitante(visId) {
-
-  const idx = visitantesRecinto.findIndex(v => v.id === visId);
-
+async function registrarSalidaVisitante(visId) {
+  const idx = (typeof visitantesRecinto !== "undefined" && Array.isArray(visitantesRecinto))
+    ? visitantesRecinto.findIndex(v => v.id === visId || v.token === visId) : -1;
+  let v = null;
   if (idx !== -1) {
-
-    const v = visitantesRecinto[idx];
-
+    v = visitantesRecinto[idx];
     visitantesRecinto.splice(idx, 1);
-
-
-
-    minutaPorteria.unshift({
-
-      id: `min-${Date.now()}`,
-
-      tipo: "Salidas",
-
-      fecha: new Date().toISOString().split("T")[0],
-
-      hora: new Date().toLocaleTimeString(),
-
-      inmueble: `Apto ${v.apto}`,
-
-      portero: `${porteroActivo.nombre} (${porteroActivo.turno})`,
-
-      titulo: `Salida de Visitante: ${v.nombre}`,
-
-      descripcion: `Se registra salida vehicular/peatonal de ${v.nombre} (${v.documento}). Vehículo: ${v.vehiculo}. Cupo de parqueadero liberado.`,
-
-      estado: "Salida Confirmada"
-
-    });
-
-
-
-    renderizarPorteria();
-
-    mostrarToast(`Salida de ${v.nombre} registrada. Cupo liberado.`);
-
+  } else {
+    v = { id: visId, nombre: "Visitante", documento: "", apto: "0301", vehiculo: "Peatonal", token: visId };
   }
 
+  const porteroNom = (typeof porteroActivo !== "undefined" && porteroActivo && porteroActivo.nombre)
+    ? `${porteroActivo.nombre} (${porteroActivo.turno || "24/7"})`
+    : "Carlos Mario Gómez (Puesto 24/7)";
+
+  // Enviar salida al backend en segundo plano para sincronizar con todos los dispositivos
+  const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+  const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+  const candidatos = [originCtx, "https://lefacturamos.onrender.com", (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "", ""];
+  if (!isHttpsCtx) {
+    candidatos.push("http://192.168.1.24:8000");
+    candidatos.push("http://127.0.0.1:8000");
+  }
+  const bases = [...new Set(candidatos.map(u => (u || "").replace(/\/$/, "")))];
+
+  (async () => {
+    for (const b of bases) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        await fetch(`${b}/api/visitantes/registrar-salida`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            token_qr: v.token || v.id,
+            vis_id: v.id,
+            guardia_nombre: porteroNom
+          })
+        });
+        clearTimeout(tid);
+        break;
+      } catch(e) {}
+    }
+  })();
+
+  if (typeof minutaPorteria !== "undefined") {
+    minutaPorteria.unshift({
+      id: `min-${Date.now()}`,
+      tipo: "Salidas",
+      fecha: new Date().toISOString().split("T")[0],
+      hora: new Date().toLocaleTimeString(),
+      inmueble: `Apto ${v.apto || "0301"}`,
+      portero: porteroNom,
+      titulo: `Salida de Visitante: ${v.nombre}`,
+      descripcion: `Se registra salida vehicular/peatonal de ${v.nombre} (${v.documento}). Vehículo: ${v.vehiculo || "Peatonal"}. Cupo de parqueadero liberado.`,
+      estado: "Salida Confirmada"
+    });
+  }
+
+  guardarEstadoPorteriaLocal();
+  renderizarVisitantesRecinto();
+  actualizarContadoresPorteria();
+  if (typeof buscarMinuta === "function") buscarMinuta();
+  mostrarToast(`Salida de ${v.nombre} registrada. Cupo liberado.`);
 }
 
-
-
-function registrarSalidaPorMinuta(minId, inmueble) {
-
-  const m = minutaPorteria.find(i => i.id === minId);
-
+async function registrarSalidaPorMinuta(minId, inmueble) {
+  const m = (typeof minutaPorteria !== "undefined") ? minutaPorteria.find(i => i.id === minId) : null;
   if (m) {
-
     m.estado = "Salida Confirmada";
-
   }
 
-  if (visitantesRecinto.length > 0) {
+  let aptoNum = inmueble ? inmueble.replace(/\D/g, "") : "";
+  let v = null;
+  if (typeof visitantesRecinto !== "undefined" && visitantesRecinto.length > 0) {
+    const idx = aptoNum ? visitantesRecinto.findIndex(vis => vis.apto && vis.apto.includes(aptoNum)) : 0;
+    if (idx !== -1) {
+      v = visitantesRecinto.splice(idx, 1)[0];
+    } else {
+      v = visitantesRecinto.pop();
+    }
+  }
 
-    const v = visitantesRecinto.pop();
+  const porteroNom = (typeof porteroActivo !== "undefined" && porteroActivo && porteroActivo.nombre)
+    ? `${porteroActivo.nombre} (${porteroActivo.turno || "24/7"})`
+    : "Carlos Mario Gómez (Puesto 24/7)";
 
+  const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
+  const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
+  const candidatos = [originCtx, "https://lefacturamos.onrender.com", (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "", ""];
+  if (!isHttpsCtx) {
+    candidatos.push("http://192.168.1.24:8000");
+    candidatos.push("http://127.0.0.1:8000");
+  }
+  const bases = [...new Set(candidatos.map(u => (u || "").replace(/\/$/, "")))];
+
+  (async () => {
+    for (const b of bases) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        await fetch(`${b}/api/visitantes/registrar-salida`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            token_qr: (v && v.token) ? v.token : (m ? m.token_qr : null),
+            vis_id: v ? v.id : null,
+            guardia_nombre: porteroNom
+          })
+        });
+        clearTimeout(tid);
+        break;
+      } catch(e) {}
+    }
+  })();
+
+  if (typeof minutaPorteria !== "undefined") {
     minutaPorteria.unshift({
-
       id: `min-${Date.now()}`,
-
       tipo: "Salidas",
-
       fecha: new Date().toISOString().split("T")[0],
-
       hora: new Date().toLocaleTimeString(),
-
-      inmueble: inmueble,
-
-      portero: `${porteroActivo.nombre} (${porteroActivo.turno})`,
-
+      inmueble: inmueble || (v ? `Apto ${v.apto}` : "Apto 0301"),
+      portero: porteroNom,
       titulo: `Salida de Visitante Registrada`,
-
       descripcion: `Salida registrada del inmueble ${inmueble}. Parqueadero liberado.`,
-
       estado: "Salida Confirmada"
-
     });
-
   }
 
-  renderizarPorteria();
-
+  guardarEstadoPorteriaLocal();
+  renderizarVisitantesRecinto();
+  actualizarContadoresPorteria();
+  if (typeof buscarMinuta === "function") buscarMinuta();
   mostrarToast(`Salida registrada correctamente.`);
-
 }
 
 

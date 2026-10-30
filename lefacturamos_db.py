@@ -393,6 +393,23 @@ def inicializar_base_datos():
 
     # 16. Auditoría de Seguridad y Registro de Actividades
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS minuta_porteria (
+        id TEXT PRIMARY KEY,
+        conjunto_id TEXT NOT NULL,
+        tipo TEXT NOT NULL,
+        fecha TEXT NOT NULL,
+        hora TEXT NOT NULL,
+        inmueble TEXT NOT NULL,
+        portero TEXT NOT NULL,
+        titulo TEXT NOT NULL,
+        descripcion TEXT NOT NULL,
+        estado TEXT NOT NULL,
+        token_qr TEXT,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS log_auditoria (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         conjunto_id TEXT,
