@@ -48428,67 +48428,6 @@ function buscarMinuta() {
 
 
 
-// VISUALIZADOR Y MODAL DE FOLIO OFICIAL DE MINUTA
-function abrirDetalleMinuta(id) {
-  const item = (typeof minutaPorteria !== "undefined") ? minutaPorteria.find(m => String(m.id) === String(id)) : null;
-  if (!item) {
-    if (typeof mostrarToast === "function") mostrarToast("No se encontró el registro seleccionado.", true);
-    return;
-  }
-  const elTipo = document.getElementById("det-min-tipo");
-  const elFecha = document.getElementById("det-min-fechahora");
-  const elInm = document.getElementById("det-min-inmueble");
-  const elEst = document.getElementById("det-min-estado");
-  const elPort = document.getElementById("det-min-portero");
-  const elTit = document.getElementById("det-min-titulo");
-  const elDesc = document.getElementById("det-min-descripcion");
-  const boxTok = document.getElementById("det-min-box-token");
-  const elTok = document.getElementById("det-min-token");
-
-  if (elTipo) elTipo.innerText = item.tipo || "Suceso";
-  if (elFecha) elFecha.innerText = `${item.fecha} • ${item.hora}`;
-  if (elInm) elInm.innerText = item.inmueble || "Portería Principal";
-  if (elEst) elEst.innerText = item.estado || "Registrado";
-  if (elPort) elPort.innerText = item.portero || "Carlos Mario Gómez";
-  if (elTit) elTit.innerText = item.titulo || "Suceso Registrado";
-  if (elDesc) elDesc.innerText = item.descripcion || "";
-
-  if (boxTok && elTok) {
-    if (item.token_qr) {
-      boxTok.classList.remove("hidden");
-      elTok.innerText = item.token_qr;
-    } else {
-      boxTok.classList.add("hidden");
-    }
-  }
-
-  const modal = document.getElementById("modal-detalle-minuta");
-  if (modal) {
-    modal.classList.remove("hidden");
-    safeCreateIcons();
-  }
-}
-
-function cerrarDetalleMinuta() {
-  const modal = document.getElementById("modal-detalle-minuta");
-  if (modal) modal.classList.add("hidden");
-}
-
-function copiarDetalleToken() {
-  const elTok = document.getElementById("det-min-token");
-  if (elTok && elTok.innerText) {
-    const val = elTok.innerText.trim();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(val).then(() => {
-        mostrarToast(`Código ${val} copiado al portapapeles.`);
-      }).catch(() => {
-        mostrarToast(`Token: ${val}`);
-      });
-    } else {
-      mostrarToast(`Token: ${val}`);
-    }
-  }
-}
 
 function renderizarMinutaLista(items) {
 
@@ -48584,7 +48523,7 @@ function renderizarMinutaLista(items) {
 
     return `
 
-      <div onclick="abrirDetalleMinuta('${item.id}')" class="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl space-y-3 text-xs hover:border-amber-500/60 transition-all shadow-sm cursor-pointer group">
+      <div class="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl space-y-3 text-xs hover:border-slate-700 transition-all shadow-sm">
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
 
@@ -48647,10 +48586,6 @@ function renderizarMinutaLista(items) {
           </span>
 
           <div class="flex items-center gap-2">
-            <button type="button" onclick="event.stopPropagation(); abrirDetalleMinuta('${item.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white font-bold flex items-center gap-1 text-[11px] shadow-sm transition-all cursor-pointer">
-              <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-              <span>Abrir Folio</span>
-            </button>
             ${item.tipo === "Paquetería" && item.estado === "En Custodia" ? `
 
               <button onclick="entregarPaquetePorMinuta('${item.id}', '${item.inmueble}')" class="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold flex items-center gap-1 text-[11px] shadow-sm transition-all">
