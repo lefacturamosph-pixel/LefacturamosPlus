@@ -45,7 +45,10 @@ def read_dbf_binary(filepath: str) -> List[Dict[str, Any]]:
                 offset = 1
                 for fname, ftype, flen in fields:
                     raw_val = rec_bytes[offset:offset+flen]
-                    val_str = raw_val.decode('latin1', errors='replace').strip()
+                    try:
+                        val_str = raw_val.decode('cp850').strip()
+                    except:
+                        val_str = raw_val.decode('latin1', errors='replace').strip()
                     if ftype == 'N':
                         try:
                             rec[fname] = float(val_str) if '.' in val_str else int(val_str)
@@ -76,6 +79,34 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
             break
             
     if not folder:
+        # Respaldo automático desde JSON master si no existe C:\dbplus en este entorno (ej: Render Linux Cloud)
+        cand_paths = [
+            f"data/edificio_{clean_cod}_master.json",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", f"edificio_{clean_cod}_master.json")
+        ]
+        for cp in cand_paths:
+            if os.path.exists(cp):
+                try:
+                    import json
+                    with open(cp, "r", encoding="utf-8") as mf:
+                        mdata = json.load(mf)
+                        ed_info = mdata.get("edificio") or {}
+                        units = mdata.get("unidades") or []
+                        return {
+                            "status": "success",
+                            "codigo": clean_cod,
+                            "directorio": f"C:\\dbplus\\{clean_cod}",
+                            "edificio": ed_info,
+                            "unidades": units,
+                            "total": len(units),
+                            "archivos": {
+                                "edificio": "EDIFICIO.DBF",
+                                "inmuebles": f"MM{clean_cod}.DBF",
+                                "cartera": f"SS{clean_cod}.DBF"
+                            }
+                        }
+                except Exception as ex:
+                    print(f"Error cargando master {cp}: {ex}")
         return None
 
     # 1. Leer EDIFICIO.DBF

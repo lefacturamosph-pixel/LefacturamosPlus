@@ -495,6 +495,17 @@ def sembrar_datos_iniciales():
     ))
 
     # 3. Conjunto 3: CENTRO COMERCIAL GRAN PLAZA (Código 0127)
+    conjunto_4160_id = "cj_4160"
+    cursor.execute("""
+    INSERT INTO conjuntos (id, codigo, nombre, tipo, nit, direccion, telefono, email, banco, tipo_cuenta, numero_cuenta, titular_cuenta, wompi_public_key, wompi_private_key, bre_b_codigo_entidad)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        conjunto_4160_id, "4160", "Edificio Mixto Riachuelo", "Propiedad Horizontal",
+        "901079657-7", "CALLE 76D SUR No 43A - 100", "3221929", "jorgeaugustorestrepob@gmail.com;riachueloph@gmail.com;javierperezadmon@gmail.com",
+        "BANCOLOMBIA", "Ahorros", "436-848008-18", "Edificio Mixto Riachuelo",
+        "pub_test_wompi_4160", "prv_test_wompi_4160", "BREB-BAN-4160"
+    ))
+
     conjunto_0127_id = "cj_0127"
     cursor.execute("""
     INSERT INTO conjuntos (id, codigo, nombre, tipo, nit, direccion, telefono, email, banco, tipo_cuenta, numero_cuenta, titular_cuenta, wompi_public_key, wompi_private_key, bre_b_codigo_entidad)
@@ -526,6 +537,14 @@ def sembrar_datos_iniciales():
     ))
 
     # 3. Administrador de Roble Alto (4901)
+    cursor.execute("""
+    INSERT INTO usuarios (id, conjunto_id, username, password_hash, nombre_completo, email, telefono, rol)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        "usr_admin_4160", conjunto_4160_id, "admin4160", hash_pw("4160"), "Javier Mauricio Pérez Mesa",
+        "javierperezadmon@gmail.com", "3155979738", "admin"
+    ))
+
     cursor.execute("""
     INSERT INTO usuarios (id, conjunto_id, username, password_hash, nombre_completo, email, telefono, rol)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -645,6 +664,32 @@ def sembrar_datos_iniciales():
                     ))
         except Exception as e:
             print(f"[!] Error cargando unidades JSON en DB: {e}")
+
+    # Cargar Unidades Reales de 4160 Edificio Mixto Riachuelo
+    json_4160 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "edificio_4160_master.json")
+    if os.path.exists(json_4160):
+        try:
+            with open(json_4160, "r", encoding="utf-8") as f4:
+                d4 = json.load(f4)
+                for u in d4.get("unidades", []):
+                    u_apto = str(u.get("apto", "")).strip()
+                    uid = f"u_4160_{u_apto}"
+                    prop_nom = u.get("propietario", f"Propietario {u_apto}")
+                    prop_doc = str(u.get("cc", ""))
+                    coef = float(u.get("coefNum", 4.0))
+                    val_admon = float(u.get("admon", 215000.0))
+                    val_tot = float(u.get("totalNum", val_admon))
+                    pq_celda = u.get("parqueadero") or None
+                    cursor.execute("""
+                    INSERT INTO unidades (id, conjunto_id, torre_bloque, numero_unidad, tipo_inmueble, cuarto_util, parqueadero, coeficiente, propietario_nombre, propietario_doc, residente_nombre, saldo_actual)
+                    VALUES (?, ?, ?, ?, 'Apartamento', ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        uid, conjunto_4160_id, "Torre 1", u_apto,
+                        "", pq_celda, coef,
+                        prop_nom, prop_doc, prop_nom, val_tot
+                    ))
+        except Exception as e4:
+            print(f"[!] Error cargando unidades 4160 en DB: {e4}")
 
     # Sembrar Mascotas de ejemplo
     cursor.execute("""

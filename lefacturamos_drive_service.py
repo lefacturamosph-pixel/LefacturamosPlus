@@ -95,6 +95,20 @@ EDIFICIOS_DESTACADOS = {
         "ciudad": "Medellín • Antioquia",
         "tipo": "Propiedad Horizontal",
         "anios": [2026, 2025, 2024]
+    },
+    "4160": {
+        "codigo": "4160",
+        "nombre": "Edificio Mixto Riachuelo",
+        "nit": "901079657-7",
+        "banco": "BANCOLOMBIA",
+        "cuenta": "436-848008-18",
+        "direccion": "CALLE 76D SUR No 43A - 100",
+        "ciudad": "Medellín • Antioquia",
+        "tipo": "Propiedad Horizontal",
+        "administrador": "Javier Mauricio Pérez Mesa",
+        "telefono": "3221929",
+        "email": "jorgeaugustorestrepob@gmail.com;riachueloph@gmail.com;javierperezadmon@gmail.com",
+        "anios": [2026, 2025, 2024, 2023, 2022]
     }
 }
 

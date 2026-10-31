@@ -1,3 +1,5 @@
+https://lefacturamos.onrender.com/superadmin
+http://localhost:8000/superadmin
 https://lefacturamos.onrender.com
 
 https://github.com/lefacturamosph-pixel/lefacturamos.git
@@ -19,3 +21,19 @@ http://www.secretariasenado.gov.co/senado/basedoc/ley_0675_2001.html
 
 Menú desplegable (Dropdown menu o simplemente Dropdown): Es el nombre más común y universal.
 menú lateral (sidebar)
+
+
+Crea un archivo .env con tus credenciales de Wompi:
+env
+WOMPI_PUBLIC_KEY=pub_test_TU_LLAVE_PUBLICA
+WOMPI_PRIVATE_KEY=prv_test_TU_LLAVE_PRIVADA
+WOMPI_INTEGRITY_KEY=integ_test_TU_LLAVE_DE_INTEGRIDAD
+SECRET_KEY=una_clave_secreta_muy_segura
+
+Regístrate en Wompi:
+Pruebas: https://sandbox.wompi.co/
+Producción: https://production.wompi.co/
+
+Configura el Webhook en Wompi:
+En el panel de Wompi, configura la URL del webhook:
+http://tu-dominio.com/webhook/wompi
