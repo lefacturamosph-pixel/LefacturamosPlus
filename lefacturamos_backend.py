@@ -1,3 +1,22 @@
+# Cargar variables de entorno desde .env si existe
+def _cargar_env():
+    import os
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k, v = k.strip(), v.strip().strip('"').strip("'")
+                        if k not in os.environ:
+                            os.environ[k] = v
+        except Exception:
+            pass
+
+_cargar_env()
+
 #!/usr/bin/env python3
 
 # -*- coding: utf-8 -*-
@@ -220,6 +239,8 @@ class ConjuntoCreateRequest(BaseModel):
 
     wompi_private_key: Optional[str] = ""
 
+    wompi_integrity_key: Optional[str] = ""
+
     bold_api_key: Optional[str] = ""
 
     payu_merchant_id: Optional[str] = ""
@@ -310,7 +331,13 @@ class WebhookPayload(BaseModel):
 
     data: Dict[str, Any]
 
-    signature: Optional[str] = None
+    signature: Optional[Any] = None
+
+    timestamp: Optional[Any] = None
+
+    sent_at: Optional[str] = None
+
+    environment: Optional[str] = None
 
 
 
@@ -1847,11 +1874,11 @@ def iniciar_pago(request: PagoIniciarRequest):
 
 
 
+@app.post("/webhook/wompi")
+@app.post("/webhook/wompi/")
 @app.post("/api/pagos/webhook/{proveedor_id}")
-
 @app.post("/api/pagos/webhook/{proveedor_id}/")
-
-def webhook_pasarelas(proveedor_id: str, payload: WebhookPayload, x_signature: Optional[str] = Header(None)):
+def webhook_pasarelas(proveedor_id: str = "wompi", payload: WebhookPayload = None, x_signature: Optional[str] = Header(None)):
 
     """
 
@@ -1863,9 +1890,10 @@ def webhook_pasarelas(proveedor_id: str, payload: WebhookPayload, x_signature: O
 
     conn = get_db_connection()
 
-    ref = payload.data.get("referencia") or payload.data.get("reference")
-
-    status_pago = payload.data.get("status", "APPROVED").upper() # APPROVED, DECLINED, VOIDED
+    data = (payload.data if payload and payload.data else {})
+    tx = data.get("transaction", {}) if isinstance(data.get("transaction"), dict) else {}
+    ref = tx.get("reference") or data.get("reference") or data.get("referencia")
+    status_pago = (tx.get("status") or data.get("status") or "APPROVED").upper()
 
     
 

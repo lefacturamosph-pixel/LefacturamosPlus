@@ -44,6 +44,7 @@ def inicializar_base_datos():
         titular_cuenta TEXT,
         wompi_public_key TEXT,
         wompi_private_key TEXT,
+        wompi_integrity_key TEXT,
         bold_api_key TEXT,
         payu_merchant_id TEXT,
         bre_b_codigo_entidad TEXT,
@@ -439,6 +440,12 @@ def inicializar_base_datos():
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+        # Migración de columnas de pasarelas
+    try:
+        cursor.execute("ALTER TABLE conjuntos ADD COLUMN wompi_integrity_key TEXT;")
+    except Exception:
+        pass
 
     conn.commit()
     conn.close()
