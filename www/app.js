@@ -20238,13 +20238,7 @@ function seleccionarRolLogin(rol) {
 
   // Actualizar estilos activos de los botones de pestaña
 
-  const tabs = ["admin", "residente", "porteria", "superadmin"];
-  if (rol === "superadmin") {
-    if (typeof accesoDirectoSuperadmin === "function") {
-      accesoDirectoSuperadmin();
-      return;
-    }
-  }
+  const tabs = ["admin", "residente", "porteria"];
 
   tabs.forEach(t => {
 
@@ -21524,6 +21518,10 @@ function ejecutarIngresoFinalAdmin(codigoEdificio, codigoUsuario, password) {
 
 
 function cerrarSesionEntrada() {
+  if (window.location.pathname.toLowerCase().includes("superadmin")) {
+    window.location.href = "/";
+    return;
+  }
 
   const pantallaEntrada = document.getElementById("pantalla-entrada");
 
@@ -21613,7 +21611,7 @@ window.accesoDirectoSuperadmin = function() {
     if (typeof sincronizarCopropiedadesBackend === "function") sincronizarCopropiedadesBackend();
 
     try {
-      if (window.location.hash !== "#superadmin") {
+      if (!window.location.pathname.toLowerCase().includes("superadmin") && window.location.hash !== "#superadmin") {
         if (window.history && window.history.replaceState) {
           window.history.replaceState(null, "", "#superadmin");
         } else {
@@ -21664,6 +21662,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mostrarToast("🚗 Acceso directo a Inventario de Parqueaderos (PQ Moto / Carro).");
         return true;
       } else if (
+        window.ES_RUTA_SUPERADMIN ||
         rolUrl === "superadmin" || 
         rolUrl.includes("superadmin") || 
         rawHash.includes("superadmin") || 
