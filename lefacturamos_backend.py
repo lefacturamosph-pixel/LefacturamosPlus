@@ -144,6 +144,8 @@ if os.path.exists("./www"):
 
         app.mount("/assets", StaticFiles(directory="./www/assets"), name="assets")
 
+        app.mount("/superadmin/assets", StaticFiles(directory="./www/assets"), name="superadmin_assets")
+
 
 
 NO_CACHE_HEADERS = {
@@ -178,6 +180,12 @@ def serve_parqueaderos_direct():
 def serve_superadmin_direct():
     if os.path.exists("./www/index.html"):
         return FileResponse("./www/index.html", headers=NO_CACHE_HEADERS)
+    raise HTTPException(status_code=404)
+
+@app.get("/superadmin/app.js")
+def serve_superadmin_app_js():
+    if os.path.exists("./www/app.js"):
+        return FileResponse("./www/app.js", media_type="application/javascript", headers=NO_CACHE_HEADERS)
     raise HTTPException(status_code=404)
 
 @app.get("/admin")

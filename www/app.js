@@ -21607,23 +21607,45 @@ window.accesoDirectoSuperadmin = function() {
     if (typeof actualizarVisibilidadPorRol === "function") actualizarVisibilidadPorRol("superadmin");
     if (typeof cambiarRolActivo === "function") cambiarRolActivo("superadmin");
     if (typeof cambiarPestana === "function") cambiarPestana("superadmin");
+
+    // Forzar activación explícita de la pestaña Superadministrador
+    const tabSA = document.getElementById("tab-superadmin");
+    if (tabSA) {
+      document.querySelectorAll(".tab-content").forEach(el => {
+        if (el.id !== "tab-superadmin") {
+          el.classList.remove("active");
+          el.style.display = "none";
+        }
+      });
+      tabSA.classList.add("active");
+      tabSA.classList.remove("hidden");
+      tabSA.style.removeProperty("display");
+      tabSA.style.display = "block";
+    }
+
+    // Avatar y Header oficial de Superadmin
+    const topAvatarCircle = document.getElementById("top-avatar-circle");
+    const topAvatarNombre = document.getElementById("top-avatar-nombre");
+    const topAvatarRol = document.getElementById("top-avatar-rol");
+    if (topAvatarCircle) {
+      topAvatarCircle.innerText = "SA";
+      topAvatarCircle.className = "w-8 h-8 rounded-full bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-md";
+    }
+    if (topAvatarNombre) topAvatarNombre.innerText = "SuperAdmin Master";
+    if (topAvatarRol) topAvatarRol.innerText = "Consola Enterprise";
+
+    const sideRoleTitle = document.getElementById("sidebar-role-title");
+    if (sideRoleTitle) {
+      sideRoleTitle.innerHTML = '<span>Superadministrador de la Plataforma</span> <i data-lucide="globe" class="w-3.5 h-3.5 text-purple-400"></i>';
+    }
+
     if (typeof cargarCopropiedadesSuperadmin === "function") cargarCopropiedadesSuperadmin();
     if (typeof sincronizarCopropiedadesBackend === "function") sincronizarCopropiedadesBackend();
-
-    try {
-      if (!window.location.pathname.toLowerCase().includes("superadmin") && window.location.hash !== "#superadmin") {
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState(null, "", "#superadmin");
-        } else {
-          window.location.hash = "#superadmin";
-        }
-      }
-    } catch (eHash) {}
 
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (typeof safeCreateIcons === "function") safeCreateIcons();
     if (typeof mostrarToast === "function") {
-      mostrarToast("👑 Bienvenido a la Consola de Super Administrador. Aquí puedes crear y fusionar edificios.");
+      mostrarToast("👑 Consola de Super Administrador (Desarrollador) activa.");
     }
   } catch (errSA) {
     console.error("Error en accesoDirectoSuperadmin:", errSA);
@@ -21733,19 +21755,18 @@ document.addEventListener("DOMContentLoaded", () => {
   renderizarModuloPagosAdmin();
   renderizarModuloManualReglamento();
 
-  const initConjuntoId = AppState.conjuntoId || AppState.codigoEdificio || (document.getElementById("sel-conjunto") ? document.getElementById("sel-conjunto").value : "4901");
-  if (typeof cambiarConjuntoActivo === "function") {
-    cambiarConjuntoActivo(initConjuntoId);
-  }
-
   if (esRutaDirecta) {
-    if (AppState.rol === "superadmin") {
+    if (AppState.rol === "superadmin" || window.ES_RUTA_SUPERADMIN) {
       window.accesoDirectoSuperadmin();
     } else {
       actualizarVisibilidadPorRol(AppState.rol);
       renderizarSidebarPorRol(AppState.rol);
     }
   } else {
+    const initConjuntoId = AppState.conjuntoId || AppState.codigoEdificio || (document.getElementById("sel-conjunto") ? document.getElementById("sel-conjunto").value : "4901");
+    if (typeof cambiarConjuntoActivo === "function") {
+      cambiarConjuntoActivo(initConjuntoId);
+    }
     actualizarVisibilidadPorRol(AppState.rol);
     seleccionarRolLogin("admin");
     actualizarPreviewEdificioLogin("");

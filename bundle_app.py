@@ -11,7 +11,7 @@ with open('www/app.js', 'r', encoding='utf-8') as f:
 
 import re
 
-pattern = r'<script src="app\.js[^"]*"></script>'
+pattern = r'<script src="/?app\.js[^"]*"></script>'
 m = re.search(pattern, html)
 if m:
     bundle = html[:m.start()] + f'<script>\n{js}\n</script>' + html[m.end():]
