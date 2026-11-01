@@ -468,38 +468,47 @@
 
 
 
-      <!-- 3 Role Selection Tabs (Administrador, Copropietarios, Portería) -->
-
-      <div class="grid grid-cols-3 gap-2.5">
-
-        <button type="button" onclick="seleccionarRolLogin('admin')" id="tab-login-admin" class="tab-login-btn active flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200">
-
-          <i data-lucide="building-2" class="w-4 h-4"></i>
-
-          <span>Administrador</span>
-
+      <!-- Banner Oficial: Acceso Directo Inmediato a Consola Super Administrador -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border-2 border-purple-500/60 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-purple-600/30 border border-purple-400/50 flex items-center justify-center text-purple-300 shrink-0 shadow-lg shadow-purple-950/50">
+            <i data-lucide="crown" class="w-6 h-6 text-amber-300"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-black uppercase tracking-wider text-purple-300 bg-purple-900/90 px-2 py-0.5 rounded border border-purple-700/60 shadow-sm">Consola Maestra</span>
+              <span class="text-xs text-amber-300 font-bold">Crear Nuevos Edificios & Fusión 3-en-1</span>
+            </div>
+            <p class="text-xs text-slate-300 mt-0.5">Acceso directo al panel maestro para crear edificios, cargar archivos DBF y gestionar licencias.</p>
+          </div>
+        </div>
+        <button type="button" onclick="accesoDirectoSuperadmin()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-purple-950/80 transition-all shrink-0 cursor-pointer border border-purple-400/80 active:scale-95">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+          <span>👑 Entrar a Super Administrador</span>
         </button>
+      </div>
 
-
+      <!-- 4 Role Selection Tabs (Administrador, Copropietarios, Portería, Super Administrador) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <button type="button" onclick="seleccionarRolLogin('admin')" id="tab-login-admin" class="tab-login-btn active flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200">
+          <i data-lucide="building-2" class="w-4 h-4"></i>
+          <span>Administrador</span>
+        </button>
 
         <button type="button" onclick="seleccionarRolLogin('residente')" id="tab-login-residente" class="tab-login-btn flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200">
-
           <i data-lucide="users" class="w-4 h-4"></i>
-
           <span>Copropietarios</span>
-
         </button>
-
-
 
         <button type="button" onclick="seleccionarRolLogin('porteria')" id="tab-login-porteria" class="tab-login-btn flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200">
-
           <i data-lucide="shield" class="w-4 h-4"></i>
-
           <span>Portería</span>
-
         </button>
 
+        <button type="button" onclick="accesoDirectoSuperadmin()" id="tab-login-superadmin" class="tab-login-btn flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 border-purple-500/50 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 hover:text-white cursor-pointer shadow-lg shadow-purple-950/30">
+          <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+          <span>Super Administrador</span>
+        </button>
       </div>
 
 
@@ -18705,7 +18714,24 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="app.js?v=20261030_1745"></script>
+  <script src="app.js?v=20261101_1030"></script>
+  <script>
+    // Enrutamiento directo instantáneo a Superadministrador
+    (function() {
+      var h = (window.location.hash || "").toLowerCase();
+      var s = (window.location.search || "").toLowerCase();
+      var p = (window.location.pathname || "").toLowerCase();
+      if (h.includes("superadmin") || s.includes("superadmin") || p.includes("superadmin")) {
+        if (typeof accesoDirectoSuperadmin === "function") {
+          accesoDirectoSuperadmin();
+        } else {
+          window.addEventListener("DOMContentLoaded", function() {
+            if (typeof accesoDirectoSuperadmin === "function") accesoDirectoSuperadmin();
+          });
+        }
+      }
+    })();
+  </script>
 
 
   <!-- MODAL: VISOR DE FOTO / EVIDENCIA EN TAMAÑO COMPLETO -->

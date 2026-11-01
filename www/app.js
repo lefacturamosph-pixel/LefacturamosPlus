@@ -20238,7 +20238,13 @@ function seleccionarRolLogin(rol) {
 
   // Actualizar estilos activos de los botones de pestaña
 
-  const tabs = ["admin", "residente", "porteria"];
+  const tabs = ["admin", "residente", "porteria", "superadmin"];
+  if (rol === "superadmin") {
+    if (typeof accesoDirectoSuperadmin === "function") {
+      accesoDirectoSuperadmin();
+      return;
+    }
+  }
 
   tabs.forEach(t => {
 
@@ -20922,6 +20928,13 @@ function loginPantallaEntrada() {
 
 
 
+  if (rolSeleccionadoLogin === "superadmin") {
+    if (typeof accesoDirectoSuperadmin === "function") {
+      accesoDirectoSuperadmin();
+      return;
+    }
+  }
+
   // 1. Validar código del edificio
 
   if (!codigoEdificio || codigoEdificio === "0" || codigoEdificio === "0000") {
@@ -21564,22 +21577,73 @@ function cerrarSesionEntrada() {
 
 
 
-// Inicialización de la aplicación
+// ==============================================================================
+// ACCESO MAESTRO GLOBAL A SUPERADMINISTRADOR
+// ==============================================================================
 
+window.accesoDirectoSuperadmin = function() {
+  console.log("👑 Invocando accesoDirectoSuperadmin()...");
+  try {
+    AppState.rol = "superadmin";
+    rolSeleccionadoLogin = "superadmin";
+
+    const pe = document.getElementById("pantalla-entrada");
+    const ap = document.getElementById("app-principal");
+    const btnTop = document.getElementById("btn-top-pantalla-entrada");
+
+    if (pe) {
+      pe.classList.add("hidden");
+      pe.style.display = "none";
+    }
+    if (ap) {
+      ap.classList.remove("hidden");
+      ap.style.display = "flex";
+    }
+    if (btnTop) {
+      btnTop.classList.remove("hidden");
+    }
+
+    if (typeof cargarCopropiedadesGuardadasPersistentes === "function") cargarCopropiedadesGuardadasPersistentes();
+    if (typeof inicializarDatos === "function") inicializarDatos();
+    if (typeof renderizarSidebarPorRol === "function") renderizarSidebarPorRol("superadmin");
+    if (typeof actualizarVisibilidadPorRol === "function") actualizarVisibilidadPorRol("superadmin");
+    if (typeof cambiarRolActivo === "function") cambiarRolActivo("superadmin");
+    if (typeof cambiarPestana === "function") cambiarPestana("superadmin");
+    if (typeof cargarCopropiedadesSuperadmin === "function") cargarCopropiedadesSuperadmin();
+    if (typeof sincronizarCopropiedadesBackend === "function") sincronizarCopropiedadesBackend();
+
+    try {
+      if (window.location.hash !== "#superadmin") {
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, "", "#superadmin");
+        } else {
+          window.location.hash = "#superadmin";
+        }
+      }
+    } catch (eHash) {}
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof safeCreateIcons === "function") safeCreateIcons();
+    if (typeof mostrarToast === "function") {
+      mostrarToast("👑 Bienvenido a la Consola de Super Administrador. Aquí puedes crear y fusionar edificios.");
+    }
+  } catch (errSA) {
+    console.error("Error en accesoDirectoSuperadmin:", errSA);
+  }
+};
+
+// Inicialización de la aplicación
 document.addEventListener("DOMContentLoaded", () => {
 
   const pantallaEntrada = document.getElementById("pantalla-entrada");
-
   const appPrincipal = document.getElementById("app-principal");
 
-
-
   // Soporte de enlace directo a Superadministrador vía URL (?rol=superadmin o #superadmin)
-
   function verificarRutaDirectaUrl() {
     try {
       const params = new URLSearchParams(window.location.search);
       const rawHash = (window.location.hash || "").replace("#", "").replace(/^\/+/, "").toLowerCase().trim();
+      const rawPath = (window.location.pathname || "").toLowerCase().trim();
       const rolUrl = (params.get("rol") || rawHash || "").toLowerCase().trim();
 
       const pantallaEntrada = document.getElementById("pantalla-entrada");
@@ -21599,19 +21663,14 @@ document.addEventListener("DOMContentLoaded", () => {
         cambiarPestana("parqueaderos");
         mostrarToast("🚗 Acceso directo a Inventario de Parqueaderos (PQ Moto / Carro).");
         return true;
-      } else if (rolUrl === "superadmin" || rolUrl.includes("superadmin")) {
-        if (pantallaEntrada) {
-          pantallaEntrada.classList.add("hidden");
-          pantallaEntrada.style.display = "none";
-        }
-        if (appPrincipal) {
-          appPrincipal.classList.remove("hidden");
-          appPrincipal.style.display = "flex";
-        }
-        if (typeof inicializarDatos === "function") inicializarDatos();
-        cambiarRolActivo("superadmin");
-        cambiarPestana("superadmin");
-        mostrarToast("👑 Acceso directo a Consola de Superadministrador concedido.");
+      } else if (
+        rolUrl === "superadmin" || 
+        rolUrl.includes("superadmin") || 
+        rawHash.includes("superadmin") || 
+        rawPath.includes("superadmin") ||
+        window.location.href.toLowerCase().includes("superadmin")
+      ) {
+        window.accesoDirectoSuperadmin();
         return true;
       } else if (rolUrl === "porteria" || rolUrl.includes("porteria") || rolUrl.startsWith("port-")) {
         if (pantallaEntrada) {
@@ -21652,104 +21711,66 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.addEventListener("hashchange", verificarRutaDirectaUrl);
-  if (verificarRutaDirectaUrl()) return;
-
-
+  const esRutaDirecta = verificarRutaDirectaUrl();
 
   cargarCopropiedadesGuardadasPersistentes();
-
   inicializarDatos();
-
   renderizarSidebarPorRol(AppState.rol);
-
   actualizarTodosLosSelectsDeCopropiedad();
-
   cargarCopropiedadesSuperadmin();
-
   sincronizarCopropiedadesBackend();
-
   cargarComunicados();
-
   inicializarModuloReservas();
-
   inicializarModuloAsamblea();
-
   cargarPQR();
-
   cargarMascotas();
-
   cargarLey675();
-
   cargarGastosAdmin();
-
   inicializarModuloPagos();
-
   renderizarPorteria();
-
   renderizarInventarioInmuebles();
-
   renderizarDirectorioResidentes();
-
   renderizarBaseSaldosMatriz();
-
   renderizarModuloPagosAdmin();
-
   renderizarModuloManualReglamento();
 
   const initConjuntoId = AppState.conjuntoId || AppState.codigoEdificio || (document.getElementById("sel-conjunto") ? document.getElementById("sel-conjunto").value : "4901");
-
   if (typeof cambiarConjuntoActivo === "function") {
-
     cambiarConjuntoActivo(initConjuntoId);
-
   }
 
-  actualizarVisibilidadPorRol(AppState.rol);
+  if (esRutaDirecta) {
+    if (AppState.rol === "superadmin") {
+      window.accesoDirectoSuperadmin();
+    } else {
+      actualizarVisibilidadPorRol(AppState.rol);
+      renderizarSidebarPorRol(AppState.rol);
+    }
+  } else {
+    actualizarVisibilidadPorRol(AppState.rol);
+    seleccionarRolLogin("admin");
+    actualizarPreviewEdificioLogin("");
+    const initInpEdif = document.getElementById("login-edificio-codigo");
+    if (initInpEdif) initInpEdif.value = "";
+    const initSelEdif = document.getElementById("login-edificio-select");
+    if (initSelEdif) initSelEdif.value = "";
+    const initInpUser = document.getElementById("login-codigo-usuario");
+    if (initInpUser) initInpUser.value = "";
+    const initInpPass = document.getElementById("login-password");
+    if (initInpPass) initInpPass.value = "";
 
-  seleccionarRolLogin("admin");
-
-  actualizarPreviewEdificioLogin("");
-
-  const initInpEdif = document.getElementById("login-edificio-codigo");
-
-  if (initInpEdif) initInpEdif.value = "";
-
-  const initSelEdif = document.getElementById("login-edificio-select");
-
-  if (initSelEdif) initSelEdif.value = "";
-
-  const initInpUser = document.getElementById("login-codigo-usuario");
-
-  if (initInpUser) initInpUser.value = "";
-
-  const initInpPass = document.getElementById("login-password");
-
-  if (initInpPass) initInpPass.value = "";
-
-
-
-  // Reafirmar visualización inicial en Pantalla de Entrada
-
-  if (pantallaEntrada) {
-
-    pantallaEntrada.classList.remove("hidden");
-
-    pantallaEntrada.style.display = "";
-
+    // Reafirmar visualización inicial en Pantalla de Entrada
+    if (pantallaEntrada) {
+      pantallaEntrada.classList.remove("hidden");
+      pantallaEntrada.style.display = "";
+    }
+    if (appPrincipal) {
+      appPrincipal.classList.add("hidden");
+      appPrincipal.style.display = "none";
+    }
   }
-
-  if (appPrincipal) {
-
-    appPrincipal.classList.add("hidden");
-
-    appPrincipal.style.display = "none";
-
-  }
-
-
 
   safeCreateIcons();
-
 });
 
 

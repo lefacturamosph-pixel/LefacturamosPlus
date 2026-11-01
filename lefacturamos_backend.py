@@ -176,7 +176,12 @@ def serve_parqueaderos_direct():
 @app.get("/superadmin")
 def serve_superadmin_direct():
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/?rol=superadmin")
+    return RedirectResponse(url="/#superadmin", status_code=302)
+
+@app.get("/superadmin/")
+def serve_superadmin_direct_slash():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/#superadmin", status_code=302)
 
 @app.get("/admin")
 def serve_admin_direct():
