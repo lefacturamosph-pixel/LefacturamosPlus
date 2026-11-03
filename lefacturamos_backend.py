@@ -878,7 +878,22 @@ def crear_conjunto(request: ConjuntoCreateRequest):
 
     conn.close()
 
-    return {"status": "saved", "conjunto_id": cid, "nombre": request.nombre}
+    # Sincronización automática de listados contables de DBPlus hacia la nube/Render
+    total_sync = 0
+    try:
+        from lefacturamos_drive_service import sincronizar_edificio_listados_y_documentos
+        s_res = sincronizar_edificio_listados_y_documentos(request.codigo)
+        total_sync = s_res.get("total_archivos_copiados", 0)
+    except Exception as e_sync:
+        print(f"Nota sync listados para {request.codigo}: {e_sync}")
+
+    return {
+        "status": "saved", 
+        "conjunto_id": cid, 
+        "nombre": request.nombre,
+        "listados_sincronizados": total_sync,
+        "mensaje": f"Copropiedad '{request.nombre}' guardada exitosamente con {total_sync} listados contables sincronizados para la Nube y Render."
+    }
 
 
 
@@ -1050,16 +1065,28 @@ def fusionar_crear_edificio_3en1(request: ConjuntoFusion3en1Request):
 
 
 
+    # Guardar master json y auto-sincronizar listados de DBPlus a data/drive_docs para Render y Cloud
+    archivos_sync = 0
+    try:
+        from lefacturamos_drive_service import sincronizar_edificio_listados_y_documentos
+        import json
+        from pathlib import Path
+        m_path = Path("data") / f"edificio_{resultado['codigo']}_master.json"
+        m_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(m_path, "w", encoding="utf-8") as mf:
+            json.dump(resultado, mf, ensure_ascii=False, indent=2)
+        
+        sync_res = sincronizar_edificio_listados_y_documentos(resultado["codigo"])
+        archivos_sync = sync_res.get("total_archivos_copiados", 0)
+    except Exception as e_sync:
+        print("Error en autosync de listados para edificio:", e_sync)
+
     return {
-
         "status": "success",
-
         "conjunto_id": cid,
-
         "edificio": resultado,
-
-        "mensaje": f"Edificio '{resultado['nombre']}' (# {resultado['codigo']}) creado exitosamente con {resultado['inmueblesCount']} unidades fusionadas y quórum del {resultado['coeficienteTotal']}."
-
+        "listados_sincronizados": archivos_sync,
+        "mensaje": f"Edificio '{resultado['nombre']}' (# {resultado['codigo']}) creado exitosamente con {resultado['inmueblesCount']} unidades y {archivos_sync} listados contables oficiales sincronizados para la Nube y Render."
     }
 
 
@@ -4257,3 +4284,50 @@ if __name__ == "__main__":
     print(f"[*] Iniciando LEFACTURAMOS API Backend en http://0.0.0.0:{port}...")
     uvicorn.run(app, host="0.0.0.0", port=port)
 
+
+
+@app.post("/api/superadmin/sincronizar-listados/{codigo}")
+def superadmin_sincronizar_listados_edificio(codigo: str):
+    """
+    Sincroniza y empaqueta bajo demanda todos los listados contables (PDF/Excel)
+    y facturas desde C:\dbplus\{codigo}\Envio hacia data/drive_docs para uso en Render y la Nube.
+    """
+    from lefacturamos_drive_service import sincronizar_edificio_listados_y_documentos
+    res = sincronizar_edificio_listados_y_documentos(codigo)
+    return res
+
+@app.post("/api/superadmin/sincronizar-todos-listados")
+def superadmin_sincronizar_todos_listados():
+    """
+    Escanea y sincroniza todos los edificios existentes en la base de datos y en C:\dbplus.
+    """
+    from lefacturamos_drive_service import sincronizar_edificio_listados_y_documentos
+    conn = get_db_connection()
+    filas = conn.execute("SELECT codigo FROM conjuntos").fetchall()
+    conn.close()
+    
+    codigos_sync = set()
+    for r in filas:
+        if r["codigo"]:
+            codigos_sync.add(str(r["codigo"]).strip())
+    
+    # Agregar edificios estándar
+    codigos_sync.update(["4160", "4901", "5304", "0127", "7480"])
+    
+    resultados = []
+    total_archivos = 0
+    for cod in sorted(codigos_sync):
+        try:
+            r = sincronizar_edificio_listados_y_documentos(cod)
+            if r.get("total_archivos_copiados", 0) > 0 or r.get("origen_encontrado"):
+                resultados.append(r)
+                total_archivos += r.get("total_archivos_copiados", 0)
+        except Exception as e:
+            resultados.append({"codigo": cod, "error": str(e)})
+
+    return {
+        "status": "success",
+        "edificios_sincronizados": len(resultados),
+        "total_archivos_empaquetados": total_archivos,
+        "detalles": resultados
+    }

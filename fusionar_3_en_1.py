@@ -19,6 +19,32 @@ import json
 import csv
 from typing import Dict, List, Any, Optional
 
+def _parse_money(val) -> float:
+    if val is None:
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    s = str(val).replace('$', '').replace(' ', '').replace('.', '').replace(',', '').strip()
+    try:
+        return float(s)
+    except Exception:
+        return 0.0
+
+def _parse_coef(val) -> float:
+    if val is None:
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    s = str(val).replace('%', '').strip()
+    try:
+        return float(s)
+    except Exception:
+        return 0.0
+
+def _fmt_money(val) -> str:
+    num = _parse_money(val)
+    return f"${int(round(num)):,}".replace(',', '.')
+
 def fusionar_3_archivos(
     codigo_edificio: str = "7480",
     campos_seleccionados: Optional[Dict[str, bool]] = None,
@@ -199,7 +225,7 @@ def fusionar_3_archivos(
             row["fac"] = u.get("fac", "")
         if campos_seleccionados.get("inm_coeficiente", True):
             row["coeficiente"] = u.get("coeficiente", "0.000%")
-            tot_coef += u.get("coefNum", 0.0)
+            tot_coef += _parse_coef(u.get("coefNum", u.get("coeficiente", 0.0)))
         if campos_seleccionados.get("inm_tipo", True):
             row["tipo"] = u.get("tipo", "APTO")
         if campos_seleccionados.get("inm_ubicacion", True):
@@ -217,39 +243,39 @@ def fusionar_3_archivos(
 
         # 8 Conceptos de Cartera
         if campos_seleccionados.get("cart_admon", True):
-            row["admon"] = u.get("admonFmt", "$0")
-            tot_admon += u.get("admon", 0.0)
+            row["admon"] = u.get("admonFmt") or _fmt_money(u.get("admon", 0))
+            tot_admon += _parse_money(u.get("admon", 0.0))
         if campos_seleccionados.get("cart_interes", True):
-            row["interes"] = u.get("interesFmt", "$0")
-            tot_interes += u.get("interes", 0.0)
+            row["interes"] = u.get("interesFmt") or _fmt_money(u.get("interes", 0))
+            tot_interes += _parse_money(u.get("interes", 0.0))
         if campos_seleccionados.get("cart_otros", True):
-            row["otros"] = u.get("otrosFmt", "$0")
-            tot_otros += u.get("otros", 0.0)
+            row["otros"] = u.get("otrosFmt") or _fmt_money(u.get("otros", 0))
+            tot_otros += _parse_money(u.get("otros", 0.0))
         if campos_seleccionados.get("cart_extra", True):
-            row["extra"] = u.get("extraFmt", "$0")
-            tot_extra += u.get("extra", 0.0)
+            row["extra"] = u.get("extraFmt") or _fmt_money(u.get("extra", 0))
+            tot_extra += _parse_money(u.get("extra", 0.0))
         if campos_seleccionados.get("cart_multa", True):
-            row["multa"] = u.get("multaFmt", "$0")
-            tot_multa += u.get("multa", 0.0)
+            row["multa"] = u.get("multaFmt") or _fmt_money(u.get("multa", 0))
+            tot_multa += _parse_money(u.get("multa", 0.0))
         if campos_seleccionados.get("cart_ser_pub", True):
-            row["ser_pub"] = u.get("serPubFmt", "$0")
-            tot_ser_pub += u.get("ser_pub", 0.0)
+            row["ser_pub"] = u.get("serPubFmt") or _fmt_money(u.get("ser_pub", 0))
+            tot_ser_pub += _parse_money(u.get("ser_pub", 0.0))
         if campos_seleccionados.get("cart_ser_serv", True):
-            row["ser_serv"] = u.get("serServFmt", "$0")
-            tot_ser_serv += u.get("ser_serv", 0.0)
+            row["ser_serv"] = u.get("serServFmt") or _fmt_money(u.get("ser_serv", 0))
+            tot_ser_serv += _parse_money(u.get("ser_serv", 0.0))
         if campos_seleccionados.get("cart_notas_dc", True):
-            row["notas_dc"] = u.get("notasDcFmt", "$0")
-            tot_notas_dc += u.get("notas_dc", 0.0)
+            row["notas_dc"] = u.get("notasDcFmt") or _fmt_money(u.get("notas_dc", 0))
+            tot_notas_dc += _parse_money(u.get("notas_dc", 0.0))
 
         # Campos oficiales de sumaria SSxxxx: VALDESC y VALPAG
         if campos_seleccionados.get("cart_valdesc", True):
-            row["valdesc"] = u.get("valdescFmt", "$0")
-            row["valdescNum"] = u.get("valdesc", 0.0)
-            tot_valdesc += u.get("valdesc", 0.0)
+            row["valdesc"] = u.get("valdescFmt") or _fmt_money(u.get("valdesc", 0))
+            row["valdescNum"] = _parse_money(u.get("valdescNum", u.get("valdesc", 0.0)))
+            tot_valdesc += _parse_money(u.get("valdesc", 0.0))
         if campos_seleccionados.get("cart_valpag", True):
-            row["valpag"] = u.get("valpagFmt", "$0")
-            row["valpagNum"] = u.get("valpag", 0.0)
-            tot_valpag += u.get("valpag", 0.0)
+            row["valpag"] = u.get("valpagFmt") or _fmt_money(u.get("valpag", 0))
+            row["valpagNum"] = _parse_money(u.get("valpagNum", u.get("valpag", 0.0)))
+            tot_valpag += _parse_money(u.get("valpag", 0.0))
 
         # Compatibilidad con campos anteriores
         if campos_seleccionados.get("cart_saldo_pendiente", False):
@@ -261,8 +287,8 @@ def fusionar_3_archivos(
 
         # Total Final
         if campos_seleccionados.get("cart_total", True):
-            row["totalPagar"] = u.get("totalPagar", "$0")
-            tot_final += u.get("totalNum", 0.0)
+            row["totalPagar"] = u.get("totalPagar") or _fmt_money(u.get("totalPagar", 0))
+            tot_final += _parse_money(u.get("totalNum", u.get("totalPagar", 0.0)))
 
         row["estado"] = u.get("estado", "Al Día")
         resultado_unidades.append(row)
