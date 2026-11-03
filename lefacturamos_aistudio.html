@@ -1131,6 +1131,112 @@
       </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- MODAL SELECCIONAR APARTAMENTO PARA VISTA COPROPIETARIO                     -->
+    <!-- ========================================================================= -->
+    <div id="modal-seleccionar-apto-copropietario" class="hidden fixed inset-0 z-[120] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      <div class="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl p-6 sm:p-7 text-white animate-fade-in">
+        
+        <!-- Encabezado con Icono y Boton Cerrar -->
+        <div class="flex items-start justify-between pb-4 border-b border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shadow-inner">
+              <i data-lucide="home" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-black text-white flex items-center gap-2">
+                Vista Copropietario
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">Simulador Apto</span>
+              </h3>
+              <p id="modal-seleccionar-apto-edif-nombre" class="text-xs text-slate-400 font-medium">¿Qué apartamento quieres abrir?</p>
+            </div>
+          </div>
+          <button type="button" onclick="cerrarModalSeleccionarAptoVistaCopropietario()" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Cuerpo del Modal -->
+        <div class="py-5 space-y-4">
+          <!-- Campo de texto para escribir el numero de apartamento -->
+          <div>
+            <label for="input-apto-vista-copropietario" class="block text-xs font-bold text-slate-300 mb-1.5">
+              Escribe el número de apartamento que deseas abrir:
+            </label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="input-apto-vista-copropietario" 
+                placeholder="Ej: 0201, 0301, 102..." 
+                class="w-full bg-slate-950/80 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white rounded-2xl px-4 py-3 text-base font-bold placeholder-slate-500 transition-all outline-none"
+                oninput="filtrarListaAptosVistaCopropietario(this.value)"
+                onkeydown="if(event.key === 'Enter') { event.preventDefault(); confirmarAptoVistaCopropietario(); }"
+              />
+              <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selector desplegable de apartamentos del edificio -->
+          <div>
+            <label for="select-apto-vista-copropietario" class="block text-xs font-bold text-slate-300 mb-1.5">
+              O elígelo del listado oficial de la copropiedad:
+            </label>
+            <select 
+              id="select-apto-vista-copropietario" 
+              class="w-full bg-slate-950/80 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white rounded-2xl px-4 py-3 text-xs sm:text-sm font-semibold transition-all outline-none cursor-pointer"
+              onchange="document.getElementById('input-apto-vista-copropietario').value = this.value; actualizarPreviewAptoSeleccionado(this.value);"
+            >
+              <option value="">-- Selecciona un apartamento --</option>
+            </select>
+          </div>
+
+          <!-- Acceso rapido con botones / chips de apartamentos -->
+          <div id="contenedor-chips-aptos-vista" class="space-y-1.5">
+            <span class="text-[11px] font-bold text-slate-400">Acceso rápido a unidades del edificio:</span>
+            <div id="chips-aptos-vista-list" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1.5 bg-slate-950/50 rounded-2xl border border-slate-800/80 no-scrollbar">
+              <!-- Cargado dinamicamente con chips -->
+            </div>
+          </div>
+
+          <!-- Tarjeta de vista previa de la unidad seleccionada -->
+          <div id="preview-apto-vista-copropietario" class="hidden p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-800/40 flex items-center justify-between">
+            <div>
+              <span id="preview-apto-num" class="text-sm font-black text-emerald-400 block">Apartamento</span>
+              <span id="preview-apto-prop" class="text-xs text-slate-300 font-medium block">Propietario</span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 uppercase font-bold block">Total a Pagar</span>
+              <span id="preview-apto-saldo" class="text-sm font-black text-white">$0</span>
+            </div>
+          </div>
+
+          <!-- Alerta de validacion si no ingresa ningun apartamento -->
+          <p id="error-apto-vista-copropietario" class="hidden text-xs font-bold text-rose-400 bg-rose-950/50 border border-rose-800/60 p-2.5 rounded-xl"></p>
+        </div>
+
+        <!-- Botones de Accion -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button 
+            type="button" 
+            onclick="cerrarModalSeleccionarAptoVistaCopropietario()" 
+            class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="button" 
+            onclick="confirmarAptoVistaCopropietario()" 
+            class="px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-950/50 border border-emerald-500/50 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <span>Abrir Apartamento</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
 <!-- ========================================== -->
 
   <div id="app-principal" class="hidden flex-1 flex flex-col pb-24 md:pb-6" style="display: none;">
@@ -1341,7 +1447,7 @@
 
           </button>
 
-          <button id="pill-rol-residente" data-rol="residente" onclick="cambiarRolActivo('residente')" class="btn-pill-rol py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-emerald-400 bg-emerald-950/80 border border-emerald-500/50 shadow-sm">
+          <button id="pill-rol-residente" data-rol="residente" onclick="abrirModalSeleccionarAptoVistaCopropietario()" class="btn-pill-rol py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-emerald-400 bg-emerald-950/80 border border-emerald-500/50 shadow-sm">
 
             <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
 
@@ -37939,6 +38045,10 @@ const MENUS_POR_ROL = {
 
     items: [
 
+      { id: "volver-admin", label: "← Volver a Administración", icono: "arrow-left", action: "cambiarRolActivo('admin')" },
+
+      { id: "cambiar-apto", label: "Cambiar de Apartamento", icono: "repeat", action: "abrirModalSeleccionarAptoVistaCopropietario()" },
+
       { id: "inicio", label: "Mi Inmueble (Apto 0301)", icono: "home" },
 
       { id: "documentos", label: "Factura/Recibo", icono: "receipt" },
@@ -38033,7 +38143,7 @@ const MENUS_POR_ROL = {
 
       { id: "mascotas", label: "Mascotas", icono: "paw-print" },
 
-      { id: "vista-copropietario", label: "Vista Copropietario (Apto)", icono: "user-check", action: "cambiarRolActivo('residente')" }
+      { id: "vista-copropietario", label: "Vista Copropietario (Apto)", icono: "user-check", action: "abrirModalSeleccionarAptoVistaCopropietario()" }
 
     ]
 
@@ -41335,6 +41445,186 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 }
 
 
+
+// ==============================================================================
+// MODAL SELECCIONAR APARTAMENTO PARA VISTA COPROPIETARIO
+// ==============================================================================
+
+function abrirModalSeleccionarAptoVistaCopropietario() {
+  const modal = document.getElementById("modal-seleccionar-apto-copropietario");
+  if (!modal) return;
+
+  const cod = String(AppState.codigoEdificio || AppState.conjuntoId || "4901").replace(/^cj_/, "").trim();
+  const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cod) : null;
+  const nomEdif = cj ? cj.nombre : `Copropiedad ${cod}`;
+
+  const subEl = document.getElementById("modal-seleccionar-apto-edif-nombre");
+  if (subEl) {
+    subEl.innerText = `¿Qué apartamento quieres abrir en ${nomEdif}?`;
+  }
+
+  // Obtener unidades del edificio activo
+  let unidades = [];
+  if (cj && cj.unidades && cj.unidades.length > 0) {
+    unidades = cj.unidades;
+  } else if (typeof obtenerUnidadesActivas === "function") {
+    unidades = obtenerUnidadesActivas();
+  }
+
+  // Ordenar numéricamente si es posible
+  const unidadesOrdenadas = [...unidades].sort((a, b) => {
+    const na = parseInt(String(a.unidad || a.apto || "").replace(/\D/g, ""), 10) || 0;
+    const nb = parseInt(String(b.unidad || b.apto || "").replace(/\D/g, ""), 10) || 0;
+    return na - nb;
+  });
+
+  // Poblar selector desplegable
+  const selApto = document.getElementById("select-apto-vista-copropietario");
+  if (selApto) {
+    selApto.innerHTML = '<option value="">-- Selecciona un apartamento del edificio --</option>' +
+      unidadesOrdenadas.map(u => {
+        const numApto = String(u.unidad || u.apto || "").trim();
+        const prop = u.propietario || u.nombre || "Copropietario";
+        const sal = u.totalPagar || u.admonFmt || (u.totalNum ? `$${Number(u.totalNum).toLocaleString('es-CO')}` : "");
+        const txtSaldo = sal ? ` • Saldo: ${sal}` : "";
+        return `<option value="${numApto}">Apto ${numApto} — ${prop}${txtSaldo}</option>`;
+      }).join("");
+  }
+
+  // Poblar chips de acceso rápido
+  const chipsCont = document.getElementById("chips-aptos-vista-list");
+  if (chipsCont) {
+    if (unidadesOrdenadas.length > 0) {
+      chipsCont.innerHTML = unidadesOrdenadas.slice(0, 36).map(u => {
+        const numApto = String(u.unidad || u.apto || "").trim();
+        return `<button type="button" onclick="seleccionarChipAptoVistaCopropietario('${numApto}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-300 border border-slate-700/60 transition-all cursor-pointer">Apto ${numApto}</button>`;
+      }).join("");
+    } else {
+      chipsCont.innerHTML = '<span class="text-xs text-slate-500 italic p-1">No hay unidades cargadas en este edificio</span>';
+    }
+  }
+
+  // Input inicial: si hay un apto previamente seleccionado, proponerlo o dejar limpio
+  const inputApto = document.getElementById("input-apto-vista-copropietario");
+  if (inputApto) {
+    inputApto.value = (AppState.aptoNumero && AppState.aptoNumero !== "0107" && AppState.aptoNumero !== "0301") 
+      ? AppState.aptoNumero 
+      : (unidadesOrdenadas[0] ? (unidadesOrdenadas[0].unidad || unidadesOrdenadas[0].apto) : "");
+    if (selApto && inputApto.value) selApto.value = inputApto.value;
+    actualizarPreviewAptoSeleccionado(inputApto.value);
+  }
+
+  // Ocultar alerta de error
+  const errEl = document.getElementById("error-apto-vista-copropietario");
+  if (errEl) errEl.classList.add("hidden");
+
+  modal.classList.remove("hidden");
+  safeCreateIcons();
+
+  setTimeout(() => {
+    if (inputApto) {
+      inputApto.focus();
+      inputApto.select();
+    }
+  }, 100);
+}
+
+function cerrarModalSeleccionarAptoVistaCopropietario() {
+  const modal = document.getElementById("modal-seleccionar-apto-copropietario");
+  if (modal) modal.classList.add("hidden");
+}
+
+function seleccionarChipAptoVistaCopropietario(apto) {
+  const inputApto = document.getElementById("input-apto-vista-copropietario");
+  const selApto = document.getElementById("select-apto-vista-copropietario");
+  if (inputApto) inputApto.value = apto;
+  if (selApto) selApto.value = apto;
+  actualizarPreviewAptoSeleccionado(apto);
+}
+
+function actualizarPreviewAptoSeleccionado(aptoInput) {
+  const prevBox = document.getElementById("preview-apto-vista-copropietario");
+  const prevNum = document.getElementById("preview-apto-num");
+  const prevProp = document.getElementById("preview-apto-prop");
+  const prevSaldo = document.getElementById("preview-apto-saldo");
+  if (!prevBox) return;
+
+  const apto = String(aptoInput || "").trim();
+  if (!apto) {
+    prevBox.classList.add("hidden");
+    return;
+  }
+
+  const cod = String(AppState.codigoEdificio || "4901").replace(/^cj_/, "").trim();
+  const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cod) : null;
+  const unidades = (cj && cj.unidades) ? cj.unidades : (typeof obtenerUnidadesActivas === "function" ? obtenerUnidadesActivas() : []);
+
+  const numBuscado = parseInt(apto.replace(/\D/g, ""), 10);
+  const found = unidades.find(u => {
+    const uCod = String(u.unidad || u.apto || "").trim();
+    if (uCod.toLowerCase() === apto.toLowerCase()) return true;
+    const uNum = parseInt(uCod.replace(/\D/g, ""), 10);
+    return (!isNaN(uNum) && !isNaN(numBuscado) && uNum === numBuscado);
+  });
+
+  if (found) {
+    if (prevNum) prevNum.innerText = `Apartamento ${found.unidad || found.apto}`;
+    if (prevProp) prevProp.innerText = `Propietario: ${found.propietario || "Registrado en Censo"}`;
+    if (prevSaldo) prevSaldo.innerText = found.totalPagar || found.admonFmt || (found.totalNum ? `$${Number(found.totalNum).toLocaleString('es-CO')}` : "$0");
+    prevBox.classList.remove("hidden");
+  } else {
+    if (prevNum) prevNum.innerText = `Apartamento ${apto}`;
+    if (prevProp) prevProp.innerText = "Simulación genérica de copropietario";
+    if (prevSaldo) prevSaldo.innerText = "$0";
+    prevBox.classList.remove("hidden");
+  }
+}
+
+function filtrarListaAptosVistaCopropietario(val) {
+  const selApto = document.getElementById("select-apto-vista-copropietario");
+  if (selApto && val) {
+    const cleanVal = String(val).trim().toLowerCase();
+    for (let i = 0; i < selApto.options.length; i++) {
+      const opt = selApto.options[i];
+      if (opt.value && opt.value.toLowerCase().includes(cleanVal)) {
+        selApto.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  actualizarPreviewAptoSeleccionado(val);
+}
+
+function confirmarAptoVistaCopropietario() {
+  const inputApto = document.getElementById("input-apto-vista-copropietario");
+  const selApto = document.getElementById("select-apto-vista-copropietario");
+  const errEl = document.getElementById("error-apto-vista-copropietario");
+
+  let aptoElegido = (inputApto ? inputApto.value : "") || (selApto ? selApto.value : "");
+  aptoElegido = String(aptoElegido || "").trim();
+
+  if (!aptoElegido) {
+    if (errEl) {
+      errEl.innerText = "Por favor ingresa o selecciona un número de apartamento para continuar.";
+      errEl.classList.remove("hidden");
+    }
+    if (inputApto) inputApto.focus();
+    return;
+  }
+
+  // Actualizar AppState y Perfil del Residente
+  AppState.aptoNumero = aptoElegido;
+  actualizarPerfilResidente(AppState.codigoEdificio, aptoElegido);
+
+  // Cerrar modal
+  cerrarModalSeleccionarAptoVistaCopropietario();
+
+  // Cambiar a rol residente
+  cambiarRolActivo("residente");
+
+  // Notificar al usuario con Toast
+  mostrarToast(`Abriendo Apto ${aptoElegido} (${AppState.propietario})`);
+}
 
 function cambiarRolActivo(nuevoRol) {
 
