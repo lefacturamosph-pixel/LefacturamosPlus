@@ -22537,7 +22537,7 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
     const finVencida = document.getElementById("dashboard-fin-vencida-total");
     if (finVencida) finVencida.innerText = carteraPendienteTotal > 0 ? formatoCOP(carteraPendienteTotal) : (encontrado.carteraVencida || "$0");
     const finVencidaSub = document.getElementById("dashboard-fin-vencida-sub");
-    if (finVencidaSub) finVencidaSub.innerText = `${inmueblesConPendiente} inmuebles con saldo pendiente`;
+    if (finVencidaSub) finVencidaSub.innerText = "";
 
     // Actualizar Subtítulos en los Menús por Rol
 
