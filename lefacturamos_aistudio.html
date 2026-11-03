@@ -85,34 +85,22 @@
   <!-- Inicialización Segura para prevenir pantalla blanca por retraso de carga -->
 
   <script>
-
     window.tailwind = window.tailwind || { config: {} };
 
     function safeCreateIcons() {
-
-      if (typeof window !== "undefined" && window.lucide && typeof window.lucide.createIcons === "function") {
-
-        try { window.lucide.createIcons(); } catch(e) {}
-
+      try {
+        if (typeof window !== "undefined" && window.lucide && typeof window.lucide.createIcons === "function" && window.lucide.createIcons !== safeCreateIcons) {
+          window.lucide.createIcons();
+        }
+      } catch(e) {
+        console.warn("Lucide safeCreateIcons:", e);
       }
-
     }
-
-    if (typeof window !== "undefined" && !window.lucide) {
-
-      window.lucide = { createIcons: safeCreateIcons };
-
-    }
-
   </script>
 
-
-
   <!-- Dependencias Híbridas (Local Offline en App Android / Fallback CDN en Navegador y AI Studio) -->
-
   <script src="/assets/tailwind.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s);"></script>
-
-  <script src="/assets/lucide.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/lucide@latest';document.head.appendChild(s);"></script>
+  <script src="/assets/lucide.js" onload="safeCreateIcons();" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/lucide@latest';s.onload=function(){safeCreateIcons();};document.head.appendChild(s);"></script>
 
   <script src="/assets/qrcode.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';document.head.appendChild(s);"></script>
 
@@ -23308,21 +23296,13 @@ function sincronizarAdministradorEdificio(cod) {
 // Manejador ultra-seguro de Lucide Icons (Previene cualquier pantallazo blanco por fallo de CDN o scripts)
 
 function safeCreateIcons() {
-
-  if (typeof window !== "undefined" && window.lucide && typeof window.lucide.createIcons === "function") {
-
-    try {
-
+  try {
+    if (typeof window !== "undefined" && window.lucide && typeof window.lucide.createIcons === "function" && window.lucide.createIcons !== safeCreateIcons) {
       window.lucide.createIcons();
-
-    } catch(e) {
-
-      console.warn("Lucide createIcons:", e);
-
     }
-
+  } catch(e) {
+    console.warn("Lucide createIcons:", e);
   }
-
 }
 
 
@@ -45418,10 +45398,6 @@ function getUnidadesClass480127Master() {
 
 
 function getUnidadesRiachuelo4160Master() {
-  const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "4160") : null;
-  if (cj && cj.unidades && cj.unidades.length === 25 && cj.unidades[0].actual !== undefined) {
-    return JSON.parse(JSON.stringify(cj.unidades));
-  }
   return [
   {
     "unidad": "0201",

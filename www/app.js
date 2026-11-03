@@ -4593,21 +4593,13 @@ function sincronizarAdministradorEdificio(cod) {
 // Manejador ultra-seguro de Lucide Icons (Previene cualquier pantallazo blanco por fallo de CDN o scripts)
 
 function safeCreateIcons() {
-
-  if (typeof window !== "undefined" && window.lucide && typeof window.lucide.createIcons === "function") {
-
-    try {
-
+  try {
+    if (typeof window !== "undefined" && window.lucide && typeof window.lucide.createIcons === "function" && window.lucide.createIcons !== safeCreateIcons) {
       window.lucide.createIcons();
-
-    } catch(e) {
-
-      console.warn("Lucide createIcons:", e);
-
     }
-
+  } catch(e) {
+    console.warn("Lucide createIcons:", e);
   }
-
 }
 
 
@@ -26703,10 +26695,6 @@ function getUnidadesClass480127Master() {
 
 
 function getUnidadesRiachuelo4160Master() {
-  const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "4160") : null;
-  if (cj && cj.unidades && cj.unidades.length === 25 && cj.unidades[0].actual !== undefined) {
-    return JSON.parse(JSON.stringify(cj.unidades));
-  }
   return [
   {
     "unidad": "0201",
