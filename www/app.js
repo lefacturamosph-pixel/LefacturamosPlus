@@ -22430,63 +22430,62 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 
 
 
-    let recaudoMes = 0;
+    const parseValorCOP = (v) => {
+      if (v === null || v === undefined) return 0;
+      if (typeof v === "number") return isNaN(v) ? 0 : v;
+      const str = String(v).trim();
+      if (!str || str === "$0" || str === "0") return 0;
+      const cleaned = str.replace(/[$ \s]/g, "");
+      if (cleaned.includes(".") && !cleaned.includes(",")) {
+        const parts = cleaned.split(".");
+        if (parts.length > 1 && parts.every((p, idx) => idx === 0 || p.length === 3)) {
+          return parseFloat(parts.join("")) || 0;
+        }
+      }
+      const num = parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
+      return isNaN(num) ? 0 : num;
+    };
 
-    let pagosProcesados = 0;
-
-    let carteraTotal = 0;
-
-    let inmueblesEnMora = 0;
-
-    let carteraJuridicaTotal = 0;
-
-    let cuentasJuridicas = 0;
-
+    let cuotaMesTotal = 0;
+    let cuotasFacturadas = 0;
+    let carteraPendienteTotal = 0;
+    let inmueblesConPendiente = 0;
+    let totalMesSum = 0;
     let coefTotalCalculado = 0;
 
-
-
     unidades.forEach(u => {
-
-      const admon = parseFloat(u.admon || u.actual || 0);
-
-      const saldo = parseFloat(u.totalNum !== undefined ? u.totalNum : (u.saldoTotal || u.saldo || admon));
-
-      const pend = parseFloat(u.pend || u.saldoPendiente || 0);
-
+      const admon = parseValorCOP(u.admon !== undefined ? u.admon : (u.actual !== undefined ? u.actual : u.cuotaMensual));
+      const pend = parseValorCOP(u.pend !== undefined ? u.pend : (u.saldoPendiente !== undefined ? u.saldoPendiente : 0));
+      const totUni = parseValorCOP(u.totalNum !== undefined ? u.totalNum : (u.totalPagar !== undefined ? u.totalPagar : (u.saldoTotal || (admon + pend))));
       const coef = parseFloat(u.coefNum || String(u.coeficiente || "").replace("%", "") || 0);
-
-
 
       if (coef > 0) coefTotalCalculado += coef;
 
       if (admon > 0) {
-
-        recaudoMes += admon;
-
-        pagosProcesados++;
-
+        cuotaMesTotal += admon;
+        cuotasFacturadas++;
       }
-
-      if (saldo > 0) {
-
-        carteraTotal += saldo;
-
-        inmueblesEnMora++;
-
+      if (pend > 0 || (totUni > admon)) {
+        inmueblesConPendiente++;
       }
-
-      if (pend > 0 || saldo > admon * 3) {
-
-        carteraJuridicaTotal += saldo;
-
-        cuentasJuridicas++;
-
+      if (totUni > 0) {
+        totalMesSum += totUni;
       }
-
     });
 
+    // Cartera Pendiente del Mes: saldos pendientes totales
+    if (totalMesSum > cuotaMesTotal) {
+      carteraPendienteTotal = totalMesSum - cuotaMesTotal;
+    } else {
+      let sumPend = 0;
+      unidades.forEach(u => {
+        sumPend += parseValorCOP(u.pend !== undefined ? u.pend : (u.saldoPendiente !== undefined ? u.saldoPendiente : 0));
+      });
+      carteraPendienteTotal = sumPend;
+    }
 
+    // Total del Mes: Cuota del Mes + Cartera Pendiente del Mes
+    totalMesSum = cuotaMesTotal + carteraPendienteTotal;
 
     const kpiAptoTotal = document.getElementById("dashboard-kpi-apto-total");
 
@@ -22522,35 +22521,23 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 
 
 
+    // Card 1: Cuota del Mes (Verde)
     const finRecaudo = document.getElementById("dashboard-fin-recaudo-total");
-
-    if (finRecaudo) finRecaudo.innerText = recaudoMes > 0 ? formatoCOP(recaudoMes) : (encontrado.recaudoTotal || "$0");
-
+    if (finRecaudo) finRecaudo.innerText = cuotaMesTotal > 0 ? formatoCOP(cuotaMesTotal) : (encontrado.recaudoTotal || "$0");
     const finRecaudoSub = document.getElementById("dashboard-fin-recaudo-sub");
+    if (finRecaudoSub) finRecaudoSub.innerText = cuotasFacturadas > 0 ? `${cuotasFacturadas} cuotas facturadas` : "0 cuotas facturadas";
 
-    if (finRecaudoSub) finRecaudoSub.innerText = `${pagosProcesados} pagos procesados`;
-
-
-
+    // Card 2: Total del Mes (Naranja) - Cuota del mes + saldo pendiente
     const finCartera = document.getElementById("dashboard-fin-cartera-total");
-
-    if (finCartera) finCartera.innerText = carteraTotal > 0 ? formatoCOP(carteraTotal) : (encontrado.carteraPendiente || "$0");
-
+    if (finCartera) finCartera.innerText = totalMesSum > 0 ? formatoCOP(totalMesSum) : (encontrado.carteraPendiente || "$0");
     const finCarteraSub = document.getElementById("dashboard-fin-cartera-sub");
+    if (finCarteraSub) finCarteraSub.innerText = "Cuota del mes + saldo pendiente";
 
-    if (finCarteraSub) finCarteraSub.innerText = `${inmueblesEnMora} inmuebles con saldo en mora`;
-
-
-
+    // Card 3: Cartera Pendiente del Mes (Rojo Carmesí) - Saldos pendientes totales
     const finVencida = document.getElementById("dashboard-fin-vencida-total");
-
-    if (finVencida) finVencida.innerText = carteraJuridicaTotal > 0 ? formatoCOP(carteraJuridicaTotal) : (encontrado.carteraVencida || "$0");
-
+    if (finVencida) finVencida.innerText = carteraPendienteTotal > 0 ? formatoCOP(carteraPendienteTotal) : (encontrado.carteraVencida || "$0");
     const finVencidaSub = document.getElementById("dashboard-fin-vencida-sub");
-
-    if (finVencidaSub) finVencidaSub.innerText = `${cuentasJuridicas} cuentas en cobro jurídico`;
-
-
+    if (finVencidaSub) finVencidaSub.innerText = `${inmueblesConPendiente} inmuebles con saldo pendiente`;
 
     // Actualizar Subtítulos en los Menús por Rol
 
