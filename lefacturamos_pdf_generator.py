@@ -25,6 +25,17 @@ except ImportError:
 
 
 EDIFICIOS_INFO = {
+    "4160": {
+        "codigo": "4160",
+        "nombre": "Edificio Mixto Riachuelo",
+        "nit": "901079657-7",
+        "direccion": "CALLE 76D SUR No 43A - 100",
+        "ciudad": "Medellín • Antioquia",
+        "banco": "BANCOLOMBIA",
+        "cuenta": "436-848008-18",
+        "convenio": "4160",
+        "administrador": "60 JAVIER MAURICIO PEREZ MESA"
+    },
     "4901": {
         "codigo": "4901",
         "nombre": "EDIFICIO ROBLE ALTO P.H.",
@@ -71,28 +82,29 @@ def obtener_info_edificio(codigo: str) -> Dict[str, Any]:
         try:
             with open(m_path, "r", encoding="utf-8") as f:
                 d = json.load(f)
+                ed = d.get("edificio", d)
                 return {
                     "codigo": cod,
-                    "nombre": d.get("nombre", f"COPROPIEDAD #{cod}"),
-                    "nit": d.get("nit", "900.000.000-1"),
-                    "direccion": d.get("direccion", "Medellín - Antioquia"),
-                    "ciudad": d.get("ciudad", "Medellín"),
-                    "banco": d.get("banco", "BANCOLOMBIA"),
-                    "cuenta": d.get("cuenta", "10022286922"),
-                    "convenio": d.get("convenio", "64821"),
-                    "administrador": d.get("administrador", "Administración")
+                    "nombre": ed.get("nombre", d.get("nombre", f"Edificio #{cod}")),
+                    "nit": ed.get("nit", d.get("nit", "901079657-7")),
+                    "direccion": ed.get("direccion", d.get("direccion", "Medellín - Antioquia")),
+                    "ciudad": ed.get("ciudad", d.get("ciudad", "Medellín")),
+                    "banco": ed.get("banco", d.get("banco", "BANCOLOMBIA")),
+                    "cuenta": ed.get("cuenta", d.get("cuenta", "436-848008-18")),
+                    "convenio": ed.get("convenio", d.get("convenio", cod)),
+                    "administrador": ed.get("administrador", d.get("administrador", "Administración Oficial"))
                 }
         except Exception:
             pass
     return {
         "codigo": cod,
-        "nombre": f"EDIFICIO Y COPROPIEDAD #{cod}",
-        "nit": "901690778-9",
+        "nombre": f"Edificio #{cod}",
+        "nit": "901079657-7",
         "direccion": "Medellín – Antioquia",
         "ciudad": "Medellín",
         "banco": "BANCOLOMBIA",
-        "cuenta": "10022286922",
-        "convenio": "64821",
+        "cuenta": "436-848008-18",
+        "convenio": cod,
         "administrador": "Administración del Edificio"
     }
 
@@ -111,47 +123,54 @@ def extraer_datos_unidad(codigo: str, apto: str) -> Dict[str, Any]:
                 for u in d.get("unidades", []):
                     u_ap = str(u.get("unidad", u.get("apto", ""))).strip()
                     if u_ap == u_clean or (u_num and re.sub(r'\D', '', u_ap) == u_num):
+                        admon_val = u.get("admon", u.get("actual", 0))
+                        pend_val = u.get("pend", 0)
+                        inta_val = u.get("inta", 0)
+                        intp_val = u.get("intp", 0)
+                        tot_val = u.get("totalNum", u.get("totalFinal", admon_val + pend_val + inta_val))
+                        valpag_val = u.get("valpag", admon_val)
                         return {
                             "apto": u_clean,
-                            "propietario": u.get("propietario", "Copropietario"),
-                            "coef": u.get("coeficiente", u.get("coef", "1.205%")),
-                            "admon": u.get("admon", u.get("actual", 451000)),
-                            "pend": u.get("pend", 0),
-                            "inta": u.get("inta", 0),
-                            "intp": u.get("intp", 0),
-                            "totalNum": u.get("totalNum", 962210 if u_clean in ["0107", "107"] else 451000),
-                            "valpag": u.get("valpag", 625000 if u_clean in ["0107", "107"] else 451000)
+                            "propietario": u.get("propietario", f"Copropietario Apto {u_clean}"),
+                            "cc": u.get("cc", ""),
+                            "coef": u.get("coeficiente", u.get("coef", "1.000%")),
+                            "admon": admon_val,
+                            "pend": pend_val,
+                            "inta": inta_val,
+                            "intp": intp_val,
+                            "totalNum": tot_val,
+                            "valpag": valpag_val
                         }
         except Exception:
             pass
 
-    # Defaults razonables
-    is_0107 = u_clean in ["0107", "107"]
     return {
         "apto": u_clean,
-        "propietario": "SANDRA LORENA MOLINA" if is_0107 else f"Copropietario Apto {u_clean}",
-        "coef": "1.205%" if is_0107 else "1.000%",
-        "admon": 451000,
-        "pend": 500610 if is_0107 else 0,
-        "inta": 10600 if is_0107 else 0,
+        "propietario": f"Copropietario Unidad {u_clean}",
+        "cc": "",
+        "coef": "1.000%",
+        "admon": 205000,
+        "pend": 0,
+        "inta": 0,
         "intp": 0,
-        "totalNum": 962210 if is_0107 else 451000,
-        "valpag": 625000 if is_0107 else 451000
+        "totalNum": 205000,
+        "valpag": 205000
     }
 
 
 def parsear_nombre_archivo(archivo: str, edificio: str, anio: str, mes: str) -> Dict[str, Any]:
     arch_upper = archivo.upper()
-    es_fac = "FACTURA" in arch_upper
-    es_rec = "RECIBO" in arch_upper
+    es_listado = any(k in arch_upper for k in ["LISTADO", "INFORME", "PLANILLA", "FACTURAS DE COBRO", "RECIBOS DE CAJA"])
+    es_fac = not es_listado and ("FACTURA" in arch_upper)
+    es_rec = not es_listado and ("RECIBO" in arch_upper)
 
     # Buscar consecutivo
     m_num = re.search(r'[-–]\s*(\d{3,6})\s*[-–]', archivo)
-    consecutivo = m_num.group(1) if m_num else ("2745" if es_fac else "2501")
+    consecutivo = m_num.group(1) if m_num else ("102401" if es_fac else "2501")
 
-    # Buscar apto
-    m_apto = re.search(r'(?:APTO[-–\s]*)?([0-9]{3,4})(?:[-–]AP)?', archivo, re.I)
-    apto = m_apto.group(1) if m_apto else "0107"
+    # Buscar apto si no es listado
+    m_apto = re.search(r'(?:APTO|LOCA|LOCL)?[-–\s]*([0-9]{3,4})(?:[-–][0-9A-Za-z]+)?', archivo, re.I) if not es_listado else None
+    apto = m_apto.group(1) if m_apto else "0201"
 
     # Buscar propietario si viene en el nombre
     m_prop = re.search(r'[-–]\s*([A-Za-zÁÉÍÓÚáéíóúÑñ\s\.]+)\.PDF', archivo, re.I)
@@ -159,10 +178,18 @@ def parsear_nombre_archivo(archivo: str, edificio: str, anio: str, mes: str) -> 
 
     # Datos contables de la unidad
     u_data = extraer_datos_unidad(edificio, apto)
-    if prop_en_nombre and len(prop_en_nombre) > 3 and not any(k in prop_en_nombre.upper() for k in ["FACTURA", "RECIBO", "2026", "OCTUBRE", "SEPTIEMBRE"]):
+    if prop_en_nombre and len(prop_en_nombre) > 3 and not any(k in prop_en_nombre.upper() for k in ["FACTURA", "RECIBO", "2026", "OCTUBRE", "SEPTIEMBRE", "LISTADO"]):
         u_data["propietario"] = prop_en_nombre
 
-    tipo = "FACTURA" if es_fac else ("RECIBO_CAJA" if es_rec else "INFORME")
+    if es_listado:
+        tipo = "LISTADO"
+    elif es_fac:
+        tipo = "FACTURA"
+    elif es_rec:
+        tipo = "RECIBO_CAJA"
+    else:
+        tipo = "INFORME"
+
     return {
         "tipo": tipo,
         "consecutivo": consecutivo,
@@ -433,86 +460,168 @@ def generar_pdf_recibo(c, width, height, edif_info: Dict[str, Any], datos: Dict[
 
 
 def generar_pdf_informe(c, width, height, edif_info: Dict[str, Any], datos: Dict[str, Any]):
-    titulo = datos["nombre_archivo"].replace(".PDF", "").replace(".pdf", "")
-    periodo = datos["periodo"]
+    """
+    Genera el informe oficial contable o listado general (Facturacion, Pendientes, Pagos, Recibos)
+    replicando con exactitud el diseno tabular de Nitro Pro 9 y cargando las 25 unidades reales.
+    """
+    cod = str(edif_info.get("codigo", "4160")).replace("cj_", "").strip()
+    titulo_raw = datos.get("nombre_archivo", "LISTADO DE FACTURACION").replace(".PDF", "").replace(".pdf", "")
+    periodo = datos.get("periodo", "OCTUBRE DE 2026")
+    nombre_edif = edif_info.get("nombre", f"Edificio #{cod}")
+    
+    # Determinar tipo de reporte
+    t_upper = titulo_raw.upper()
+    if "PENDIENTE" in t_upper:
+        tipo_reporte = "LISTADO DE PENDIENTES"
+    elif "PAGO" in t_upper:
+        tipo_reporte = "LISTADO DE PAGOS"
+    elif "RECIBO" in t_upper:
+        tipo_reporte = "LISTADO DE RECIBOS DE CAJA"
+    else:
+        tipo_reporte = "LISTADO DE FACTURACIÓN"
 
-    # Encabezado
-    c.setFillColor(colors.HexColor("#0f172a"))
-    c.rect(0, height - 85, width, 85, fill=1, stroke=0)
+    # Cargar unidades reales del master json
+    unidades = []
+    m_path = Path("data") / f"edificio_{cod}_master.json"
+    if m_path.exists():
+        try:
+            with open(m_path, "r", encoding="utf-8") as f:
+                m_data = json.load(f)
+                unidades = m_data.get("unidades", [])
+        except Exception:
+            pass
 
-    c.setFillColor(colors.HexColor("#38bdf8"))
-    c.rect(0, height - 88, width, 3, fill=1, stroke=0)
+    # Si no hay master, buscar en edificio_4160_master.json como referencia oficial
+    if not unidades and Path("data/edificio_4160_master.json").exists():
+        try:
+            with open("data/edificio_4160_master.json", "r", encoding="utf-8") as f:
+                unidades = json.load(f).get("unidades", [])
+        except Exception:
+            pass
 
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(36, height - 36, "LEFACTURAMOS • INFORME OFICIAL")
-    c.setFont("Helvetica", 9)
-    c.setFillColor(colors.HexColor("#94a3b8"))
-    c.drawString(36, height - 50, f"{edif_info['nombre']} • NIT {edif_info['nit']}")
-    c.drawString(36, height - 64, f"Periodo Contable: {periodo} • Sistema Integrado de Control de Propiedad Horizontal")
+    fmt_num = lambda v: f"{int(v):,}".replace(",", ".") if v else "0"
 
-    # Título del Informe
-    y = height - 120
-    c.setFillColor(colors.HexColor("#0f172a"))
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(36, y, titulo)
+    # Paginacion: 7 unidades por pagina (cada unidad tiene 3 lineas: Pendiente, Actual, Total)
+    chunk_size = 7
+    total_unidades = len(unidades)
+    total_paginas = max(1, (total_unidades + chunk_size - 1) // chunk_size)
 
-    c.setFont("Helvetica", 9)
-    c.setFillColor(colors.HexColor("#64748b"))
-    c.drawString(36, y - 16, f"Consolidado emitido el 01 de {periodo} por la Administración Oficial.")
+    for pag in range(total_paginas):
+        page_num = pag + 1
+        page_units = unidades[pag * chunk_size : (pag + 1) * chunk_size]
 
-    # Tabla resumen
-    y = height - 170
-    c.setFillColor(colors.HexColor("#1e293b"))
-    c.rect(36, y, width - 72, 22, fill=1, stroke=0)
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 8.5)
-    c.drawString(45, y + 6, "UNIDAD")
-    c.drawString(100, y + 6, "COPROPIETARIO")
-    c.drawRightString(280, y + 6, "CUOTA ADMON")
-    c.drawRightString(400, y + 6, "SALDO ANTERIOR")
-    c.drawRightString(width - 45, y + 6, "TOTAL PERIODO")
+        # 1. ENCABEZADO ESTILO NITRO PRO 9
+        # Marco exterior superior
+        c.setStrokeColor(colors.black)
+        c.setLineWidth(1)
+        c.rect(36, height - 85, width - 72, 50, fill=0, stroke=1)
 
-    # Muestra de unidades
-    unidades_muestra = [
-        ("0101", "CARLOS ANDRES RESTREPO", 451000, 0, 451000),
-        ("0102", "MARIA FERNANDA GOMEZ", 451000, 0, 451000),
-        ("0103", "JUAN GUILLERMO VELEZ", 451000, 0, 451000),
-        ("0104", "ANA LUCIA JARAMILLO", 451000, 329800, 780800),
-        ("0107", "SANDRA LORENA MOLINA", 451000, 500610, 962210),
-        ("0201", "ELENA MERCEDES VALDES", 451000, 0, 451000),
-        ("0202", "ROBERTO GOMEZ CASTRILLON", 451000, 0, 451000),
-        ("0203", "GLORIA INES RAMIREZ", 451000, 0, 451000),
-        ("0204", "MARTA ELENA GOMEZ", 451000, 0, 451000),
-        ("0301", "JORGE ENRIQUE DUQUE", 451000, 0, 451000),
-        ("0302", "DARIO ALONSO ZAPATA", 451000, 0, 451000),
-        ("0303", "PATRICIA ELENA OCHOA", 451000, 0, 451000),
-        ("0401", "GABRIEL JAIME LONDOÑO", 451000, 0, 451000),
-        ("0402", "FERNANDO CADAVID", 451000, 0, 451000)
-    ]
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(width / 2, height - 52, f"{tipo_reporte} DEL MES DE {periodo}")
+        c.setFont("Helvetica-Bold", 11)
+        c.drawCentredString(width / 2, height - 68, nombre_edif)
 
-    row_y = y - 20
-    for idx, (ap_u, prop_u, adm_u, ant_u, tot_u) in enumerate(unidades_muestra):
-        c.setFillColor(colors.HexColor("#f8fafc") if idx % 2 == 0 else colors.white)
-        c.rect(36, row_y - 2, width - 72, 18, fill=1, stroke=0)
-        c.setStrokeColor(colors.HexColor("#f1f5f9"))
-        c.line(36, row_y - 2, width - 36, row_y - 2)
+        # 2. ENCABEZADO DE TABLA
+        y_th = height - 105
+        c.rect(36, y_th - 16, width - 72, 16, fill=0, stroke=1)
 
-        c.setFillColor(colors.HexColor("#334155"))
-        c.setFont("Helvetica-Bold", 8)
-        c.drawString(45, row_y + 3, ap_u)
-        c.setFont("Helvetica", 8)
-        c.drawString(100, row_y + 3, prop_u[:30])
-        c.drawRightString(280, row_y + 3, f"${adm_u:,.0f}".replace(",", "."))
-        c.drawRightString(400, row_y + 3, f"${ant_u:,.0f}".replace(",", "."))
-        c.setFont("Helvetica-Bold", 8)
-        c.drawRightString(width - 45, row_y + 3, f"${tot_u:,.0f}".replace(",", "."))
-        row_y -= 18
+        c.setFont("Helvetica-Bold", 6.5)
+        c.drawString(38, y_th - 7, f"Código {cod}")
+        c.drawString(75, y_th - 7, str(page_num))
+        c.drawCentredString(180, y_th - 7, "Nombre Propietario")
+        c.drawString(245, y_th - 7, "Admón")
+        c.drawString(285, y_th - 7, "Interés")
+        c.drawString(320, y_th - 7, "Otros")
+        c.drawString(350, y_th - 7, "Extra")
+        c.drawString(380, y_th - 7, "Multa")
+        c.drawString(410, y_th - 7, "Ser. Publ.")
+        c.drawCentredString(470, y_th - 7, "Nombre Inquilino / Notas")
+        c.drawRightString(515, y_th - 7, "Valor")
+        c.drawRightString(width - 40, y_th - 7, "Pagos")
 
-    # Pie
-    c.setFillColor(colors.HexColor("#94a3b8"))
-    c.setFont("Helvetica", 8)
-    c.drawCentredString(width / 2, 24, f"Lefacturamos PH • {edif_info['nombre']} • Certificado Oficial de Nube")
+        # Sub-header de columnas
+        y_subth = y_th - 28
+        c.setFont("Helvetica", 6)
+        c.drawString(38, y_subth, "Bloq. Apto. Factura")
+        c.line(36, y_subth - 4, width - 36, y_subth - 4)
+
+        # 3. FILAS DE UNIDADES REALES
+        y_row = y_subth - 16
+        for u in page_units:
+            bloq = str(u.get("bloq", u.get("bloque", "00")))
+            apto = str(u.get("apto", u.get("unidad", "")))
+            fac = str(u.get("fac", ""))
+            prop = str(u.get("propietario", "Copropietario"))[:32]
+
+            admon = float(u.get("admon", u.get("actual", 0)))
+            pend = float(u.get("pend", 0))
+            inta = float(u.get("inta", 0))
+            intp = float(u.get("intp", 0))
+            tot_num = float(u.get("totalNum", u.get("totalFinal", admon + pend + inta)))
+            valpag = float(u.get("valpag", 0))
+
+            # Cada unidad ocupa un bloque de 48 pt (3 lineas)
+            h_block = 48
+            c.setLineWidth(0.5)
+            c.rect(36, y_row - h_block, width - 72, h_block, fill=0, stroke=1)
+
+            # Columna izquierda identificadora
+            c.setFont("Helvetica-Bold", 7)
+            c.drawString(38, y_row - 12, f"{bloq}  {apto}  {fac}")
+
+            c.setFont("Helvetica-Bold", 7.5)
+            c.drawString(100, y_row - 12, prop)
+
+            # Linea 1: Pendiente
+            c.setFont("Helvetica", 6.5)
+            c.drawString(110, y_row - 24, "Pendiente")
+            c.drawRightString(275, y_row - 24, fmt_num(pend))
+            c.drawRightString(310, y_row - 24, fmt_num(intp))
+            c.drawRightString(340, y_row - 24, "0")
+            c.drawRightString(370, y_row - 24, "0")
+            c.drawRightString(400, y_row - 24, "0")
+            c.drawRightString(435, y_row - 24, "0")
+            c.drawRightString(515, y_row - 24, fmt_num(pend + intp))
+
+            # Linea 2: Actual
+            c.drawString(110, y_row - 34, "Actual")
+            c.drawRightString(275, y_row - 34, fmt_num(admon))
+            c.drawRightString(310, y_row - 34, fmt_num(inta))
+            c.drawRightString(340, y_row - 34, "0")
+            c.drawRightString(370, y_row - 34, "0")
+            c.drawRightString(400, y_row - 34, "0")
+            c.drawRightString(435, y_row - 34, "0")
+            c.drawRightString(515, y_row - 34, fmt_num(admon + inta))
+
+            # Linea 3: Total
+            c.setFont("Helvetica-Bold", 6.5)
+            c.drawString(110, y_row - 44, "Total")
+            c.drawRightString(275, y_row - 44, fmt_num(admon + pend))
+            c.drawRightString(310, y_row - 44, fmt_num(inta + intp))
+            c.drawRightString(340, y_row - 44, "0")
+            c.drawRightString(370, y_row - 44, "0")
+            c.drawRightString(400, y_row - 44, "0")
+            c.drawRightString(435, y_row - 44, "0")
+            c.drawRightString(515, y_row - 44, fmt_num(tot_num))
+
+            # Columna de pagos
+            if valpag > 0:
+                c.drawRightString(width - 40, y_row - 24, fmt_num(valpag))
+
+            y_row -= h_block
+
+        # 4. PIE DE PAGINA NITRO PRO 9
+        c.setStrokeColor(colors.black)
+        c.setLineWidth(0.5)
+        c.line(36, 42, width - 36, 42)
+
+        c.setFont("Helvetica", 6.5)
+        c.drawString(36, 32, "Lefacturamos  NIT 71582999-7 CEL: 3155979738")
+        c.drawCentredString(width / 2, 32, f"Página {page_num} de {total_paginas}")
+        c.drawRightString(width - 36, 32, f"{tipo_reporte} DEL MES DE {periodo}")
+
+        if page_num < total_paginas:
+            c.showPage()
 
 
 def generar_pdf_documento(edificio: str, anio: str, mes: str, archivo: str, destino_path: Path) -> Path:

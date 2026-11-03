@@ -217,6 +217,11 @@ import json
 import re
 from urllib.parse import quote
 
+def _norm_filename(s: str) -> str:
+    import unicodedata
+    s_norm = unicodedata.normalize('NFKD', str(s)).encode('ASCII', 'ignore').decode('ASCII').lower()
+    return re.sub(r'[^a-z0-9]', '', s_norm)
+
 def buscar_directorio_mes(codigo: str, anio: int, mes: str) -> Optional[Path]:
     cod = str(codigo).replace("cj_", "").strip()
     mes_upper = str(mes).upper().strip()
@@ -256,7 +261,7 @@ def buscar_archivo_disco(edificio: str, anio: str, mes: str, archivo: str) -> Op
         if c.exists() and c.is_file():
             return c
 
-    # 2. Busqueda insensible a mayusculas/espacios
+    # 2. Busqueda insensible a mayusculas, espacios, tildes y signos de puntuacion (. - _)
     carpetas_buscar = [
         REPO_DRIVE_PATH / edif / anio_str / mes_str,
         REPO_DRIVE_PATH / edif.zfill(4) / anio_str / mes_str,
@@ -264,39 +269,63 @@ def buscar_archivo_disco(edificio: str, anio: str, mes: str, archivo: str) -> Op
         GOOGLE_DRIVE_LOCAL_PATH / edif.zfill(4) / anio_str / mes_str,
         DBPLUS_LOCAL_PATH / edif / "Envio",
         DBPLUS_LOCAL_PATH / edif.zfill(4) / "Envio",
+        REPO_DRIVE_PATH / edif,
+        REPO_DRIVE_PATH / edif.zfill(4),
+        DBPLUS_LOCAL_PATH / edif,
     ]
-    norm_target = archivo.lower().replace(" ", "").replace("-", "").replace("_", "")
+    norm_target = _norm_filename(archivo)
     for carp in carpetas_buscar:
         if carp.exists() and carp.is_dir():
             for f in carp.iterdir():
                 if f.is_file():
-                    norm_f = f.name.lower().replace(" ", "").replace("-", "").replace("_", "")
+                    norm_f = _norm_filename(f.name)
                     if norm_f == norm_target or f.name.lower() == archivo.lower():
                         return f
 
-    # 3. Coincidencia inteligente para documentos de copropietarios (Facturas y Recibos)
-    is_fac = "factura" in archivo.lower()
-    is_rec = "recibo" in archivo.lower()
-    m_apto = re.search(r'apto[-–\s]*([0-9A-Za-z]+)', archivo, re.IGNORECASE)
-    apto_num = m_apto.group(1).replace("-AP", "").replace("-ap", "") if m_apto else None
-    if not apto_num:
-        m_gen = re.search(r'(?:^|[-–\s])([0-9]{3,4})(?:[-–\s]|$)', archivo)
-        if m_gen:
-            apto_num = m_gen.group(1)
-
-    if (is_fac or is_rec) and apto_num:
-        prefix = "FACTURA" if is_fac else "RECIBO"
+    # 2.5 Coincidencia para INFORMES Y LISTADOS GENERALES (Evita 100% confundir listados con facturas de aptos)
+    es_listado_target = any(k in archivo.upper() for k in ["LISTADO", "FACTURAS DE COBRO", "PLANILLA", "RECIBOS DE CAJA"])
+    if es_listado_target:
+        ext_target = ".pdf" if archivo.lower().endswith(".pdf") else (".xlsx" if archivo.lower().endswith(".xlsx") else "")
         for carp in carpetas_buscar:
             if carp.exists() and carp.is_dir():
                 for f in carp.iterdir():
-                    if f.is_file() and f.name.upper().startswith(prefix):
-                        m_f_apto = re.search(r'apto[-–\s]*([0-9A-Za-z]+)', f.name, re.IGNORECASE)
-                        if m_f_apto:
-                            f_apto = m_f_apto.group(1).replace("-AP", "").replace("-ap", "")
-                            if f_apto == apto_num or f_apto.lstrip("0") == apto_num.lstrip("0"):
-                                return f
-                        elif apto_num in f.name:
+                    if f.is_file():
+                        if ext_target and not f.name.lower().endswith(ext_target):
+                            continue
+                        f_norm = _norm_filename(f.name)
+                        if ("facturacion" in norm_target and "facturacion" in f_norm) or \
+                           ("pendiente" in norm_target and "pendiente" in f_norm) or \
+                           ("pagos" in norm_target and "pagos" in f_norm) or \
+                           ("planilla" in norm_target and "planilla" in f_norm) or \
+                           ("recibosdecaja" in norm_target and "recibosdecaja" in f_norm) or \
+                           ("facturasdecobro" in norm_target and "facturasdecobro" in f_norm):
                             return f
+
+    # 3. Coincidencia inteligente para documentos de copropietarios (Facturas y Recibos individuales)
+    # IMPORTANTE: Se ignora si es un listado general
+    if not es_listado_target:
+        is_fac = "factura" in archivo.lower()
+        is_rec = "recibo" in archivo.lower()
+        m_apto = re.search(r'apto[-–\s]*([0-9A-Za-z]+)', archivo, re.IGNORECASE)
+        apto_num = m_apto.group(1).replace("-AP", "").replace("-ap", "") if m_apto else None
+        if not apto_num:
+            m_gen = re.search(r'(?:^|[-–\s])([0-9]{3,4})(?:[-–\s]|$)', archivo)
+            if m_gen:
+                apto_num = m_gen.group(1)
+
+        if (is_fac or is_rec) and apto_num:
+            prefix = "FACTURA" if is_fac else "RECIBO"
+            for carp in carpetas_buscar:
+                if carp.exists() and carp.is_dir():
+                    for f in carp.iterdir():
+                        if f.is_file() and f.name.upper().startswith(prefix):
+                            m_f_apto = re.search(r'apto[-–\s]*([0-9A-Za-z]+)', f.name, re.IGNORECASE)
+                            if m_f_apto:
+                                f_apto = m_f_apto.group(1).replace("-AP", "").replace("-ap", "")
+                                if f_apto == apto_num or f_apto.lstrip("0") == apto_num.lstrip("0"):
+                                    return f
+                            elif apto_num in f.name:
+                                return f
 
     # 4. Generacion dinamica de PDF si no existe en disco fisico (100% libre de errores 404)
     if archivo.lower().endswith(".pdf"):
@@ -331,8 +360,8 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
     informes_generales = []
     documentos_inmuebles = []
 
-    fac_re = re.compile(r'FACTURA\s*[-–]?\s*(\d+)\s*[-–]?\s*(?:APTO[-–\s]*)?([0-9A-Za-z]+)(?:[-–]AP)?\s*[-–]\s*(.+?)\s*[-–]\s*(.+?)\.PDF', re.IGNORECASE)
-    rec_re = re.compile(r'RECIBO\s*CAJA\s*[-–]?\s*(\d+)\s*[-–]?\s*(?:APTO[-–\s]*)?([0-9A-Za-z]+)(?:[-–]AP)?\s*[-–]\s*(.+?)\s*[-–]\s*(.+?)\.PDF', re.IGNORECASE)
+    fac_re = re.compile(r'FACTURA\s*[-–]?\s*(\d+)\s*[-–]?\s*(?:APTO|LOCA|LOCL)?[-–\s]*([0-9A-Za-z]+)(?:[-–][0-9A-Za-z]+)?\s*[-–]\s*(.+?)\s*[-–]\s*(.+?)\.PDF', re.IGNORECASE)
+    rec_re = re.compile(r'RECIBO\s*CAJA\s*[-–]?\s*(\d+)\s*[-–]?\s*(?:APTO|LOCA|LOCL)?[-–\s]*([0-9A-Za-z]+)(?:[-–][0-9A-Za-z]+)?\s*[-–]\s*(.+?)\s*[-–]\s*(.+?)\.PDF', re.IGNORECASE)
 
     if folder_real and folder_real.exists():
         # Cargar mapa contable para inyectar saldos reales si existe
