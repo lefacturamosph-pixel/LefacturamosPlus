@@ -22780,6 +22780,37 @@ function filtrarListaAptosVistaCopropietario(val) {
   actualizarPreviewAptoSeleccionado(val);
 }
 
+function mostrarBannerIncognito(apto) {
+  const banner = document.getElementById("banner-incognito-admin");
+  const btnTop = document.getElementById("btn-top-volver-admin");
+  const txt = document.getElementById("banner-incognito-apto-txt");
+
+  if (txt) {
+    const cod = String(AppState.codigoEdificio || "4901").replace(/^cj_/, "").trim();
+    const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cod) : null;
+    const nomEdif = cj ? cj.nombre : "";
+    txt.innerText = `Estás viendo el Apto ${apto} (${AppState.propietario || "Copropietario"}) — ${nomEdif}`;
+  }
+
+  if (banner) banner.classList.remove("hidden");
+  if (btnTop) btnTop.classList.remove("hidden");
+  safeCreateIcons();
+}
+
+function ocultarBannerIncognito() {
+  const banner = document.getElementById("banner-incognito-admin");
+  const btnTop = document.getElementById("btn-top-volver-admin");
+  if (banner) banner.classList.add("hidden");
+  if (btnTop) btnTop.classList.add("hidden");
+}
+
+function volverAdministracionDesdeIncognito() {
+  AppState.modoIncognitoAdmin = false;
+  ocultarBannerIncognito();
+  cambiarRolActivo("admin");
+  mostrarToast("Regresando al Panel de Administración");
+}
+
 function confirmarAptoVistaCopropietario() {
   const inputApto = document.getElementById("input-apto-vista-copropietario");
   const selApto = document.getElementById("select-apto-vista-copropietario");
@@ -22797,7 +22828,8 @@ function confirmarAptoVistaCopropietario() {
     return;
   }
 
-  // Actualizar AppState y Perfil del Residente
+  // Activar modo incógnito del Administrador
+  AppState.modoIncognitoAdmin = true;
   AppState.aptoNumero = aptoElegido;
   actualizarPerfilResidente(AppState.codigoEdificio, aptoElegido);
 
@@ -22807,11 +22839,21 @@ function confirmarAptoVistaCopropietario() {
   // Cambiar a rol residente
   cambiarRolActivo("residente");
 
+  // Mostrar barra flotante discreta para permitir el retorno a la administración
+  mostrarBannerIncognito(aptoElegido);
+
   // Notificar al usuario con Toast
   mostrarToast(`Abriendo Apto ${aptoElegido} (${AppState.propietario})`);
 }
 
 function cambiarRolActivo(nuevoRol) {
+
+  if (nuevoRol !== "residente") {
+    AppState.modoIncognitoAdmin = false;
+    ocultarBannerIncognito();
+  } else if (!AppState.modoIncognitoAdmin) {
+    ocultarBannerIncognito();
+  }
 
   AppState.rol = nuevoRol;
 

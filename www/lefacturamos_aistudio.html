@@ -1339,6 +1339,12 @@
 
 
 
+        <!-- Botón Volver a Administración (Visible solo en Modo Incógnito / Vista Copropietario) -->
+        <button id="btn-top-volver-admin" type="button" onclick="volverAdministracionDesdeIncognito()" class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 border border-emerald-400 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-white"></i>
+          <span>Volver a Administración</span>
+        </button>
+
         <!-- Botón Cerrar Sesión (Borde Rojo) -->
 
         <button type="button" onclick="cerrarSesionEntrada()" class="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/70 text-rose-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
@@ -1416,6 +1422,19 @@
   </div>
 
 
+
+  <!-- BANNER FLOTANTE DE MODO INCÓGNITO (SOLO CUANDO EL ADMIN ABRE VISTA COPROPIETARIO) -->
+  <div id="banner-incognito-admin" class="hidden bg-emerald-950/95 border-b border-emerald-500/40 px-3 sm:px-6 py-2.5 text-white text-xs font-bold flex items-center justify-between sticky top-16 z-30 shadow-lg backdrop-blur-md">
+    <div class="flex items-center gap-2 min-w-0 pr-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
+      <span class="text-emerald-300 shrink-0 font-extrabold">Modo Incógnito:</span>
+      <span id="banner-incognito-apto-txt" class="text-white font-bold truncate">Estás viendo el Apto</span>
+    </div>
+    <button type="button" onclick="volverAdministracionDesdeIncognito()" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center gap-1.5 shadow-md border border-emerald-400/50 transition-all cursor-pointer">
+      <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+      <span>Volver a Administración</span>
+    </button>
+  </div>
 
   <!-- BARRA DE SELECCIÓN DE ROLES (ROLES PARA ENSAYAR - SEGÚN SCREENSHOT) -->
 
@@ -41589,6 +41608,37 @@ function filtrarListaAptosVistaCopropietario(val) {
   actualizarPreviewAptoSeleccionado(val);
 }
 
+function mostrarBannerIncognito(apto) {
+  const banner = document.getElementById("banner-incognito-admin");
+  const btnTop = document.getElementById("btn-top-volver-admin");
+  const txt = document.getElementById("banner-incognito-apto-txt");
+
+  if (txt) {
+    const cod = String(AppState.codigoEdificio || "4901").replace(/^cj_/, "").trim();
+    const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cod) : null;
+    const nomEdif = cj ? cj.nombre : "";
+    txt.innerText = `Estás viendo el Apto ${apto} (${AppState.propietario || "Copropietario"}) — ${nomEdif}`;
+  }
+
+  if (banner) banner.classList.remove("hidden");
+  if (btnTop) btnTop.classList.remove("hidden");
+  safeCreateIcons();
+}
+
+function ocultarBannerIncognito() {
+  const banner = document.getElementById("banner-incognito-admin");
+  const btnTop = document.getElementById("btn-top-volver-admin");
+  if (banner) banner.classList.add("hidden");
+  if (btnTop) btnTop.classList.add("hidden");
+}
+
+function volverAdministracionDesdeIncognito() {
+  AppState.modoIncognitoAdmin = false;
+  ocultarBannerIncognito();
+  cambiarRolActivo("admin");
+  mostrarToast("Regresando al Panel de Administración");
+}
+
 function confirmarAptoVistaCopropietario() {
   const inputApto = document.getElementById("input-apto-vista-copropietario");
   const selApto = document.getElementById("select-apto-vista-copropietario");
@@ -41606,7 +41656,8 @@ function confirmarAptoVistaCopropietario() {
     return;
   }
 
-  // Actualizar AppState y Perfil del Residente
+  // Activar modo incógnito del Administrador
+  AppState.modoIncognitoAdmin = true;
   AppState.aptoNumero = aptoElegido;
   actualizarPerfilResidente(AppState.codigoEdificio, aptoElegido);
 
@@ -41616,11 +41667,21 @@ function confirmarAptoVistaCopropietario() {
   // Cambiar a rol residente
   cambiarRolActivo("residente");
 
+  // Mostrar barra flotante discreta para permitir el retorno a la administración
+  mostrarBannerIncognito(aptoElegido);
+
   // Notificar al usuario con Toast
   mostrarToast(`Abriendo Apto ${aptoElegido} (${AppState.propietario})`);
 }
 
 function cambiarRolActivo(nuevoRol) {
+
+  if (nuevoRol !== "residente") {
+    AppState.modoIncognitoAdmin = false;
+    ocultarBannerIncognito();
+  } else if (!AppState.modoIncognitoAdmin) {
+    ocultarBannerIncognito();
+  }
 
   AppState.rol = nuevoRol;
 
