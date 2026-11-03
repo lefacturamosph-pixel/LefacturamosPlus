@@ -51,10 +51,26 @@ def inicializar_base_datos():
         google_drive_folder_id TEXT DEFAULT '1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E',
         drive_email TEXT DEFAULT 'LefacturamosPH@lefacturamos.com',
         clave_porteria TEXT DEFAULT 'Porteria123*',
+        administrador TEXT DEFAULT '',
+        codigo_admin TEXT DEFAULT '',
+        password_admin TEXT DEFAULT '',
+        interes_mora TEXT DEFAULT '2.16%',
         activo INTEGER DEFAULT 1,
         creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+    # Migración de columnas de administración para conjuntos existentes
+    for col, col_def in [
+        ("administrador", "TEXT DEFAULT ''"),
+        ("codigo_admin", "TEXT DEFAULT ''"),
+        ("password_admin", "TEXT DEFAULT ''"),
+        ("interes_mora", "TEXT DEFAULT '2.16%'")
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE conjuntos ADD COLUMN {col} {col_def};")
+        except sqlite3.OperationalError:
+            pass
 
     # 2. Tabla de Usuarios y Roles
     cursor.execute("""

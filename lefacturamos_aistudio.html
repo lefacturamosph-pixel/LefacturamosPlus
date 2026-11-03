@@ -37889,8 +37889,12 @@ async function sincronizarCopropiedadesBackend() {
           if (!cod) return;
 
           const idx = listaCopropiedadesSuperadmin.findIndex(c => String(c.codigo).trim() === cod || c.id === cj.id);
-
-          if (idx === -1) {
+          if (idx !== -1) {
+            if (cj.codigo_admin) listaCopropiedadesSuperadmin[idx].codigoAdmin = cj.codigo_admin;
+            if (cj.password_admin) listaCopropiedadesSuperadmin[idx].passwordAdmin = cj.password_admin;
+            if (cj.administrador) listaCopropiedadesSuperadmin[idx].administrador = cj.administrador;
+            if (cj.activo !== undefined) listaCopropiedadesSuperadmin[idx].bloqueadoMora = !cj.activo;
+          } else {
 
             const uGen = (typeof obtenerUnidadesRealesParaFusion === "function") 
 
@@ -38653,11 +38657,15 @@ function actualizarPreviewEdificioLogin(codigo) {
   // Actualizar placeholder de usuario según rol y código sin sobreescribir valor
 
   if (inputCodUsuario) {
-
     if (rolSeleccionadoLogin === "admin") {
-
-      inputCodUsuario.placeholder = `Código de Administrador (ej: ADM-${codLimpio})`;
-
+      const copPreview = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
+      const codAdmSugerido = (copPreview && copPreview.codigoAdmin) ? copPreview.codigoAdmin : `ADM-${codLimpio}`;
+      const claveSugerida = (copPreview && copPreview.passwordAdmin) ? copPreview.passwordAdmin : "Admin123*";
+      inputCodUsuario.placeholder = `Código de Administrador (ej: ${codAdmSugerido})`;
+      const hintDemo = document.getElementById("login-demo-hint");
+      if (hintDemo) {
+        hintDemo.innerText = `Clave: ${claveSugerida}`;
+      }
     } else if (rolSeleccionadoLogin === "porteria") {
 
       inputCodUsuario.placeholder = "Portería Principal (24 Horas)";
@@ -39117,27 +39125,19 @@ function seleccionarRolLogin(rol) {
 
 
   if (rol === "admin") {
-
     if (cardTitle) cardTitle.innerText = "Acceso a la Administración del Edificio";
-
     if (cardSubtitle) cardSubtitle.innerText = "Ingrese el código de su copropiedad para sincronizar datos.";
-
     if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. CÓDIGO DE ENTRADA DEL ADMINISTRADOR";
-
+    const copAdmin = (typeof obtenerDatosCopropiedad === "function" && codEdificio) ? obtenerDatosCopropiedad(codEdificio) : null;
+    const codAdminSugerido = (copAdmin && copAdmin.codigoAdmin) ? copAdmin.codigoAdmin : ("ADM-" + (codEdificio || "4901"));
+    const passAdminSugerida = (copAdmin && copAdmin.passwordAdmin) ? copAdmin.passwordAdmin : "Admin123*";
     if (inputCodigoUsuario) {
-
-      inputCodigoUsuario.placeholder = "Código de Administrador (ej: ADM-" + (codEdificio || "4901") + ")";
-
+      inputCodigoUsuario.placeholder = `Código de Administrador (ej: ${codAdminSugerido})`;
       inputCodigoUsuario.value = "";
-
     }
-
     if (lblPassword) lblPassword.innerText = "3. PASSWORD / CONTRASEÑA DE LA ADMINISTRACIÓN";
-
-    if (hintDemo) hintDemo.innerText = "Clave demo: Admin123*";
-
+    if (hintDemo) hintDemo.innerText = `Clave: ${passAdminSugerida}`;
     if (inputPassword) inputPassword.value = "";
-
     if (btnTexto) btnTexto.innerText = "Ingresar a Ver y Administrar mi Edificio ->";
 
   } else if (rol === "residente") {
@@ -39273,10 +39273,12 @@ function autocompletarPasswordDemo() {
   const codEdif = document.getElementById("login-edificio-codigo")?.value.trim() || (typeof AppState !== "undefined" && AppState.codigoEdificio) || "4901";
 
   if (rolSeleccionadoLogin === "admin") {
-
-    inputPass.value = "Admin123*";
-
-    mostrarToast("Clave demo de administración autocompletada.");
+    const cop = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codEdif) : null;
+    const claveAdmin = (cop && cop.passwordAdmin) ? cop.passwordAdmin : "Admin123*";
+    const userAdmin = (cop && cop.codigoAdmin) ? cop.codigoAdmin : `ADM-${codEdif}`;
+    inputPass.value = claveAdmin;
+    if (inputCodUsuario && !inputCodUsuario.value) inputCodUsuario.value = userAdmin;
+    mostrarToast(`Credenciales oficiales de administración para #${codEdif} autocompletadas.`);
 
   } else if (rolSeleccionadoLogin === "residente") {
 
@@ -39985,47 +39987,37 @@ function loginPantallaEntrada() {
 
 
   } else if (rolSeleccionadoLogin === "admin") {
+    const copropiedad = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codigoEdificio) : null;
+    
+    // Obtener credenciales oficiales configuradas en Superadmin para este edificio
+    const claveConfigurada = (copropiedad && copropiedad.passwordAdmin) ? String(copropiedad.passwordAdmin).trim() : "";
+    const codigoAdminConfigurado = (copropiedad && copropiedad.codigoAdmin) ? String(copropiedad.codigoAdmin).trim() : "";
 
     if (!codigoUsuario) {
-
-      codigoUsuario = `ADM-${codigoEdificio}`;
-
+      codigoUsuario = codigoAdminConfigurado || `ADM-${codigoEdificio}`;
       if (inputCodUsuario) inputCodUsuario.value = codigoUsuario;
-
     }
-
     if (!password) {
-
-      password = "Admin123*";
-
+      password = claveConfigurada || "Admin123*";
       if (inputPass) inputPass.value = password;
-
     }
 
+    const passClean = password.trim();
     const esClaveAdminValida = (
-
-      password === "Admin123*" ||
-
-      password === `Admin${codigoEdificio}` ||
-
-      password === codigoEdificio ||
-
-      password === "4901"
-
+      (claveConfigurada && passClean.toLowerCase() === claveConfigurada.toLowerCase()) ||
+      (codigoAdminConfigurado && passClean.toLowerCase() === codigoAdminConfigurado.toLowerCase()) ||
+      passClean === "Admin123*" ||
+      passClean.toLowerCase() === `Admin${codigoEdificio}`.toLowerCase() ||
+      passClean === codigoEdificio ||
+      passClean === "4901"
     );
 
     if (!esClaveAdminValida) {
-
       if (typeof mostrarToast === "function") {
-
         mostrarToast("⚠️ Contraseña de administración incorrecta.", true);
-
       }
-
       if (inputPass) inputPass.focus();
-
       return;
-
     }
 
 
@@ -64828,6 +64820,8 @@ async function guardarEdicionEdificio() {
         banco: cop.banco,
         tipoCuenta: cop.tipoCuenta,
         cuenta: cop.cuenta,
+        codigoAdmin: cop.codigoAdmin,
+        passwordAdmin: cop.passwordAdmin,
         interesMora: cop.interesMora
       });
     }
