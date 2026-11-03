@@ -3054,9 +3054,9 @@ const CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO = {
 
     "cuenta": "991-000017-17",
 
-    "administrador": "Adriana Salgado Patiño (604)5011727 Ext 1301",
+    "administrador": "Sofía Jiménez Rangel",
 
-    "telefono": "6045011727",
+    "telefono": "3137856910",
 
     "email": "admonedificioroblealto@gmail.com; soniaebd@hotmail.com",
 
@@ -4500,22 +4500,20 @@ function sincronizarAdministradorEdificio(cod) {
 
   let adminNom = null;
 
-  // 1. EDIFICIOS_CATALOGO_DRIVE
-
-  if (typeof EDIFICIOS_CATALOGO_DRIVE !== 'undefined' && EDIFICIOS_CATALOGO_DRIVE[codLimpio] && EDIFICIOS_CATALOGO_DRIVE[codLimpio].administrador) {
-
-    adminNom = EDIFICIOS_CATALOGO_DRIVE[codLimpio].administrador;
-
+  // 1. PRIMERO: listaCopropiedadesSuperadmin (edición activa del usuario en SuperAdmin / localStorage)
+  if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) {
+    const cop = listaCopropiedadesSuperadmin.find(c => c && (c.codigo === codLimpio || c.id === cod || c.id === `cj_${codLimpio}`));
+    if (cop && cop.administrador) adminNom = cop.administrador;
   }
 
-  // 2. listaCopropiedadesSuperadmin
+  // 2. SEGUNDO: EDIFICIOS_CATALOGO_DRIVE
+  if (!adminNom && typeof EDIFICIOS_CATALOGO_DRIVE !== 'undefined' && EDIFICIOS_CATALOGO_DRIVE[codLimpio] && EDIFICIOS_CATALOGO_DRIVE[codLimpio].administrador) {
+    adminNom = EDIFICIOS_CATALOGO_DRIVE[codLimpio].administrador;
+  }
 
-  if (!adminNom && typeof listaCopropiedadesSuperadmin !== 'undefined') {
-
-    const cop = listaCopropiedadesSuperadmin.find(c => c.codigo === codLimpio || c.id === cod || c.id === `cj_${codLimpio}`);
-
-    if (cop && cop.administrador) adminNom = cop.administrador;
-
+  // 3. TERCERO: COPROPIEDADES
+  if (!adminNom && typeof COPROPIEDADES !== 'undefined' && COPROPIEDADES[codLimpio] && COPROPIEDADES[codLimpio].administrador) {
+    adminNom = COPROPIEDADES[codLimpio].administrador;
   }
 
   // 3. Catálogo Oficial extraído de EDIFICIO.xlsx
@@ -4534,7 +4532,7 @@ function sincronizarAdministradorEdificio(cod) {
 
 
 
-  // Limpiar nombre si trae teléfono o extensión (ej: "Adriana Salgado Patiño (604)5011727 Ext 1301")
+  // Limpiar nombre si trae teléfono o extensión (ej: "Sofía Jiménez Rangel")
 
   const nombreLimpio = adminNom.replace(/\s*\(?\d{3,}\)?[\d\s\-Ext\.]*$/i, "").trim() || adminNom;
 
@@ -10012,7 +10010,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "ciudad": "Medellín • Antioquia",
 
-    "telefono": "6045011727",
+    "telefono": "3137856910",
 
     "email": "admonedificioroblealto@gmail.com; soniaebd@hotmail.com",
 
@@ -10022,7 +10020,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "cuenta": "991-000017-17",
 
-    "administrador": "Adriana Salgado Pati¤o (604)5011727 Ext 1301",
+    "administrador": "Sofía Jiménez Rangel",
 
     "interesMora": "2.16",
 
@@ -13708,9 +13706,9 @@ let listaCopropiedadesSuperadmin = [
 
     passwordAdmin: "Admin123*",
 
-    administrador: "Adriana Salgado Patiño (604)5011727 Ext 1301",
+    administrador: "Sofía Jiménez Rangel",
 
-    telefono: "6045011727",
+    telefono: "3137856910",
 
     email: "admonedificioroblealto@gmail.com; soniaebd@hotmail.com",
 
@@ -42723,9 +42721,9 @@ async function cargarDirectoDesdeDbplus(codigoParam = null) {
 
         cuenta: "991-000017-17",
 
-        administrador: "Adriana Salgado Patiño (604)5011727 Ext 1301",
+        administrador: "Sofía Jiménez Rangel",
 
-        telefono: "6045011727",
+        telefono: "3137856910",
 
         email: "admonedificioroblealto@gmail.com; soniaebd@hotmail.com",
 
@@ -43341,7 +43339,7 @@ function procesarDatosEdificio(rows, fileName = "") {
 
   const dir = String(fila.DIREC || fila.DIRECCION || fila.direccion || `DG 79A No 76-250/252/254/256`).trim();
 
-  let tel = String(fila.TEL || fila.TELEFONO || fila.CELULAR || fila.NOMTEL || fila.telefono || "6045011727").trim();
+  let tel = String(fila.TEL || fila.TELEFONO || fila.CELULAR || fila.NOMTEL || fila.telefono || "3137856910").trim();
 
   if (tel === "0") tel = "";
 
@@ -43351,7 +43349,7 @@ function procesarDatosEdificio(rows, fileName = "") {
 
   const cta = String(fila.CUENTA || fila.cuenta || "991-000017-17").trim();
 
-  const admin = String(fila.NOMTEL || fila.ADMINISTRADOR || fila.NOMADMON || fila.administrador || "Adriana Salgado Patiño").trim();
+  const admin = String(fila.NOMTEL || fila.ADMINISTRADOR || fila.NOMADMON || fila.administrador || "Sofía Jiménez Rangel").trim();
 
   let intMora = String(fila.MORA || fila.INTPORC || fila.INTERES || fila.interesMora || "2.118%").trim();
 
@@ -46013,6 +46011,19 @@ async function guardarEdicionEdificio() {
     }
 
     // 5. Actualizar todos los selectores, vistas y encabezados
+    if (typeof EDIFICIOS_CATALOGO_DRIVE !== 'undefined' && EDIFICIOS_CATALOGO_DRIVE[cop.codigo]) {
+      EDIFICIOS_CATALOGO_DRIVE[cop.codigo].administrador = cop.administrador;
+      EDIFICIOS_CATALOGO_DRIVE[cop.codigo].telefono = cop.telefono;
+      EDIFICIOS_CATALOGO_DRIVE[cop.codigo].email = cop.email;
+    }
+    if (typeof COPROPIEDADES !== 'undefined' && COPROPIEDADES[cop.codigo]) {
+      COPROPIEDADES[cop.codigo].administrador = cop.administrador;
+      COPROPIEDADES[cop.codigo].telefono = cop.telefono;
+      COPROPIEDADES[cop.codigo].email = cop.email;
+    }
+    if (typeof sincronizarAdministradorEdificio === "function") {
+      sincronizarAdministradorEdificio(cop.codigo);
+    }
     if (typeof actualizarTodosLosSelectsDeCopropiedad === "function") {
       actualizarTodosLosSelectsDeCopropiedad(cop.codigo);
     }
@@ -64096,7 +64107,7 @@ const EDIFICIOS_CATALOGO_DRIVE = {
 
     nombre: "EDIFICIO ROBLE ALTO P.H.",
 
-    administrador: "Adriana Salgado Patiño",
+    administrador: "Sofía Jiménez Rangel",
 
     nit: "901690778-9",
 
