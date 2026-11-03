@@ -954,13 +954,15 @@ def sincronizar_edificio_listados_y_documentos(codigo: str) -> Dict[str, Any]:
                 try:
                     if "SEPTIEMBRE" in name_up and "OCTUBRE" not in name_up:
                         target_dest = dest_septiembre / item.name
-                        shutil.copy2(item, target_dest)
+                        if not target_dest.exists() or target_dest.stat().st_size != item.stat().st_size:
+                            shutil.copy2(item, target_dest)
                         archivos_copiados.append({"archivo": item.name, "mes": "SEPTIEMBRE", "tam": item.stat().st_size})
                         if any(k in name_up for k in ["PAGO", "RECIBO", "DESCUENTO"]):
                             shutil.copy2(item, dest_octubre / item.name)
                     else:
                         target_dest = dest_octubre / item.name
-                        shutil.copy2(item, target_dest)
+                        if not target_dest.exists() or target_dest.stat().st_size != item.stat().st_size:
+                            shutil.copy2(item, target_dest)
                         archivos_copiados.append({"archivo": item.name, "mes": "OCTUBRE", "tam": item.stat().st_size})
                 except Exception as ex_copy:
                     print(f"Error copiando {item.name}: {ex_copy}")

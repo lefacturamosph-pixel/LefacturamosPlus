@@ -4627,27 +4627,21 @@ function getApiBaseUrl() {
   try {
     const isHttps = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
     const origin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin.replace(/\/$/, "") : "";
-    const host = (typeof window !== "undefined" && window.location && window.location.hostname) ? window.location.hostname : "";
+    const isNativeApp = origin.startsWith("file:") || origin.startsWith("capacitor:") || (typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.());
 
-    // 1. Si estamos en la nube bajo HTTPS (Render / Producción), usar siempre el origen HTTPS actual
-    if (isHttps && origin && !host.includes("localhost") && host !== "127.0.0.1" && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
+    // 1. Si estamos en un navegador web (localhost:8000, 127.0.0.1:8000 o Render Cloud HTTPS), usar el mismo origen
+    if (!isNativeApp && origin && (origin.startsWith("http://") || origin.startsWith("https://"))) {
       return origin;
     }
 
-    // 2. Verificar URL guardada en localStorage
+    // 2. Si se trata de APK móvil nativo, verificar URL personalizada en localStorage
     const saved = localStorage.getItem("lefacturamos_backend_url");
     if (saved && saved.startsWith("http")) {
-      // Si estamos en HTTPS, jamás permitir URL insegura http:// (evita bloqueo Mixed Content)
       if (isHttps && saved.startsWith("http://")) {
         try { localStorage.removeItem("lefacturamos_backend_url"); } catch(e) {}
       } else {
         return saved.replace(/\/$/, "");
       }
-    }
-
-    // 3. Origen no-localhost
-    if (origin && !host.includes("localhost") && host !== "127.0.0.1" && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
-      return origin;
     }
 
     return DEFAULT_BACKEND_TUNNEL_URL;
@@ -18454,7 +18448,7 @@ function cargarCopropiedadesGuardadasPersistentes() {
 
       // Sanitizar nombres provisionales / de ensayo para que siempre use los datos reales de DBPLUS
 
-      if (cod === "4901" || (cGuardada.nombre && cGuardada.nombre.startsWith("EDIFICIO COPROPIEDAD #"))) {
+      if (cGuardada.nombre && cGuardada.nombre.startsWith("EDIFICIO COPROPIEDAD #")) {
 
         if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined" && CATALOGO_OFICIAL_DBPLUS[cod]) {
 
@@ -45731,237 +45725,155 @@ function cerrarModalEditarEdificio() {
 
 
 async function guardarEdicionEdificio() {
+  const btn = document.querySelector("#modal-editar-edificio button[onclick*='guardarEdicionEdificio']") || document.getElementById("btn-guardar-edicion-edificio");
+  const origHtml = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span><span>Guardando...</span>`;
+  }
 
-  const id = document.getElementById("edit-cop-id").value;
+  try {
+    const idEl = document.getElementById("edit-cop-id");
+    const codEl = document.getElementById("edit-cop-codigo");
+    const id = idEl ? idEl.value.trim() : "";
+    const codLimpio = (codEl ? codEl.value.trim() : "") || String(id || "").replace(/^cj_/, "").trim();
 
-  const codLimpio = document.getElementById("edit-cop-codigo")?.value || String(id || "").replace(/^cj_/, "").trim();
+    if (!codLimpio) {
+      if (typeof mostrarToast === "function") mostrarToast("⚠️ Código de copropiedad no identificado.", "warning");
+      return;
+    }
 
-  const cop = listaCopropiedadesSuperadmin.find(c => c.id === id || String(c.codigo).trim() === codLimpio || c.id === `cj_${codLimpio}`);
+    let cop = (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin))
+      ? listaCopropiedadesSuperadmin.find(c => c && (c.id === id || String(c.codigo).trim() === codLimpio || c.id === `cj_${codLimpio}`))
+      : null;
 
-  if (!cop) {
+    if (!cop) {
+      cop = {
+        id: id || `cj_${codLimpio}`,
+        codigo: codLimpio,
+        nombre: `Copropiedad #${codLimpio}`,
+        tipo: "Propiedad Horizontal",
+        estado: "A Paz y Salvo",
+        bloqueadoMora: false
+      };
+      if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+        listaCopropiedadesSuperadmin.unshift(cop);
+      }
+    }
+
+    const getVal = (elemId) => {
+      const el = document.getElementById(elemId);
+      return el ? el.value.trim() : "";
+    };
+
+    cop.nombre = getVal("edit-cop-nombre") || cop.nombre;
+    cop.nit = getVal("edit-cop-nit") || cop.nit;
+    cop.direccion = getVal("edit-cop-direccion") || cop.direccion;
+    cop.ciudad = getVal("edit-cop-ciudad") || cop.ciudad || "Medellín • Antioquia";
+    cop.administrador = getVal("edit-cop-admin-nom") || cop.administrador;
+    cop.telefono = getVal("edit-cop-telefono") || cop.telefono;
+    cop.email = getVal("edit-cop-email") || cop.email;
+    cop.banco = getVal("edit-cop-banco") || cop.banco;
+    cop.tipoCuenta = getVal("edit-cop-tipo-cuenta") || cop.tipoCuenta;
+    cop.cuenta = getVal("edit-cop-cuenta") || cop.cuenta;
+    cop.codigoAdmin = getVal("edit-cop-admin-cod") || cop.codigoAdmin;
+    cop.passwordAdmin = getVal("edit-cop-admin-pass") || cop.passwordAdmin;
+    cop.interesMora = getVal("edit-cop-interes-mora") || cop.interesMora || "2.16%";
+
+    // 1. Guardar en catálogo oficial local si existe para evitar que se revierta
+    if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined" && CATALOGO_OFICIAL_DBPLUS[cop.codigo]) {
+      Object.assign(CATALOGO_OFICIAL_DBPLUS[cop.codigo], {
+        nombre: cop.nombre,
+        nit: cop.nit,
+        direccion: cop.direccion,
+        ciudad: cop.ciudad,
+        administrador: cop.administrador,
+        telefono: cop.telefono,
+        email: cop.email,
+        banco: cop.banco,
+        tipoCuenta: cop.tipoCuenta,
+        cuenta: cop.cuenta,
+        interesMora: cop.interesMora
+      });
+    }
+
+    // 2. Persistir de inmediato en localStorage
+    try {
+      localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
+    } catch (e) {}
+
+    // 3. Guardar en el Backend Local o Nube (POST /api/conjuntos) con timeout
+    try {
+      const urlApi = (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "";
+      const baseFinal = urlApi ? urlApi.replace(/\/$/, "") : "";
+      
+      const payload = {
+        codigo: cop.codigo,
+        nombre: cop.nombre,
+        tipo: cop.tipo || "Propiedad Horizontal",
+        nit: cop.nit,
+        direccion: cop.direccion,
+        ciudad: cop.ciudad,
+        telefono: cop.telefono,
+        email: cop.email,
+        banco: cop.banco,
+        tipo_cuenta: cop.tipoCuenta,
+        numero_cuenta: cop.cuenta,
+        titular_cuenta: cop.administrador || cop.nombre,
+        administrador: cop.administrador,
+        codigo_admin: cop.codigoAdmin,
+        password_admin: cop.passwordAdmin,
+        interes_mora: cop.interesMora,
+        bre_b_codigo_entidad: cop.breb || `BREB-${cop.codigo}`
+      };
+
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      await fetch(`${baseFinal}/api/conjuntos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal
+      }).catch(err => console.warn("Fetch backend no completado:", err));
+      clearTimeout(timer);
+    } catch (errDb) {
+      console.warn("Aviso guardando en SQLite backend:", errDb);
+    }
+
+    // 4. Asegurar filtro activo para que la tarjeta no desaparezca
+    if (typeof edificioFiltroCodigoSuperadmin !== "undefined") {
+      edificioFiltroCodigoSuperadmin = cop.codigo;
+    }
+
+    // 5. Actualizar todos los selectores, vistas y encabezados
+    if (typeof actualizarTodosLosSelectsDeCopropiedad === "function") {
+      actualizarTodosLosSelectsDeCopropiedad(cop.codigo);
+    }
+    if (typeof cambiarConjuntoActivo === "function") {
+      cambiarConjuntoActivo(cop.id);
+    }
+    if (typeof renderizarCopropiedadesSuperadmin === "function") {
+      renderizarCopropiedadesSuperadmin();
+    }
 
     cerrarModalEditarEdificio();
 
-    return;
-
+    if (typeof mostrarToast === "function") {
+      mostrarToast(`💾 ¡Arreglos de '${cop.nombre}' (#${cop.codigo}) salvados y guardados exitosamente!`, "success");
+    }
+  } catch (errGen) {
+    console.error("Error en guardarEdicionEdificio:", errGen);
+    if (typeof mostrarToast === "function") {
+      mostrarToast("⚠️ Se aplicaron los arreglos en pantalla y almacenamiento local.", "info");
+    }
+    cerrarModalEditarEdificio();
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (typeof safeCreateIcons === "function") safeCreateIcons();
+    }
   }
-
-
-
-  const getVal = (elemId) => {
-
-    const el = document.getElementById(elemId);
-
-    return el ? el.value.trim() : "";
-
-  };
-
-
-
-  cop.nombre = getVal("edit-cop-nombre") || cop.nombre;
-
-  cop.nit = getVal("edit-cop-nit") || cop.nit;
-
-  cop.direccion = getVal("edit-cop-direccion") || cop.direccion;
-
-  cop.ciudad = getVal("edit-cop-ciudad") || cop.ciudad;
-
-  cop.administrador = getVal("edit-cop-admin-nom") || cop.administrador;
-
-  cop.telefono = getVal("edit-cop-telefono") || cop.telefono;
-
-  cop.email = getVal("edit-cop-email") || cop.email;
-
-  cop.banco = getVal("edit-cop-banco") || cop.banco;
-
-  cop.tipoCuenta = getVal("edit-cop-tipo-cuenta") || cop.tipoCuenta;
-
-  cop.cuenta = getVal("edit-cop-cuenta") || cop.cuenta;
-
-  cop.codigoAdmin = getVal("edit-cop-admin-cod") || cop.codigoAdmin;
-
-  cop.passwordAdmin = getVal("edit-cop-admin-pass") || cop.passwordAdmin;
-
-  cop.interesMora = getVal("edit-cop-interes-mora") || cop.interesMora || "2.16%";
-
-
-
-  // 1. Guardar en catálogo oficial local si existe para evitar que se revierta
-
-  if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined" && CATALOGO_OFICIAL_DBPLUS[cop.codigo]) {
-
-    Object.assign(CATALOGO_OFICIAL_DBPLUS[cop.codigo], {
-
-      nombre: cop.nombre,
-
-      nit: cop.nit,
-
-      direccion: cop.direccion,
-
-      ciudad: cop.ciudad,
-
-      administrador: cop.administrador,
-
-      telefono: cop.telefono,
-
-      email: cop.email,
-
-      banco: cop.banco,
-
-      tipoCuenta: cop.tipoCuenta,
-
-      cuenta: cop.cuenta,
-
-      interesMora: cop.interesMora
-
-    });
-
-  }
-
-
-
-  // 2. Persistir de inmediato en localStorage
-
-  try {
-
-    localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
-
-  } catch (e) {}
-
-
-
-  // 3. Guardar y Salvar en la Base de Datos SQLite del Servidor (POST /api/conjuntos)
-
-  try {
-
-    const urlApi = (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "http://127.0.0.1:8000";
-
-    await fetch(`${urlApi}/api/conjuntos`, {
-
-      method: "POST",
-
-      headers: { "Content-Type": "application/json" },
-
-      body: JSON.stringify({
-
-        codigo: cop.codigo,
-
-        nombre: cop.nombre,
-
-        tipo: cop.tipo || "Propiedad Horizontal",
-
-        nit: cop.nit,
-
-        direccion: cop.direccion,
-
-        telefono: cop.telefono,
-
-        email: cop.email,
-
-        banco: cop.banco,
-
-        tipo_cuenta: cop.tipoCuenta,
-
-        numero_cuenta: cop.cuenta,
-
-        titular_cuenta: cop.administrador || cop.nombre,
-
-        bre_b_codigo_entidad: cop.breb || `BREB-${cop.codigo}`
-
-      })
-
-    });
-
-  } catch (errDb) {
-
-    console.warn("Aviso guardando en SQLite backend:", errDb);
-
-  }
-
-
-
-  // 4. Actualizar todos los selectores, vistas y encabezados
-
-  if (typeof actualizarTodosLosSelectsDeCopropiedad === "function") {
-
-    actualizarTodosLosSelectsDeCopropiedad(cop.codigo);
-
-  }
-
-  if (typeof cambiarConjuntoActivo === "function") {
-
-    cambiarConjuntoActivo(cop.id);
-
-  }
-
-  if (typeof renderizarCopropiedadesSuperadmin === "function") {
-
-    renderizarCopropiedadesSuperadmin();
-
-  }
-
-
-
-  cerrarModalEditarEdificio();
-
-  if (typeof mostrarToast === "function") {
-
-    mostrarToast(`💾 ¡Arreglos de '${cop.nombre}' (#${cop.codigo}) salvados y guardados exitosamente!`, "success");
-
-  }
-
-}
-
-
-
-// Modales del Footer
-
-function abrirModalMigradorPython() {
-
-  const m = document.getElementById("modal-migrador-python");
-
-  if (m) m.classList.remove("hidden");
-
-}
-
-function abrirModalCompilarApp() {
-
-  const m = document.getElementById("modal-compilar-app");
-
-  if (m) m.classList.remove("hidden");
-
-}
-
-function abrirModalPlantillasExcel() {
-
-  const m = document.getElementById("modal-plantillas-excel");
-
-  if (m) m.classList.remove("hidden");
-
-}
-
-function abrirModalInformesListados() {
-
-  const m = document.getElementById("modal-informes-listados");
-
-  if (m) m.classList.remove("hidden");
-
-}
-
-function cerrarModal(id) {
-
-  const m = document.getElementById(id);
-
-  if (m) m.classList.add("hidden");
-
-}
-
-
-
-function descargarPlantillaExcelLey675() {
-
-  mostrarToast("Descargando Plantilla Oficial Excel Ley 675...");
-
 }
 
 function procesarArchivoExcelMasivo(e) {

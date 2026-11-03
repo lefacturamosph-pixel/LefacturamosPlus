@@ -233,6 +233,8 @@ class ConjuntoCreateRequest(BaseModel):
 
     direccion: Optional[str] = ""
 
+    ciudad: Optional[str] = ""
+
     telefono: Optional[str] = ""
 
     email: Optional[str] = ""
@@ -244,6 +246,14 @@ class ConjuntoCreateRequest(BaseModel):
     numero_cuenta: Optional[str] = ""
 
     titular_cuenta: Optional[str] = ""
+
+    administrador: Optional[str] = ""
+
+    codigo_admin: Optional[str] = ""
+
+    password_admin: Optional[str] = ""
+
+    interes_mora: Optional[str] = ""
 
     wompi_public_key: Optional[str] = ""
 
@@ -877,6 +887,32 @@ def crear_conjunto(request: ConjuntoCreateRequest):
     
 
     conn.close()
+
+    # Reflejar metadatos actualizados en data/edificio_{codigo}_master.json
+    try:
+        from pathlib import Path
+        m_path = Path("data") / f"edificio_{request.codigo}_master.json"
+        if m_path.exists():
+            with open(m_path, "r", encoding="utf-8") as mf:
+                m_data = json.load(mf)
+            m_data["nombre"] = request.nombre
+            if "edificio" in m_data and isinstance(m_data["edificio"], dict):
+                m_data["edificio"]["nombre"] = request.nombre
+                m_data["edificio"]["nit"] = request.nit or ""
+                m_data["edificio"]["direccion"] = request.direccion or ""
+                m_data["edificio"]["ciudad"] = request.ciudad or m_data["edificio"].get("ciudad", "Medellín • Antioquia")
+                m_data["edificio"]["administrador"] = request.administrador or request.titular_cuenta or ""
+                m_data["edificio"]["telefono"] = request.telefono or ""
+                m_data["edificio"]["email"] = request.email or ""
+                m_data["edificio"]["banco"] = request.banco or ""
+                m_data["edificio"]["tipoCuenta"] = request.tipo_cuenta or "Ahorros"
+                m_data["edificio"]["cuenta"] = request.numero_cuenta or ""
+                if request.interes_mora:
+                    m_data["edificio"]["interesMora"] = request.interes_mora
+            with open(m_path, "w", encoding="utf-8") as mf:
+                json.dump(m_data, mf, ensure_ascii=False, indent=2)
+    except Exception as e_m:
+        print("Nota actualización master JSON:", e_m)
 
     # Sincronización automática de listados contables de DBPlus hacia la nube/Render
     total_sync = 0
