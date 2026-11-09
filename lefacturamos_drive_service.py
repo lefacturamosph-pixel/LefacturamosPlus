@@ -233,11 +233,19 @@ def buscar_directorio_mes(codigo: str, anio: int, mes: str) -> Optional[Path]:
     for p in [GOOGLE_DRIVE_LOCAL_PATH / cod / str(anio) / mes_upper, GOOGLE_DRIVE_LOCAL_PATH / cod.zfill(4) / str(anio) / mes_upper]:
         if p.exists() and p.is_dir():
             return p
-    # 2. En C:\dbplus (solo para periodo contable actual OCTUBRE)
-    if mes_upper == "OCTUBRE":
-        for p in [DBPLUS_LOCAL_PATH / cod / "Envio", DBPLUS_LOCAL_PATH / cod.zfill(4) / "Envio"]:
-            if p.exists() and p.is_dir():
-                return p
+    # 2. En C:\dbplus
+    for p in [DBPLUS_LOCAL_PATH / cod / "Envio", DBPLUS_LOCAL_PATH / cod.zfill(4) / "Envio"]:
+        if p.exists() and p.is_dir():
+            try:
+                tiene_mes = any(mes_upper in f.name.upper() for f in p.iterdir() if f.is_file())
+                if tiene_mes:
+                    return p
+            except Exception:
+                pass
+    # Fallback general para Envio si existe
+    for p in [DBPLUS_LOCAL_PATH / cod / "Envio", DBPLUS_LOCAL_PATH / cod.zfill(4) / "Envio"]:
+        if p.exists() and p.is_dir():
+            return p
     return None
 
 def buscar_archivo_disco(edificio: str, anio: str, mes: str, archivo: str) -> Optional[Path]:
@@ -938,12 +946,17 @@ def sincronizar_edificio_listados_y_documentos(codigo: str) -> Dict[str, Any]:
 
     archivos_copiados = []
     
-    # 2. Si existe carpeta local, copiar los archivos a data/drive_docs
+    # 2. Si existe carpeta local, copiar los archivos a data/drive_docs organizados por mes
     if origen_folder:
+        dest_noviembre = REPO_DRIVE_PATH / clean_cod / "2026" / "NOVIEMBRE"
         dest_octubre = REPO_DRIVE_PATH / clean_cod / "2026" / "OCTUBRE"
         dest_septiembre = REPO_DRIVE_PATH / clean_cod / "2026" / "SEPTIEMBRE"
+        dest_diciembre = REPO_DRIVE_PATH / clean_cod / "2026" / "DICIEMBRE"
+        
+        dest_noviembre.mkdir(parents=True, exist_ok=True)
         dest_octubre.mkdir(parents=True, exist_ok=True)
         dest_septiembre.mkdir(parents=True, exist_ok=True)
+        dest_diciembre.mkdir(parents=True, exist_ok=True)
 
         for item in origen_folder.iterdir():
             if not item.is_file():
@@ -952,54 +965,74 @@ def sincronizar_edificio_listados_y_documentos(codigo: str) -> Dict[str, Any]:
             ext = item.suffix.lower()
             if ext in [".pdf", ".xlsx", ".xls", ".csv", ".rar"]:
                 try:
-                    if "SEPTIEMBRE" in name_up and "OCTUBRE" not in name_up:
+                    mes_destino = "NOVIEMBRE"
+                    if "NOVIEMBRE" in name_up or "2611" in name_up:
+                        mes_destino = "NOVIEMBRE"
+                        target_dest = dest_noviembre / item.name
+                        if not target_dest.exists() or target_dest.stat().st_size != item.stat().st_size:
+                            shutil.copy2(item, target_dest)
+                        archivos_copiados.append({"archivo": item.name, "mes": "NOVIEMBRE", "tam": item.stat().st_size})
+                    elif "SEPTIEMBRE" in name_up and "OCTUBRE" not in name_up:
+                        mes_destino = "SEPTIEMBRE"
                         target_dest = dest_septiembre / item.name
                         if not target_dest.exists() or target_dest.stat().st_size != item.stat().st_size:
                             shutil.copy2(item, target_dest)
                         archivos_copiados.append({"archivo": item.name, "mes": "SEPTIEMBRE", "tam": item.stat().st_size})
-                        if any(k in name_up for k in ["PAGO", "RECIBO", "DESCUENTO"]):
-                            shutil.copy2(item, dest_octubre / item.name)
-                    else:
+                    elif "DICIEMBRE" in name_up or "2612" in name_up:
+                        mes_destino = "DICIEMBRE"
+                        target_dest = dest_diciembre / item.name
+                        if not target_dest.exists() or target_dest.stat().st_size != item.stat().st_size:
+                            shutil.copy2(item, target_dest)
+                        archivos_copiados.append({"archivo": item.name, "mes": "DICIEMBRE", "tam": item.stat().st_size})
+                    elif "OCTUBRE" in name_up or "2610" in name_up:
+                        mes_destino = "OCTUBRE"
                         target_dest = dest_octubre / item.name
                         if not target_dest.exists() or target_dest.stat().st_size != item.stat().st_size:
                             shutil.copy2(item, target_dest)
                         archivos_copiados.append({"archivo": item.name, "mes": "OCTUBRE", "tam": item.stat().st_size})
+                        # Si es recibo de caja de octubre, también ponerlo en noviembre para consulta del periodo activo
+                        if any(k in name_up for k in ["RECIBO", "PAGO", "DESCUENTO"]):
+                            shutil.copy2(item, dest_noviembre / item.name)
+                    else:
+                        # Archivos generales (enviados_Copropietarios, planillas, etc.)
+                        shutil.copy2(item, dest_noviembre / item.name)
+                        archivos_copiados.append({"archivo": item.name, "mes": "NOVIEMBRE", "tam": item.stat().st_size})
                 except Exception as ex_copy:
                     print(f"Error copiando {item.name}: {ex_copy}")
 
-    # 3. Asegurar data/edificio_{codigo}_master.json
+    # 3. Asegurar y actualizar data/edificio_{codigo}_master.json
     master_path = REPO_ROOT / "data" / f"edificio_{clean_cod}_master.json"
     master_creado = False
     unidades_count = 0
 
-    if not master_path.exists() or master_path.stat().st_size < 100:
-        try:
-            from dbplus_service import obtener_datos_dbplus_edificio
-            db_data = obtener_datos_dbplus_edificio(clean_cod)
-            if db_data and db_data.get("unidades"):
-                def _to_float_coef(v):
-                    try:
-                        return float(str(v).replace("%", "").strip())
-                    except Exception:
-                        return 0.0
+    try:
+        from dbplus_service import obtener_datos_dbplus_edificio
+        db_data = obtener_datos_dbplus_edificio(clean_cod)
+        if db_data and db_data.get("unidades"):
+            def _to_float_coef(v):
+                try:
+                    return float(str(v).replace("%", "").strip())
+                except Exception:
+                    return 0.0
 
-                master_obj = {
-                    "codigo": clean_cod,
-                    "nombre": db_data.get("edificio", {}).get("nombre", f"Edificio #{clean_cod}"),
-                    "edificio": db_data.get("edificio", {}),
-                    "unidades": db_data.get("unidades", []),
-                    "anios": [2026, 2025, 2024, 2023, 2022],
-                    "inmueblesCount": len(db_data.get("unidades", [])),
-                    "coeficienteTotal": f"{sum(_to_float_coef(u.get('coefNum', 0)) for u in db_data.get('unidades', [])):.3f}%"
-                }
-                master_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(master_path, "w", encoding="utf-8") as f:
-                    json.dump(master_obj, f, ensure_ascii=False, indent=2)
-                master_creado = True
-                unidades_count = len(db_data.get("unidades", []))
-        except Exception as e:
-            print(f"Error generando master para {clean_cod}: {e}")
-    else:
+            master_obj = {
+                "codigo": clean_cod,
+                "nombre": db_data.get("edificio", {}).get("nombre", f"Edificio #{clean_cod}"),
+                "edificio": db_data.get("edificio", {}),
+                "unidades": db_data.get("unidades", []),
+                "anios": [2026, 2025, 2024, 2023, 2022],
+                "inmueblesCount": len(db_data.get("unidades", [])),
+                "coeficienteTotal": f"{sum(_to_float_coef(u.get('coefNum', 0)) for u in db_data.get('unidades', [])):.3f}%"
+            }
+            master_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(master_path, "w", encoding="utf-8") as f:
+                json.dump(master_obj, f, ensure_ascii=False, indent=2)
+            master_creado = True
+            unidades_count = len(db_data.get("unidades", []))
+    except Exception as e:
+        print(f"Error generando master para {clean_cod}: {e}")
+
+    if not master_creado and master_path.exists():
         try:
             with open(master_path, "r", encoding="utf-8") as f:
                 d = json.load(f)
