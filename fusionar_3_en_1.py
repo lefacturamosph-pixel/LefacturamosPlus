@@ -157,35 +157,71 @@ def fusionar_3_archivos(
     # Si se suministraron unidades o cartera separadas, relacionarlas por unidad (APTO)
     unidades_fuente = edif_data.get("unidades", [])
     if datos_inmuebles:
-        cartera_map = {str(c.get("unidad", c.get("APTO", ""))).strip().zfill(4): c for c in (datos_cartera or [])}
+        cartera_map = {str(c.get("unidad", c.get("apto", c.get("APTO", "")))).strip().zfill(4): c for c in (datos_cartera or [])}
         unidades_fuente = []
         for inm in datos_inmuebles:
-            u_num = str(inm.get("unidad", inm.get("APTO", ""))).strip().zfill(4)
+            u_num = str(inm.get("unidad", inm.get("apto", inm.get("APTO", "")))).strip().zfill(4)
             cart = cartera_map.get(u_num, {})
             
             # Cálculo de los 8 conceptos si vienen en bruto
-            p_admon = float(cart.get("pend", cart.get("PEND", 0)) or 0) + float(cart.get("actual", cart.get("ACTUAL", 0)) or 0)
-            p_int = float(cart.get("intp", cart.get("INTP", 0)) or 0) + float(cart.get("inta", cart.get("INTA", 0)) or 0)
-            p_otr = float(cart.get("otrosp", cart.get("OTROSP", 0)) or 0) + float(cart.get("otrosa", cart.get("OTROSA", 0)) or 0)
-            p_ext = float(cart.get("extrap", cart.get("EXTRAP", 0)) or 0) + float(cart.get("extraa", cart.get("EXTRAA", 0)) or 0)
-            p_mul = float(cart.get("multap", cart.get("MULTAP", 0)) or 0) + float(cart.get("multaa", cart.get("MULTAA", 0)) or 0)
-            p_sp = float(cart.get("serpup", cart.get("SERPUP", 0)) or 0) + float(cart.get("serpua", cart.get("SERPUA", 0)) or 0)
-            p_ss = float(cart.get("servip", cart.get("SERVIP", 0)) or 0) + float(cart.get("servia", cart.get("SERVIA", 0)) or 0)
-            p_nd = float(cart.get("ndncp", cart.get("NDNCP", 0)) or 0) + float(cart.get("ndnca", cart.get("NDNCA", 0)) or 0)
+            p_actual = float(cart.get("actual", cart.get("ACTUAL", cart.get("admon", 0))) or 0)
+            p_pend = float(cart.get("pend", cart.get("PEND", 0)) or 0)
+            p_inta = float(cart.get("inta", cart.get("INTA", cart.get("interes", 0))) or 0)
+            p_intp = float(cart.get("intp", cart.get("INTP", 0)) or 0)
+            p_otrosa = float(cart.get("otrosa", cart.get("OTROSA", cart.get("otros", 0))) or 0)
+            p_otrosp = float(cart.get("otrosp", cart.get("OTROSP", 0)) or 0)
+            p_extraa = float(cart.get("extraa", cart.get("EXTRAA", cart.get("extra", 0))) or 0)
+            p_extrap = float(cart.get("extrap", cart.get("EXTRAP", 0)) or 0)
+            p_multaa = float(cart.get("multaa", cart.get("MULTAA", cart.get("multa", 0))) or 0)
+            p_multap = float(cart.get("multap", cart.get("MULTAP", 0)) or 0)
+            p_serpua = float(cart.get("serpua", cart.get("SERPUA", cart.get("ser_pub", 0))) or 0)
+            p_serpup = float(cart.get("serpup", cart.get("SERPUP", 0)) or 0)
+            p_servia = float(cart.get("servia", cart.get("SERVIA", cart.get("ser_serv", 0))) or 0)
+            p_servip = float(cart.get("servip", cart.get("SERVIP", 0)) or 0)
+            p_ndnca = float(cart.get("ndnca", cart.get("NDNCA", cart.get("notas_dc", 0))) or 0)
+            p_ndncp = float(cart.get("ndncp", cart.get("NDNCP", 0)) or 0)
             p_valdesc = float(cart.get("valdesc", cart.get("VALDESC", cart.get("descuento", cart.get("DESC", 0)))) or 0)
-            p_tot = p_admon + p_int + p_otr + p_ext + p_mul + p_sp + p_ss + p_nd
+
+            p_admon = p_actual if p_actual > 0 else (float(cart.get("pend", 0)) + float(cart.get("actual", 0)))
+            p_int = p_inta + p_intp
+            p_otr = p_otrosa + p_otrosp
+            p_ext = p_extraa + p_extrap
+            p_mul = p_multaa + p_multap
+            p_sp = p_serpua + p_serpup
+            p_ss = p_servia + p_servip
+            p_nd = p_ndnca + p_ndncp
+            p_calc_tot = p_actual + p_pend + p_int + p_otr + p_ext + p_mul + p_sp + p_ss + p_nd
+            p_tot = float(cart.get("totalNum", cart.get("TOTAL", p_calc_tot)) or p_calc_tot)
             p_valpag = float(cart.get("valpag", cart.get("VALPAG", cart.get("valor_pagar", p_tot - p_valdesc))) or (p_tot - p_valdesc))
 
             u_merged = {
                 "unidad": u_num,
-                "bloque": inm.get("bloque", inm.get("BLOQ", "00")),
-                "fac": cart.get("fac", cart.get("FAC", "")),
+                "apto": u_num,
+                "bloque": inm.get("bloque", inm.get("bloq", inm.get("BLOQ", "00"))),
+                "bloq": inm.get("bloq", inm.get("bloque", inm.get("BLOQ", "00"))),
+                "fac": cart.get("fac", cart.get("FAC", inm.get("fac", ""))),
                 "propietario": inm.get("propietario", inm.get("NOMBRE", "")),
                 "cc": inm.get("cc", inm.get("CEDULA", "")),
                 "coeficiente": str(inm.get("coeficiente", inm.get("COEF", "2.272%"))),
                 "coefNum": float(str(inm.get("coeficiente", "2.272")).replace("%", "")),
                 "tipo": inm.get("tipo", "APTO"),
                 "ubicacion": inm.get("ubicacion", ""),
+                "actual": p_actual,
+                "pend": p_pend,
+                "inta": p_inta,
+                "intp": p_intp,
+                "otrosa": p_otrosa,
+                "otrosp": p_otrosp,
+                "extraa": p_extraa,
+                "extrap": p_extrap,
+                "multaa": p_multaa,
+                "multap": p_multap,
+                "serpua": p_serpua,
+                "serpup": p_serpup,
+                "servia": p_servia,
+                "servip": p_servip,
+                "ndnca": p_ndnca,
+                "ndncp": p_ndncp,
                 "admon": p_admon,
                 "interes": p_int,
                 "otros": p_otr,
@@ -206,8 +242,8 @@ def fusionar_3_archivos(
                 "notasDcFmt": f"${p_nd:,.0f}".replace(",", "."),
                 "valdescFmt": f"${p_valdesc:,.0f}".replace(",", "."),
                 "valpagFmt": f"${p_valpag:,.0f}".replace(",", "."),
-                "saldoPendiente": cart.get("saldoPendiente", f"${float(cart.get('pend', 0)):,.0f}".replace(",", ".")),
-                "cuotaMensual": cart.get("cuotaMensual", f"${float(cart.get('actual', 0)):,.0f}".replace(",", ".")),
+                "saldoPendiente": cart.get("saldoPendiente", f"${float(p_pend):,.0f}".replace(",", ".")),
+                "cuotaMensual": cart.get("cuotaMensual", f"${float(p_actual):,.0f}".replace(",", ".")),
                 "totalPagar": f"${p_tot:,.0f}".replace(",", "."),
                 "totalNum": int(p_tot),
                 "estado": cart.get("estado", "Al Día")
@@ -311,6 +347,27 @@ def fusionar_3_archivos(
         if campos_seleccionados.get("cart_total", True):
             row["totalPagar"] = u.get("totalPagar") or _fmt_money(u.get("totalPagar", 0))
             tot_final += _parse_money(u.get("totalNum", u.get("totalPagar", 0.0)))
+
+        # Siempre preservar campos contables numéricos y de matriz de saldos
+        row["apto"] = u.get("apto", u.get("unidad", ""))
+        row["bloq"] = u.get("bloq", u.get("bloque", "00"))
+        row["actual"] = float(u.get("actual", _parse_money(u.get("admon", 0.0))))
+        row["pend"] = float(u.get("pend", 0.0))
+        row["inta"] = float(u.get("inta", 0.0))
+        row["intp"] = float(u.get("intp", 0.0))
+        row["otrosa"] = float(u.get("otrosa", 0.0))
+        row["otrosp"] = float(u.get("otrosp", 0.0))
+        row["extraa"] = float(u.get("extraa", 0.0))
+        row["extrap"] = float(u.get("extrap", 0.0))
+        row["multaa"] = float(u.get("multaa", 0.0))
+        row["multap"] = float(u.get("multap", 0.0))
+        row["serpua"] = float(u.get("serpua", 0.0))
+        row["serpup"] = float(u.get("serpup", 0.0))
+        row["servia"] = float(u.get("servia", 0.0))
+        row["servip"] = float(u.get("servip", 0.0))
+        row["ndnca"] = float(u.get("ndnca", 0.0))
+        row["ndncp"] = float(u.get("ndncp", 0.0))
+        row["totalNum"] = float(u.get("totalNum", _parse_money(row.get("totalPagar", 0.0))))
 
         row["estado"] = u.get("estado", "Al Día")
         resultado_unidades.append(row)

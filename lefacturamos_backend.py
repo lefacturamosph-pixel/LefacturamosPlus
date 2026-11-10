@@ -1072,37 +1072,23 @@ def fusionar_crear_edificio_3en1(request: ConjuntoFusion3en1Request):
         if u_exist:
 
             conn.execute("""
-
             UPDATE unidades
-
-            SET propietario_nombre = ?, propietario_doc = ?, coeficiente = ?, tipo_inmueble = ?, cuarto_util = ?
-
+            SET propietario_nombre = ?, propietario_doc = ?, coeficiente = ?, tipo_inmueble = ?, cuarto_util = ?, saldo_actual = ?
             WHERE id = ?
-
             """, (
-
                 u.get("propietario", ""), u.get("cc", ""), coef_num,
-
-                u.get("tipo", "Apartamento"), u.get("cuarto_util", ""), uid
-
+                u.get("tipo", "Apartamento"), u.get("cuarto_util", ""),
+                float(u.get("totalNum", u.get("actual", 0.0))), uid
             ))
-
         else:
-
             conn.execute("""
-
-            INSERT INTO unidades (id, conjunto_id, torre_bloque, numero_unidad, tipo_inmueble, cuarto_util, coeficiente, propietario_nombre, propietario_doc)
-
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-
+            INSERT INTO unidades (id, conjunto_id, torre_bloque, numero_unidad, tipo_inmueble, cuarto_util, coeficiente, propietario_nombre, propietario_doc, saldo_actual)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-
                 uid, cid, u.get("bloque", "00"), u.get("unidad", ""),
-
                 u.get("tipo", "Apartamento"), u.get("cuarto_util", ""), coef_num,
-
-                u.get("propietario", ""), u.get("cc", "")
-
+                u.get("propietario", ""), u.get("cc", ""),
+                float(u.get("totalNum", u.get("actual", 0.0)))
             ))
 
 

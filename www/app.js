@@ -18870,48 +18870,27 @@ async function guardarCopropiedadGlobal(cop, unidades = []) {
 
 
 
-  if ((!cop.unidades || cop.unidades.length === 0) && unidades && unidades.length > 0) {
-
+  if (unidades && unidades.length > 0) {
     cop.unidades = unidades;
-
   }
-
   if (!cop.unidades || cop.unidades.length === 0) {
-
     if (typeof obtenerUnidadesRealesParaFusion === "function") {
-
       cop.unidades = obtenerUnidadesRealesParaFusion(cod, cop.nombre);
-
     } else {
-
       cop.unidades = [
-
         { unidad: "0101", propietario: cop.administrador || "ADMINISTRACIÓN", coeficiente: "100%", estado: "Al Día" }
-
       ];
-
     }
-
   }
-
   cop.inmueblesCount = cop.unidades.length;
-
   cop.inmueblesOcupados = cop.unidades.length;
-
   cop.censoCount = cop.unidades.length;
 
-
-
   const idx = listaCopropiedadesSuperadmin.findIndex(c => String(c.codigo).trim() === cod || c.id === cop.id);
-
   if (idx >= 0) {
-
-    listaCopropiedadesSuperadmin[idx] = { ...listaCopropiedadesSuperadmin[idx], ...cop };
-
+    listaCopropiedadesSuperadmin[idx] = { ...listaCopropiedadesSuperadmin[idx], ...cop, unidades: cop.unidades };
   } else {
-
     listaCopropiedadesSuperadmin.unshift(cop);
-
   }
 
 
@@ -19171,37 +19150,41 @@ cargarCopropiedadesGuardadasPersistentes();
 const MENUS_POR_ROL = {
 
   superadmin: {
-
     titulo: "Superadministrador de la Plataforma",
-
     subtitulo: "Panel Global Multi-Conjunto Enterprise Cloud v2.4",
-
     icono: "globe",
-
     color: "purple",
-
     homeTab: "superadmin",
-
     badgeTexto: "Perfil: Superadministrador Global",
-
     itemsMovil: [
-
       { id: "superadmin", label: "Global", icono: "globe" },
-
-      { id: "ley675", label: "Ley 675", icono: "search" }
-
+      { id: "admin", label: "Panel", icono: "layout-grid" },
+      { id: "saldos", label: "Saldos", icono: "wallet" },
+      { id: "apartamentos", label: "Aptos", icono: "home" },
+      { id: "cargamasiva", label: "Carga Masiva", icono: "upload-cloud" }
     ],
-
     items: [
-
       { id: "superadmin", label: "Superadministrador Global", icono: "globe" },
-
+      { id: "cargamasiva", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud" },
+      { id: "admin", label: "Panel Principal", icono: "layout-grid" },
+      { id: "apartamentos", label: "Apartamentos", icono: "home" },
+      { id: "residentes", label: "Residentes", icono: "users" },
+      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
+      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
+      { id: "documentos", label: "Documentos", icono: "folder" },
+      { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
+      { id: "reservas", label: "Reservas", icono: "calendar" },
+      { id: "visitantes", label: "Visitas", icono: "qr-code" },
+      { id: "pqr", label: "PQR", icono: "message-square" },
+      { id: "comunicados", label: "Comunicados", icono: "megaphone" },
+      { id: "votaciones", label: "Asamblea Ley 675", icono: "file-check-2" },
+      { id: "ley675", label: "Consultar Ley 675", icono: "search" },
+      { id: "zonas", label: "Zonas Comunes", icono: "trees" },
       { id: "manual-superadmin", label: "Manual Superadministrador", icono: "book-open", action: "abrirManualRol('superadmin')" },
-
-      { id: "ley675", label: "Consultar Ley 675", icono: "search" }
-
+      { id: "manual-admin", label: "Manual de Lefacturamos para el Administrador", icono: "book-open-check", action: "abrirManualRol('admin')" },
+      { id: "manual", label: "Reglamento Interno PH (Edificio)", icono: "file-text" },
+      { id: "mascotas", label: "Mascotas", icono: "paw-print" }
     ]
-
   },
 
   residente: {
@@ -19431,22 +19414,17 @@ function obtenerDatosCopropiedad(codigoOId) {
   );
 
     if (cop) {
-
-    if (limpioSinCj === "4160") {
-      cop.unidades = (typeof getUnidadesRiachuelo4160Master === "function") ? getUnidadesRiachuelo4160Master() : [];
-    } else if (limpioSinCj === "4901") {
-
-      cop.unidades = (typeof getUnidadesRobleAlto4901Master === "function") ? getUnidadesRobleAlto4901Master() : [];
-
-    } else if (limpioSinCj === "7480") {
-
-      cop.unidades = (typeof getUnidadesManchester7480Master === "function") ? getUnidadesManchester7480Master() : [];
-
-    } else if ((!cop.unidades || cop.unidades.length === 0) && typeof obtenerUnidadesRealesParaFusion === "function") {
-
-      cop.unidades = obtenerUnidadesRealesParaFusion(cop.codigo, cop.nombre);
-
-    }
+      if (cop.unidades && cop.unidades.length > 0 && cop.unidades[0].actual !== undefined) {
+        // Preservar unidades actualizadas en memoria
+      } else if (limpioSinCj === "4160") {
+        cop.unidades = (typeof getUnidadesRiachuelo4160Master === "function") ? getUnidadesRiachuelo4160Master() : [];
+      } else if (limpioSinCj === "4901") {
+        cop.unidades = (typeof getUnidadesRobleAlto4901Master === "function") ? getUnidadesRobleAlto4901Master() : [];
+      } else if (limpioSinCj === "7480") {
+        cop.unidades = (typeof getUnidadesManchester7480Master === "function") ? getUnidadesManchester7480Master() : [];
+      } else if ((!cop.unidades || cop.unidades.length === 0) && typeof obtenerUnidadesRealesParaFusion === "function") {
+        cop.unidades = obtenerUnidadesRealesParaFusion(cop.codigo, cop.nombre);
+      }
 
     if (cop.unidades && cop.unidades.length > 0) {
 
@@ -32946,6 +32924,120 @@ function getUnidadesRobleAlto4901Master() {
 }
 
 
+function obtenerUnidadesRealesParaFusion(codigo, nombre) {
+  const codLimpio = String(codigo || "").replace(/^cj_/, "").trim();
+  const asegurarValdescValpag = (list) => {
+    if (!list || !Array.isArray(list)) return [];
+    return list.map(u => {
+      if (u.valdesc === undefined) u.valdesc = 0;
+      if (!u.valdescFmt) u.valdescFmt = "$0";
+      if (u.valpag === undefined) u.valpag = (u.totalNum !== undefined ? u.totalNum : (u.admon || 0)) - u.valdesc;
+      if (!u.valpagFmt) u.valpagFmt = "$" + Math.round(u.valpag).toLocaleString("es-CO");
+      return u;
+    });
+  };
+
+  const cop = typeof listaCopropiedadesSuperadmin !== "undefined"
+    ? listaCopropiedadesSuperadmin.find(c => c.codigo === codLimpio || c.id === `cj_${codLimpio}`)
+    : null;
+  if (cop && cop.unidades && cop.unidades.length > 3 && (cop.unidades[0].actual !== undefined || cop.unidades[0].admonFmt)) {
+    return asegurarValdescValpag(JSON.parse(JSON.stringify(cop.unidades)));
+  }
+
+  if (codLimpio === "4160") {
+    return asegurarValdescValpag(getUnidadesRiachuelo4160Master());
+  }
+  if (codLimpio === "4901") {
+    return asegurarValdescValpag(getUnidadesRobleAlto4901Master());
+  }
+  if (codLimpio === "7480") {
+    return asegurarValdescValpag(getUnidadesManchester7480Master());
+  }
+  if (codLimpio === "5304" && typeof getUnidadesVallados5304Master === "function") {
+    return asegurarValdescValpag(getUnidadesVallados5304Master());
+  }
+  if (codLimpio === "0127" && typeof getUnidadesClass480127Master === "function") {
+    return asegurarValdescValpag(getUnidadesClass480127Master());
+  }
+
+  // Generador dinámico para cualquier otro edificio con Ley 675 y quórum 100.000%
+  const numUnidades = 10;
+  const coefBase = parseFloat((100.0 / numUnidades).toFixed(3));
+  const unidades = [];
+  const nombresBase = [
+    "CARLOS MARIO RESTREPO", "ANA MARIA JARAMILLO", "JUAN DAVID OCHOA",
+    "GLORIA ESPERANZA RESTREPO", "OLGA LUCIA VALENCIA", "FERNANDO MEJIA POSADA",
+    "SANTIAGO QUINTERO LONDOÑO", "MARGARITA ROSA GOMEZ", "ANDRES FELIPE HERRERA",
+    "PAULA ANDREA ZAPATA"
+  ];
+  let acumCoef = 0;
+  for (let i = 1; i <= numUnidades; i++) {
+    const aptoNum = String(100 + i * 10);
+    const coef = (i === numUnidades) ? parseFloat((100.0 - acumCoef).toFixed(3)) : coefBase;
+    acumCoef += coef;
+    const valAdmon = 320000 + (i % 3) * 15000;
+    unidades.push({
+      unidad: aptoNum,
+      apto: aptoNum,
+      bloque: "01",
+      bloq: "01",
+      fac: 3000 + i,
+      propietario: nombresBase[i - 1] || `PROPIETARIO APTO ${aptoNum}`,
+      cc: String(71000000 + i * 2345),
+      coeficiente: coef.toFixed(3) + "%",
+      coefNum: coef,
+      tipo: "APTO",
+      ubicacion: "Torre 1",
+      telefono: "311" + (6000000 + i * 4321),
+      email: `residente${aptoNum}@gmail.com`,
+      actual: valAdmon,
+      pend: 0,
+      inta: 0,
+      intp: 0,
+      otrosa: 0,
+      otrosp: 0,
+      extraa: 0,
+      extrap: 0,
+      multaa: 0,
+      multap: 0,
+      serpua: 0,
+      serpup: 0,
+      servia: 0,
+      servip: 0,
+      ndnca: 0,
+      ndncp: 0,
+      admon: valAdmon,
+      admonFmt: "$" + valAdmon.toLocaleString("es-CO"),
+      interes: 0,
+      interesFmt: "$0",
+      otros: 0,
+      otrosFmt: "$0",
+      extra: 0,
+      extraFmt: "$0",
+      multa: 0,
+      multaFmt: "$0",
+      ser_pub: 0,
+      serPubFmt: "$0",
+      ser_serv: 0,
+      serServFmt: "$0",
+      notas_dc: 0,
+      notasDcFmt: "$0",
+      valdesc: 0,
+      valdescFmt: "$0",
+      valpag: valAdmon,
+      valpagFmt: "$" + valAdmon.toLocaleString("es-CO"),
+      saldoPendiente: "$0",
+      cuotaMensual: "$" + valAdmon.toLocaleString("es-CO"),
+      interesMora: "$0",
+      totalPagar: "$" + valAdmon.toLocaleString("es-CO"),
+      totalNum: valAdmon,
+      estado: "Al Día"
+    });
+  }
+  return unidades;
+}
+
+
 function getUnidadesManchester7480Master() {
 
   const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "7480") : null;
@@ -39139,139 +39231,121 @@ function procesarDatosCartera(rows, fileName = "") {
 
 
 function fusionarCarteraConUnidades(unidadesMap, rowsCartera) {
-
   rowsCartera.forEach(r => {
-
     const apto = String(r.APTO || r.UNIDAD || r.INMUEBLE || "").trim();
-
     if (!apto || !unidadesMap.has(apto)) return;
 
-
-
     const u = unidadesMap.get(apto);
-
     if (r.FAC) u.fac = r.FAC;
 
-
-
     const p_admon = parseFloat(r.ACTUAL || r.ADMON || r.CUOTA || 0) || 0;
-
     const p_pend = parseFloat(r.PEND || r.SALDO || r.ANTERIOR || 0) || 0;
-
-    const p_int = (parseFloat(r.INTP || 0) || 0) + (parseFloat(r.INTA || r.INT || 0) || 0);
-
-    const p_otr = (parseFloat(r.OTROSP || 0) || 0) + (parseFloat(r.OTROSA || r.OTROS || 0) || 0);
-
-    const p_ext = (parseFloat(r.EXTRAP || 0) || 0) + (parseFloat(r.EXTRAA || r.EXTRA || 0) || 0);
-
-    const p_mul = (parseFloat(r.MULTAP || 0) || 0) + (parseFloat(r.MULTAA || r.MULTA || 0) || 0);
-
-    const p_sp = (parseFloat(r.SERPUP || 0) || 0) + (parseFloat(r.SERPUA || r.SER_PUB || 0) || 0);
-
-    const p_ss = (parseFloat(r.SERVIP || 0) || 0) + (parseFloat(r.SERVIA || r.SER_SERV || 0) || 0);
-
-    const p_nd = (parseFloat(r.NDNCP || 0) || 0) + (parseFloat(r.NDNCA || r.NOTAS_DC || 0) || 0);
-
-
+    const p_inta = parseFloat(r.INTA || r.INT || 0) || 0;
+    const p_intp = parseFloat(r.INTP || 0) || 0;
+    const p_int = p_inta + p_intp;
+    const p_otrosa = parseFloat(r.OTROSA || r.OTROS || 0) || 0;
+    const p_otrosp = parseFloat(r.OTROSP || 0) || 0;
+    const p_otr = p_otrosa + p_otrosp;
+    const p_extraa = parseFloat(r.EXTRAA || r.EXTRA || 0) || 0;
+    const p_extrap = parseFloat(r.EXTRAP || 0) || 0;
+    const p_ext = p_extraa + p_extrap;
+    const p_multaa = parseFloat(r.MULTAA || r.MULTA || 0) || 0;
+    const p_multap = parseFloat(r.MULTAP || 0) || 0;
+    const p_mul = p_multaa + p_multap;
+    const p_serpua = parseFloat(r.SERPUA || r.SER_PUB || 0) || 0;
+    const p_serpup = parseFloat(r.SERPUP || 0) || 0;
+    const p_sp = p_serpua + p_serpup;
+    const p_servia = parseFloat(r.SERVIA || r.SER_SERV || 0) || 0;
+    const p_servip = parseFloat(r.SERVIP || 0) || 0;
+    const p_ss = p_servia + p_servip;
+    const p_ndnca = parseFloat(r.NDNCA || r.NOTAS_DC || 0) || 0;
+    const p_ndncp = parseFloat(r.NDNCP || 0) || 0;
+    const p_nd = p_ndnca + p_ndncp;
 
     // Campos oficiales de sumaria SSxxxx: VALDESC (Descuento pronto pago) y VALPAG (Valor a pagar con descuento)
-
     const p_valdesc = parseFloat(r.VALDESC !== undefined ? r.VALDESC : (r.DESCUENTO || r.DESC || 0)) || 0;
-
     const totalCalculado = p_admon + p_pend + p_int + p_otr + p_ext + p_mul + p_sp + p_ss + p_nd;
-
     const p_valpag = parseFloat(r.VALPAG !== undefined ? r.VALPAG : (r.VALOR_PAGAR || (totalCalculado - p_valdesc))) || (totalCalculado - p_valdesc);
-
     const totalPagar = parseFloat(r.TOTAL || r.VALPAG || totalCalculado) || totalCalculado;
 
-
+    u.actual = p_admon;
+    u.pend = p_pend;
+    u.inta = p_inta;
+    u.intp = p_intp;
+    u.otrosa = p_otrosa;
+    u.otrosp = p_otrosp;
+    u.extraa = p_extraa;
+    u.extrap = p_extrap;
+    u.multaa = p_multaa;
+    u.multap = p_multap;
+    u.serpua = p_serpua;
+    u.serpup = p_serpup;
+    u.servia = p_servia;
+    u.servip = p_servip;
+    u.ndnca = p_ndnca;
+    u.ndncp = p_ndncp;
+    u.bloq = u.bloque || String(r.BLOQ || "00").trim();
+    u.apto = u.unidad || String(r.APTO || "").trim();
 
     u.admon = p_admon;
-
     u.admonFmt = "$" + Math.round(p_admon).toLocaleString("es-CO");
-
     u.interes = p_int;
-
     u.interesFmt = "$" + Math.round(p_int).toLocaleString("es-CO");
-
     u.otros = p_otr;
-
     u.otrosFmt = "$" + Math.round(p_otr).toLocaleString("es-CO");
-
     u.extra = p_ext;
-
     u.extraFmt = "$" + Math.round(p_ext).toLocaleString("es-CO");
-
     u.multa = p_mul;
-
     u.multaFmt = "$" + Math.round(p_mul).toLocaleString("es-CO");
-
     u.ser_pub = p_sp;
-
     u.serPubFmt = "$" + Math.round(p_sp).toLocaleString("es-CO");
-
     u.ser_serv = p_ss;
-
     u.serServFmt = "$" + Math.round(p_ss).toLocaleString("es-CO");
-
     u.notas_dc = p_nd;
-
     u.notasDcFmt = "$" + Math.round(p_nd).toLocaleString("es-CO");
-
     u.valdesc = p_valdesc;
-
     u.valdescFmt = "$" + Math.round(p_valdesc).toLocaleString("es-CO");
-
     u.valpag = p_valpag;
-
     u.valpagFmt = "$" + Math.round(p_valpag).toLocaleString("es-CO");
-
     u.saldoPendiente = "$" + Math.round(p_pend).toLocaleString("es-CO");
-
     u.cuotaMensual = "$" + Math.round(p_admon).toLocaleString("es-CO");
-
     u.totalNum = totalPagar;
-
     u.totalPagar = "$" + Math.round(totalPagar).toLocaleString("es-CO");
-
     u.estado = totalPagar > p_admon ? "En Mora" : "Al Día";
-
   });
-
 }
 
-
-
 async function procesarArchivosFusionMultiples(event) {
-
   const files = Array.from(event.target.files || []);
-
   if (files.length === 0) return;
-
-
 
   mostrarToast(`Analizando y procesando ${files.length} archivo(s)...`);
 
-
-
   // Paso A: Detectar código del edificio desde los nombres de archivo (MM4901.DBF -> 4901)
-
   let codigoDetectado = "";
-
+  // 1. Priorizar archivos MMxxxx para el código del edificio (ya que SS puede ser el mes contable SS2611)
   for (const f of files) {
-
     const fn = (f.name || "").toUpperCase();
-
-    const match = fn.match(/(?:MM|SS)([0-9A-Z]{3,6})/i);
-
-    if (match && match[1]) {
-
-      codigoDetectado = match[1];
-
+    const matchMM = fn.match(/^MM([0-9A-Z]{3,6})/i);
+    if (matchMM && matchMM[1]) {
+      codigoDetectado = matchMM[1];
       break;
-
     }
-
+  }
+  // 2. Si no hay MM, buscar en otros archivos evitando códigos de mes contable (ej. SS2611)
+  if (!codigoDetectado) {
+    for (const f of files) {
+      const fn = (f.name || "").toUpperCase();
+      const match = fn.match(/(?:MM|EDIFICIO|RC|PE|PA|SS)([0-9A-Z]{3,6})/i);
+      if (match && match[1]) {
+        const cVal = match[1];
+        if (/^2[3-9](0[1-9]|1[0-2])$/.test(cVal) && (AppState.codigoEdificio || codigoEdificioActivoFusion)) {
+          continue;
+        }
+        codigoDetectado = cVal;
+        break;
+      }
+    }
   }
 
 
@@ -40227,135 +40301,144 @@ async function ejecutarCreacionEdificioFusion3en1() {
     bloqueadoMora: false,
 
     unidades: unidades.map(u => {
+      const actualVal = (u.actual !== undefined) ? u.actual : (u.admon !== undefined ? u.admon : 0);
+      const pendVal = (u.pend !== undefined) ? u.pend : 0;
+      const intaVal = (u.inta !== undefined) ? u.inta : 0;
+      const intpVal = (u.intp !== undefined) ? u.intp : 0;
+      const otrosaVal = (u.otrosa !== undefined) ? u.otrosa : 0;
+      const otrospVal = (u.otrosp !== undefined) ? u.otrosp : 0;
+      const extraaVal = (u.extraa !== undefined) ? u.extraa : 0;
+      const extrapVal = (u.extrap !== undefined) ? u.extrap : 0;
+      const multaVal = (u.multaa !== undefined) ? u.multaa : 0;
+      const multapVal = (u.multap !== undefined) ? u.multap : 0;
+      const serpuaVal = (u.serpua !== undefined) ? u.serpua : 0;
+      const serpupVal = (u.serpup !== undefined) ? u.serpup : 0;
+      const serviaVal = (u.servia !== undefined) ? u.servia : 0;
+      const servipVal = (u.servip !== undefined) ? u.servip : 0;
+      const ndncaVal = (u.ndnca !== undefined) ? u.ndnca : 0;
+      const ndncpVal = (u.ndncp !== undefined) ? u.ndncp : 0;
+      const valdescVal = (u.valdesc !== undefined) ? u.valdesc : 0;
+      const totalNumVal = (u.totalNum !== undefined) ? u.totalNum : (actualVal + pendVal + intaVal + intpVal + otrosaVal + otrospVal);
+      const valpagVal = (u.valpag !== undefined) ? u.valpag : (totalNumVal - valdescVal);
 
-      const uFiltrada = { unidad: u.unidad, apto: u.apto || u.unidad, estado: u.estado || "Al Día" };
-
-      if (selCampos.inm_bloque) uFiltrada.bloque = u.bloque || "00";
-
-      if (selCampos.inm_coeficiente) { uFiltrada.coeficiente = u.coeficiente; uFiltrada.coefNum = u.coefNum; }
-
-      if (selCampos.inm_tipo) uFiltrada.tipo = u.tipo;
-
-      if (selCampos.inm_ubicacion) uFiltrada.ubicacion = u.ubicacion || "";
-
-      if (selCampos.prop_nombre) uFiltrada.propietario = u.propietario;
-
-      if (selCampos.prop_cc) uFiltrada.cc = u.cc || "";
-
-      if (selCampos.prop_telefono) uFiltrada.telefono = u.telefono || "";
-
-      if (selCampos.prop_email) uFiltrada.email = u.email || "";
-
-      if (selCampos.cart_fac) uFiltrada.fac = u.fac || "";
-
-      if (selCampos.cart_admon) { uFiltrada.admon = u.admon || 0; uFiltrada.admonFmt = u.admonFmt || "$0"; }
-
-      if (selCampos.cart_interes) { uFiltrada.interes = u.interes || 0; uFiltrada.interesFmt = u.interesFmt || "$0"; }
-
-      if (selCampos.cart_otros) { uFiltrada.otros = u.otros || 0; uFiltrada.otrosFmt = u.otrosFmt || "$0"; }
-
-      if (selCampos.cart_extra) { uFiltrada.extra = u.extra || 0; uFiltrada.extraFmt = u.extraFmt || "$0"; }
-
-      if (selCampos.cart_multa) { uFiltrada.multa = u.multa || 0; uFiltrada.multaFmt = u.multaFmt || "$0"; }
-
-      if (selCampos.cart_ser_pub) { uFiltrada.ser_pub = u.ser_pub || 0; uFiltrada.serPubFmt = u.serPubFmt || "$0"; }
-
-      if (selCampos.cart_ser_serv) { uFiltrada.ser_serv = u.ser_serv || 0; uFiltrada.serServFmt = u.serServFmt || "$0"; }
-
-      if (selCampos.cart_notas_dc) { uFiltrada.notas_dc = u.notas_dc || 0; uFiltrada.notasDcFmt = u.notasDcFmt || "$0"; }
-
-      if (selCampos.cart_valdesc) { uFiltrada.valdesc = u.valdesc || 0; uFiltrada.valdescFmt = u.valdescFmt || "$0"; }
-
-      if (selCampos.cart_valpag) { uFiltrada.valpag = u.valpag !== undefined ? u.valpag : (u.totalNum || 0); uFiltrada.valpagFmt = u.valpagFmt || u.totalPagar || "$0"; }
-
-      // Campos de sumaria SSxxxx garantizados al crear nuevo edificio
-
-      if (uFiltrada.valdesc === undefined) { uFiltrada.valdesc = u.valdesc || 0; uFiltrada.valdescFmt = u.valdescFmt || "$0"; }
-
-      if (uFiltrada.valpag === undefined) { uFiltrada.valpag = u.valpag !== undefined ? u.valpag : (uFiltrada.totalNum || 0); uFiltrada.valpagFmt = u.valpagFmt || uFiltrada.totalPagar || "$0"; }
-
-      if (selCampos.cart_saldo_pendiente) uFiltrada.saldoPendiente = u.saldoPendiente || "$0";
-
-      if (selCampos.cart_cuota_mes) uFiltrada.cuotaMensual = u.cuotaMensual || "$0";
-
-      if (selCampos.cart_interes_mora) uFiltrada.interesMora = u.interesMora || "$0";
-
-      if (selCampos.cart_total) { uFiltrada.totalPagar = u.totalPagar || "$0"; uFiltrada.totalNum = u.totalNum || 0; }
-
+      const uFiltrada = {
+        unidad: u.unidad,
+        apto: u.apto || u.unidad,
+        bloque: u.bloque || u.bloq || "00",
+        bloq: u.bloq || u.bloque || "00",
+        tipo: u.tipo || "APTO",
+        ubicacion: u.ubicacion || "",
+        propietario: u.propietario || `PROPIETARIO APTO ${u.unidad}`,
+        cc: u.cc || "",
+        telefono: u.telefono || "",
+        email: u.email || "",
+        fac: u.fac || "",
+        coefNum: (u.coefNum !== undefined) ? u.coefNum : (parseFloat(String(u.coeficiente || "").replace("%", "")) || 0),
+        coeficiente: u.coeficiente || `${u.coefNum || 0}%`,
+        actual: actualVal,
+        pend: pendVal,
+        inta: intaVal,
+        intp: intpVal,
+        otrosa: otrosaVal,
+        otrosp: otrospVal,
+        extraa: extraaVal,
+        extrap: extrapVal,
+        multaa: multaVal,
+        multap: multapVal,
+        serpua: serpuaVal,
+        serpup: serpupVal,
+        servia: serviaVal,
+        servip: servipVal,
+        ndnca: ndncaVal,
+        ndncp: ndncpVal,
+        admon: actualVal,
+        admonFmt: u.admonFmt || "$" + Math.round(actualVal).toLocaleString("es-CO"),
+        interes: intaVal + intpVal,
+        interesFmt: u.interesFmt || "$" + Math.round(intaVal + intpVal).toLocaleString("es-CO"),
+        otros: otrosaVal + otrospVal,
+        otrosFmt: u.otrosFmt || "$0",
+        extra: extraaVal + extrapVal,
+        extraFmt: u.extraFmt || "$0",
+        multa: multaVal + multapVal,
+        multaFmt: u.multaFmt || "$0",
+        ser_pub: serpuaVal + serpupVal,
+        serPubFmt: u.serPubFmt || "$0",
+        ser_serv: serviaVal + servipVal,
+        serServFmt: u.serServFmt || "$0",
+        notas_dc: ndncaVal + ndncpVal,
+        notasDcFmt: u.notasDcFmt || "$0",
+        valdesc: valdescVal,
+        valdescFmt: u.valdescFmt || "$" + Math.round(valdescVal).toLocaleString("es-CO"),
+        valpag: valpagVal,
+        valpagFmt: u.valpagFmt || "$" + Math.round(valpagVal).toLocaleString("es-CO"),
+        saldoPendiente: u.saldoPendiente || "$" + Math.round(pendVal).toLocaleString("es-CO"),
+        cuotaMensual: u.cuotaMensual || "$" + Math.round(actualVal).toLocaleString("es-CO"),
+        interesMora: u.interesMora || "$0",
+        totalNum: totalNumVal,
+        totalPagar: u.totalPagar || "$" + Math.round(totalNumVal).toLocaleString("es-CO"),
+        totalFinal: totalNumVal,
+        estado: u.estado || (totalNumVal > actualVal ? "En Mora" : "Al Día")
+      };
       return uFiltrada;
-
     })
-
   };
 
-
-
-  // Guardar en memoria, localStorage y backend
-
-  await guardarCopropiedadGlobal(nuevaCop, nuevaCop.unidades);
-
-
-
-  // Enviar datos completos de fusión al endpoint especializado
-
-  try {
-
-    const urlApi = (typeof AppState !== "undefined" && AppState.apiBaseUrl) ? AppState.apiBaseUrl : "";
-
-    await fetch(`${urlApi}/api/conjuntos/fusionar-3-en-1`, {
-
-      method: "POST",
-
-      headers: { "Content-Type": "application/json" },
-
-      body: JSON.stringify({
-
-        codigo: nuevaCop.codigo,
-
-        campos_seleccionados: selCampos,
-
-        datos_edificio: {
-
-          nombre: nuevaCop.nombre,
-
-          nit: nuevaCop.nit,
-
-          direccion: nuevaCop.direccion,
-
-          banco: nuevaCop.banco,
-
-          tipoCuenta: nuevaCop.tipoCuenta,
-
-          cuenta: nuevaCop.cuenta,
-
-          administrador: nuevaCop.administrador,
-
-          telefono: nuevaCop.telefono,
-
-          email: nuevaCop.email
-
-        },
-
-        datos_inmuebles: nuevaCop.unidades
-
-      })
-
-    });
-
-  } catch (err) {
-
-    console.log("Backend offline, operando en modo local:", err);
-
+  // Totalizadores contables directos
+  let sumAct = 0, sumPen = 0, sumIntp = 0, sumTot = 0;
+  nuevaCop.unidades.forEach(u => {
+    sumAct += (u.actual || 0);
+    sumPen += (u.pend || 0);
+    sumIntp += (u.intp || 0);
+    sumTot += (u.totalNum || 0);
+  });
+  if (sumAct > 0) {
+    nuevaCop.recaudoTotal = "$" + Math.round(sumAct).toLocaleString("es-CO");
+    nuevaCop.carteraPendiente = "$" + Math.round(sumPen + sumIntp).toLocaleString("es-CO");
+    nuevaCop.totalFinalEdificio = "$" + Math.round(sumTot).toLocaleString("es-CO");
   }
 
+  // Guardar en memoria, localStorage y backend
+  await guardarCopropiedadGlobal(nuevaCop, nuevaCop.unidades);
 
+  // Enviar datos completos de fusión al endpoint especializado
+  try {
+    const urlApi = (typeof AppState !== "undefined" && AppState.apiBaseUrl) ? AppState.apiBaseUrl : "";
+    await fetch(`${urlApi}/api/conjuntos/fusionar-3-en-1`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        codigo: nuevaCop.codigo,
+        campos_seleccionados: selCampos,
+        datos_edificio: {
+          nombre: nuevaCop.nombre,
+          nit: nuevaCop.nit,
+          direccion: nuevaCop.direccion,
+          banco: nuevaCop.banco,
+          tipoCuenta: nuevaCop.tipoCuenta,
+          cuenta: nuevaCop.cuenta,
+          administrador: nuevaCop.administrador,
+          telefono: nuevaCop.telefono,
+          email: nuevaCop.email
+        },
+        datos_inmuebles: nuevaCop.unidades,
+        datos_cartera: estadoFusion3en1.rawCartera || nuevaCop.unidades
+      })
+    });
+  } catch (err) {
+    console.log("Backend offline, operando en modo local:", err);
+  }
 
   copropiedadCargaMasivaActiva = nuevaCop.codigo;
-
+  AppState.codigoEdificio = nuevaCop.codigo;
+  AppState.conjuntoId = nuevaCop.codigo;
+  if (typeof cambiarConjuntoActivo === "function") {
+    cambiarConjuntoActivo(nuevaCop.codigo);
+  }
+  if (typeof renderizarBaseSaldosMatriz === "function") {
+    renderizarBaseSaldosMatriz();
+  }
   actualizarVistaCargaMasiva();
-
   renderizarCopropiedadesSuperadmin();
-
   cambiarSubtabSuperadmin("conjuntos");
 
 
@@ -55152,37 +55235,26 @@ function renderizarBaseSaldosMatriz(datos = null) {
 
 
   let unidadesBase = [];
-
-  if (codLimpio === "4901") {
-
+  if (cj && cj.unidades && cj.unidades.length > 0 && cj.unidades[0].actual !== undefined) {
+    unidadesBase = cj.unidades;
+  } else if (codLimpio === "4160") {
+    unidadesBase = (typeof getUnidadesRiachuelo4160Master === "function") ? getUnidadesRiachuelo4160Master() : [];
+    if (cj) cj.unidades = unidadesBase;
+  } else if (codLimpio === "4901") {
     unidadesBase = (typeof getUnidadesRobleAlto4901Master === "function") ? getUnidadesRobleAlto4901Master() : [];
-
     if (cj) cj.unidades = unidadesBase;
-
   } else if (codLimpio === "7480") {
-
     unidadesBase = (typeof getUnidadesManchester7480Master === "function") ? getUnidadesManchester7480Master() : [];
-
     if (cj) cj.unidades = unidadesBase;
-
   } else {
-
     if (cj && cj.unidades && cj.unidades.length > 0) {
-
       unidadesBase = cj.unidades;
-
     } else if (typeof obtenerUnidadesRealesParaFusion === "function") {
-
       unidadesBase = obtenerUnidadesRealesParaFusion(codLimpio, cj ? cj.nombre : "");
-
     }
-
     if (!unidadesBase || unidadesBase.length === 0) {
-
       unidadesBase = (typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : [];
-
     }
-
   }
 
 

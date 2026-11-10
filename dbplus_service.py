@@ -13,6 +13,8 @@ Lee, procesa y fusiona los archivos contables de DBPLUS ubicados en C:\\dbplus\\
 import os
 import glob
 import struct
+import re
+import json
 from typing import Dict, List, Any, Optional
 
 def read_dbf_binary(filepath: str) -> List[Dict[str, Any]]:
@@ -87,7 +89,6 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
         for cp in cand_paths:
             if os.path.exists(cp):
                 try:
-                    import json
                     with open(cp, "r", encoding="utf-8") as mf:
                         mdata = json.load(mf)
                         ed_info = mdata.get("edificio") or {}
@@ -128,11 +129,36 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
                 glob.glob(f'{folder}/*MM*.DBF'))
     mm_rows = read_dbf_binary(mm_files[0]) if mm_files else []
 
-    # 3. Leer Cartera SSxxxx.DBF (priorizar SS{codigo}.DBF sobre SS2610 etc.)
-    ss_cand = glob.glob(f'{folder}/SS{clean_cod}.DBF') + glob.glob(f'{folder}/ss{clean_cod}.dbf')
-    if not ss_cand:
-        ss_cand = glob.glob(f'{folder}/SS*.DBF') + glob.glob(f'{folder}/ss*.dbf')
-    ss_rows = read_dbf_binary(ss_cand[0]) if ss_cand else []
+    # 3. Leer Cartera SSxxxx.DBF (priorizar archivo del mes contable más reciente SSYYMM.DBF, ej: SS2611.DBF)
+    all_ss = (glob.glob(f'{folder}/SS*.DBF') + glob.glob(f'{folder}/ss*.dbf') +
+              glob.glob(f'{folder}/Envio/SS*.DBF') + glob.glob(f'{folder}/Envio/ss*.dbf') +
+              glob.glob(f'{folder}/envio/SS*.DBF') + glob.glob(f'{folder}/envio/ss*.dbf'))
+    all_ss = list(dict.fromkeys(all_ss))
+    
+    monthly_ss = []
+    other_ss = []
+    for f in all_ss:
+        fname = os.path.basename(f)
+        m = re.match(r'^[Ss][Ss](\d{4})\.[Dd][Bb][Ff]$', fname)
+        if m:
+            monthly_ss.append((m.group(1), f))
+        else:
+            other_ss.append(f)
+            
+    if monthly_ss:
+        monthly_ss.sort(key=lambda x: x[0], reverse=True)
+        ss_chosen = monthly_ss[0][1]
+    elif other_ss:
+        cod_ss = [f for f in other_ss if f'{clean_cod}'.lower() in os.path.basename(f).lower()]
+        if cod_ss:
+            ss_chosen = cod_ss[0]
+        else:
+            other_ss.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+            ss_chosen = other_ss[0]
+    else:
+        ss_chosen = None
+        
+    ss_rows = read_dbf_binary(ss_chosen) if ss_chosen else []
     ss_map = {str(r.get('APTO','')).strip(): r for r in ss_rows}
 
     # Metadatos del Edificio
@@ -293,6 +319,35 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
                 u["coefNum"] = c
                 u["coeficiente"] = f"{c:.3f}%"
 
+    # Actualizar automáticamente data/edificio_{clean_cod}_master.json para sincronización perfecta con Render Cloud
+    try:
+        master_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", f"edificio_{clean_cod}_master.json")
+        if clean_cod != "7480" or not os.path.exists(master_path):
+            existing = {}
+            if os.path.exists(master_path):
+                try:
+                    with open(master_path, "r", encoding="utf-8") as exf:
+                        existing = json.load(exf)
+                except Exception:
+                    pass
+
+            unidades_save = unidades
+            master_obj = dict(existing)
+            master_obj.update({
+                "codigo": clean_cod,
+                "nombre": edificio_info.get("nombre", f"Edificio #{clean_cod}"),
+                "edificio": edificio_info,
+                "unidades": unidades_save,
+                "anios": existing.get("anios", [2026, 2025, 2024, 2023, 2022]),
+                "inmueblesCount": len(unidades_save),
+                "coeficienteTotal": f"{tot_coef:.3f}%" if tot_coef > 0 else "100.000%"
+            })
+            os.makedirs(os.path.dirname(master_path), exist_ok=True)
+            with open(master_path, "w", encoding="utf-8") as f:
+                json.dump(master_obj, f, ensure_ascii=False, indent=2)
+    except Exception as ex_m:
+        print(f"Error guardando master para {clean_cod}: {ex_m}")
+
     return {
         "status": "success",
         "codigo": clean_cod,
@@ -303,7 +358,7 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
         "archivos": {
             "edificio": os.path.basename(ed_path),
             "inmuebles": os.path.basename(mm_files[0]) if mm_files else "No encontrado",
-            "cartera": os.path.basename(ss_cand[0]) if ss_cand else "No encontrado"
+            "cartera": os.path.basename(ss_chosen) if ss_chosen else "No encontrado"
         }
     }
 
