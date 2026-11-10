@@ -111,12 +111,19 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
         return None
 
     # 1. Leer EDIFICIO.DBF
-    ed_path = os.path.join(folder, 'EDIFICIO.DBF')
+    ed_candidates = (
+        glob.glob(f'{folder}/EDIFICIO.DBF') + glob.glob(f'{folder}/edificio.dbf') +
+        glob.glob(f'{folder}/Envio/EDIFICIO.DBF') + glob.glob(f'{folder}/Envio/edificio.dbf') +
+        glob.glob(f'{folder}/envio/EDIFICIO.DBF') + glob.glob(f'{folder}/envio/edificio.dbf')
+    )
+    ed_path = ed_candidates[0] if ed_candidates else os.path.join(folder, 'EDIFICIO.DBF')
     if not os.path.exists(ed_path):
         for bd in base_dirs:
-            candidate_ed = f"{bd}/EDIFICIO.DBF"
-            if os.path.exists(candidate_ed):
-                ed_path = candidate_ed
+            for cand in [f"{bd}/EDIFICIO.DBF", f"{bd}/edificio.dbf"]:
+                if os.path.exists(cand):
+                    ed_path = cand
+                    break
+            if os.path.exists(ed_path):
                 break
     ed_rows = read_dbf_binary(ed_path) if os.path.exists(ed_path) else []
     target_ed = next((r for r in ed_rows if str(r.get('CODIGO','')).strip() == clean_cod), {})
@@ -126,7 +133,12 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
     # 2. Leer Inmuebles MMxxxx.DBF
     mm_files = (glob.glob(f'{folder}/MM*.DBF') + 
                 glob.glob(f'{folder}/mm*.dbf') + 
-                glob.glob(f'{folder}/*MM*.DBF'))
+                glob.glob(f'{folder}/*MM*.DBF') +
+                glob.glob(f'{folder}/Envio/MM*.DBF') +
+                glob.glob(f'{folder}/Envio/mm*.dbf') +
+                glob.glob(f'{folder}/envio/MM*.DBF') +
+                glob.glob(f'{folder}/envio/mm*.dbf'))
+    mm_files = list(dict.fromkeys(mm_files))
     mm_rows = read_dbf_binary(mm_files[0]) if mm_files else []
 
     # 3. Leer Cartera SSxxxx.DBF (priorizar archivo del mes contable más reciente SSYYMM.DBF, ej: SS2611.DBF)

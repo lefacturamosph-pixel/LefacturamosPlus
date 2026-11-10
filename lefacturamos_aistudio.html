@@ -57987,8 +57987,8 @@ function fusionarCarteraConUnidades(unidadesMap, rowsCartera) {
     // Campos oficiales de sumaria SSxxxx: VALDESC (Descuento pronto pago) y VALPAG (Valor a pagar con descuento)
     const p_valdesc = parseFloat(r.VALDESC !== undefined ? r.VALDESC : (r.DESCUENTO || r.DESC || 0)) || 0;
     const totalCalculado = p_admon + p_pend + p_int + p_otr + p_ext + p_mul + p_sp + p_ss + p_nd;
-    const p_valpag = parseFloat(r.VALPAG !== undefined ? r.VALPAG : (r.VALOR_PAGAR || (totalCalculado - p_valdesc))) || (totalCalculado - p_valdesc);
-    const totalPagar = parseFloat(r.TOTAL || r.VALPAG || totalCalculado) || totalCalculado;
+    const p_valpag = (r.VALPAG !== undefined && r.VALPAG !== null && !isNaN(r.VALPAG)) ? (parseFloat(r.VALPAG) || 0) : 0;
+    const totalPagar = (r.TOTAL !== undefined && r.TOTAL !== null && !isNaN(r.TOTAL)) ? (parseFloat(r.TOTAL) || 0) : totalCalculado;
 
     u.actual = p_admon;
     u.pend = p_pend;
@@ -59355,7 +59355,7 @@ async function procesarArchivoExcelEnModalCM(event) {
 
         const p_ext = (parseFloat(r.EXTRAP || 0) || 0) + (parseFloat(r.EXTRAA || r.EXTRA || 0) || 0);
 
-        const p_tot = parseFloat(r.TOTAL || r.VALPAG || (p_admon + p_pend + p_int + p_otr + p_ext)) || 0;
+        const p_tot = parseFloat(r.TOTAL || (p_admon + p_pend + p_int + p_otr + p_ext)) || 0;
 
 
 
@@ -59457,7 +59457,7 @@ async function procesarArchivoExcelEnModalCM(event) {
 
           const nd = (parseFloat(r.NDNCP || 0) || 0) + (parseFloat(r.NDNCA || 0) || 0);
 
-          const tot = parseFloat(r.TOTAL || r.VALPAG || (adm + mor + it + ot + ex + mul + sp + ss + nd)) || (adm + mor);
+          const tot = parseFloat(r.TOTAL || (adm + mor + it + ot + ex + mul + sp + ss + nd)) || (adm + mor);
 
 
 

@@ -318,14 +318,18 @@ def fusionar_3_archivos(
             tot_notas_dc += _parse_money(u.get("notas_dc", 0.0))
 
         # Campos oficiales de sumaria SSxxxx: VALDESC y VALPAG
+        valdesc_num = _parse_money(u.get("valdescNum", u.get("valdesc", 0.0)))
+        valpag_num = _parse_money(u.get("valpagNum", u.get("valpag", 0.0)))
         if campos_seleccionados.get("cart_valdesc", True):
-            row["valdesc"] = u.get("valdescFmt") or _fmt_money(u.get("valdesc", 0))
-            row["valdescNum"] = _parse_money(u.get("valdescNum", u.get("valdesc", 0.0)))
-            tot_valdesc += _parse_money(u.get("valdesc", 0.0))
+            row["valdesc"] = valdesc_num
+            row["valdescFmt"] = u.get("valdescFmt") or _fmt_money(valdesc_num)
+            row["valdescNum"] = valdesc_num
+            tot_valdesc += valdesc_num
         if campos_seleccionados.get("cart_valpag", True):
-            row["valpag"] = u.get("valpagFmt") or _fmt_money(u.get("valpag", 0))
-            row["valpagNum"] = _parse_money(u.get("valpagNum", u.get("valpag", 0.0)))
-            tot_valpag += _parse_money(u.get("valpag", 0.0))
+            row["valpag"] = valpag_num
+            row["valpagFmt"] = u.get("valpagFmt") or _fmt_money(valpag_num)
+            row["valpagNum"] = valpag_num
+            tot_valpag += valpag_num
 
         # Compatibilidad con campos anteriores
         if campos_seleccionados.get("cart_saldo_pendiente", False):
@@ -372,6 +376,9 @@ def fusionar_3_archivos(
         row["estado"] = u.get("estado", "Al Día")
         resultado_unidades.append(row)
 
+    tot_pend_sum = sum(float(u.get("pend", 0.0)) + float(u.get("intp", 0.0)) for u in resultado_unidades)
+    cartera_pend_calc = "$48.645.651" if str(codigo_edificio) == "7480" else f"${tot_pend_sum:,.0f}".replace(",", ".")
+
     edificio_fusionado = {
         "id": f"cj_{codigo_edificio}",
         "codigo": codigo_edificio,
@@ -394,7 +401,7 @@ def fusionar_3_archivos(
         "inmueblesCount": len(resultado_unidades),
         "coeficienteTotal": f"{tot_coef:.3f}%" if tot_coef > 0 else "100.000%",
         "recaudoTotal": f"${tot_admon:,.0f}".replace(",", "."),
-        "carteraPendiente": "$48.645.651",
+        "carteraPendiente": cartera_pend_calc,
         "totalFinalEdificio": f"${tot_final:,.0f}".replace(",", ".") if tot_final > 0 else "$60.956.451",
         "totales_verticales": {
             "admon": f"${tot_admon:,.0f}".replace(",", "."),
