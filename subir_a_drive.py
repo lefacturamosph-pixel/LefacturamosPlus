@@ -160,11 +160,19 @@ def subir_archivos_dbplus(codigo_edificio, anio, mes):
             print(f"[{idx}/{len(archivos_locales)}] ❌ Error al subir {archivo}: {err}")
             errores += 1
 
-    print(f"\n✨ ¡Proceso de sincronización y subida finalizado con éxito!")
+    print(f"\n✨ ¡Proceso de sincronización y subida a Google Drive finalizado con éxito!")
     print(f"   • Nuevos subidos: {subidos}")
     print(f"   • Actualizados:   {actualizados}")
     if errores > 0:
         print(f"   • Con error:      {errores}")
+
+    # Sincronización automática inmediata hacia Render Cloud (data/drive_docs, Master contable y GitHub)
+    try:
+        from sincronizador_completo import sincronizar_todo_el_edificio
+        print("\n🌐 Sincronizando y desplegando automáticamente a Render Cloud...")
+        sincronizar_todo_el_edificio(codigo_final, str(anio), str(mes), subir_google_drive=False)
+    except Exception as e_sync:
+        print(f"⚠️ Nota al sincronizar con Render: {e_sync}")
 
 if __name__ == "__main__":
     codigo = input("Ingrese el código del edificio (ej: 0127): ")

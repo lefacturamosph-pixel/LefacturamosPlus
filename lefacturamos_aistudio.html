@@ -46920,9 +46920,9 @@ function getUnidadesRiachuelo4160Master() {
 
 function getUnidadesRobleAlto4901Master() {
   const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "4901") : null;
-  if (cj && cj.unidades && cj.unidades.length > 10 && cj.unidades[0].actual !== undefined) {{
+  if (cj && cj.unidades && cj.unidades.length > 10 && cj.unidades[0].actual !== undefined) {
     return JSON.parse(JSON.stringify(cj.unidades));
-  }}
+  }
   return [
   {
     "unidad": "0103",
