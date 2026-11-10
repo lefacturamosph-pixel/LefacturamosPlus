@@ -238,7 +238,7 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
         p_nd = p_ndnca + p_ndncp
         p_valdesc = float(s.get('VALDESC') or s.get('DESCUENTO') or s.get('DESC') or 0.0)
         p_tot = float(s.get('TOTAL') or (p_admon + p_pend + p_int + p_otr + p_ext + p_mul + p_sp + p_ss + p_nd - p_valdesc))
-        p_valpag = float(s.get('VALPAG') or s.get('VALOR_PAGAR') or (p_tot - p_valdesc))
+        p_valpag = float(s.get('VALPAG') if s.get('VALPAG') is not None else 0.0)
 
         unidades.append({
             "unidad": apto,

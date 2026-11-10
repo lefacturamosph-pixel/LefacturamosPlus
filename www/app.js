@@ -13673,7 +13673,7 @@ let listaCopropiedadesSuperadmin = [
     carteraJuridica: "0 cuentas en mora jurídica",
     estado: "A Paz y Salvo",
     bloqueadoMora: false,
-    unidades: getUnidadesRiachuelo4160Master()
+    unidades: []
   },
 
   {
@@ -26857,7 +26857,7 @@ function getUnidadesClass480127Master() {
 
 
 function getUnidadesRiachuelo4160Master() {
-  const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "4160") : null;
+  let cj = null; try { if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) { cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '4160'); } } catch(e) {}
   if (cj && cj.unidades && cj.unidades.length > 10 && cj.unidades[0].actual !== undefined) {
     return JSON.parse(JSON.stringify(cj.unidades));
   }
@@ -28267,7 +28267,12 @@ function getUnidadesRiachuelo4160Master() {
 
 
 function getUnidadesRobleAlto4901Master() {
-  const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "4901") : null;
+  let cj = null;
+  try {
+    if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) {
+      cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '4901');
+    }
+  } catch(e) {}
   if (cj && cj.unidades && cj.unidades.length > 10 && cj.unidades[0].actual !== undefined) {
     return JSON.parse(JSON.stringify(cj.unidades));
   }
@@ -28542,8 +28547,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 1433200.0,
-    "valpagFmt": "$1.433.200",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$951.610",
     "cuotaMensual": "$451.000",
     "totalNum": 1433200.0,
@@ -28598,8 +28603,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 1374590.0,
-    "valpagFmt": "$1.374.590",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$863.430",
     "cuotaMensual": "$485.000",
     "totalNum": 1374590.0,
@@ -28766,8 +28771,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 947560.0,
-    "valpagFmt": "$947.560",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$492.200",
     "cuotaMensual": "$444.000",
     "totalNum": 947560.0,
@@ -29158,8 +29163,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 1774420.0,
-    "valpagFmt": "$1.774.420",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$1.289.830",
     "cuotaMensual": "$430.000",
     "totalNum": 1774420.0,
@@ -29438,8 +29443,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": -451000.0,
-    "valpagFmt": "$-451.000",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$-902.000",
     "cuotaMensual": "$451.000",
     "totalNum": -451000.0,
@@ -29718,8 +29723,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 897330.0,
-    "valpagFmt": "$897.330",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$444.000",
     "cuotaMensual": "$444.000",
     "totalNum": 897330.0,
@@ -29942,8 +29947,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 848820.0,
-    "valpagFmt": "$848.820",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$420.000",
     "cuotaMensual": "$420.000",
     "totalNum": 848820.0,
@@ -30614,8 +30619,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 788190.0,
-    "valpagFmt": "$788.190",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$390.000",
     "cuotaMensual": "$390.000",
     "totalNum": 788190.0,
@@ -31174,8 +31179,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 2747963.0,
-    "valpagFmt": "$2.747.963",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$1.999.943",
     "cuotaMensual": "$678.000",
     "totalNum": 2747963.0,
@@ -31230,8 +31235,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 3364523.0,
-    "valpagFmt": "$3.364.523",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$2.552.103",
     "cuotaMensual": "$720.000",
     "totalNum": 3364523.0,
@@ -31510,8 +31515,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": -486000.0,
-    "valpagFmt": "$-486.000",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$-972.000",
     "cuotaMensual": "$486.000",
     "totalNum": -486000.0,
@@ -31846,8 +31851,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 2233070.0,
-    "valpagFmt": "$2.233.070",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$1.458.000",
     "cuotaMensual": "$729.000",
     "totalNum": 2233070.0,
@@ -32630,8 +32635,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 949200.0,
-    "valpagFmt": "$949.200",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$497.530",
     "cuotaMensual": "$440.000",
     "totalNum": 949200.0,
@@ -32742,8 +32747,8 @@ function getUnidadesRobleAlto4901Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 435000.0,
-    "valpagFmt": "$435.000",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$0",
     "cuotaMensual": "$435.000",
     "totalNum": 435000.0,
@@ -32923,124 +32928,9 @@ function getUnidadesRobleAlto4901Master() {
 ];
 }
 
-
-function obtenerUnidadesRealesParaFusion(codigo, nombre) {
-  const codLimpio = String(codigo || "").replace(/^cj_/, "").trim();
-  const asegurarValdescValpag = (list) => {
-    if (!list || !Array.isArray(list)) return [];
-    return list.map(u => {
-      if (u.valdesc === undefined) u.valdesc = 0;
-      if (!u.valdescFmt) u.valdescFmt = "$0";
-      if (u.valpag === undefined) u.valpag = (u.totalNum !== undefined ? u.totalNum : (u.admon || 0)) - u.valdesc;
-      if (!u.valpagFmt) u.valpagFmt = "$" + Math.round(u.valpag).toLocaleString("es-CO");
-      return u;
-    });
-  };
-
-  const cop = typeof listaCopropiedadesSuperadmin !== "undefined"
-    ? listaCopropiedadesSuperadmin.find(c => c.codigo === codLimpio || c.id === `cj_${codLimpio}`)
-    : null;
-  if (cop && cop.unidades && cop.unidades.length > 3 && (cop.unidades[0].actual !== undefined || cop.unidades[0].admonFmt)) {
-    return asegurarValdescValpag(JSON.parse(JSON.stringify(cop.unidades)));
-  }
-
-  if (codLimpio === "4160") {
-    return asegurarValdescValpag(getUnidadesRiachuelo4160Master());
-  }
-  if (codLimpio === "4901") {
-    return asegurarValdescValpag(getUnidadesRobleAlto4901Master());
-  }
-  if (codLimpio === "7480") {
-    return asegurarValdescValpag(getUnidadesManchester7480Master());
-  }
-  if (codLimpio === "5304" && typeof getUnidadesVallados5304Master === "function") {
-    return asegurarValdescValpag(getUnidadesVallados5304Master());
-  }
-  if (codLimpio === "0127" && typeof getUnidadesClass480127Master === "function") {
-    return asegurarValdescValpag(getUnidadesClass480127Master());
-  }
-
-  // Generador dinámico para cualquier otro edificio con Ley 675 y quórum 100.000%
-  const numUnidades = 10;
-  const coefBase = parseFloat((100.0 / numUnidades).toFixed(3));
-  const unidades = [];
-  const nombresBase = [
-    "CARLOS MARIO RESTREPO", "ANA MARIA JARAMILLO", "JUAN DAVID OCHOA",
-    "GLORIA ESPERANZA RESTREPO", "OLGA LUCIA VALENCIA", "FERNANDO MEJIA POSADA",
-    "SANTIAGO QUINTERO LONDOÑO", "MARGARITA ROSA GOMEZ", "ANDRES FELIPE HERRERA",
-    "PAULA ANDREA ZAPATA"
-  ];
-  let acumCoef = 0;
-  for (let i = 1; i <= numUnidades; i++) {
-    const aptoNum = String(100 + i * 10);
-    const coef = (i === numUnidades) ? parseFloat((100.0 - acumCoef).toFixed(3)) : coefBase;
-    acumCoef += coef;
-    const valAdmon = 320000 + (i % 3) * 15000;
-    unidades.push({
-      unidad: aptoNum,
-      apto: aptoNum,
-      bloque: "01",
-      bloq: "01",
-      fac: 3000 + i,
-      propietario: nombresBase[i - 1] || `PROPIETARIO APTO ${aptoNum}`,
-      cc: String(71000000 + i * 2345),
-      coeficiente: coef.toFixed(3) + "%",
-      coefNum: coef,
-      tipo: "APTO",
-      ubicacion: "Torre 1",
-      telefono: "311" + (6000000 + i * 4321),
-      email: `residente${aptoNum}@gmail.com`,
-      actual: valAdmon,
-      pend: 0,
-      inta: 0,
-      intp: 0,
-      otrosa: 0,
-      otrosp: 0,
-      extraa: 0,
-      extrap: 0,
-      multaa: 0,
-      multap: 0,
-      serpua: 0,
-      serpup: 0,
-      servia: 0,
-      servip: 0,
-      ndnca: 0,
-      ndncp: 0,
-      admon: valAdmon,
-      admonFmt: "$" + valAdmon.toLocaleString("es-CO"),
-      interes: 0,
-      interesFmt: "$0",
-      otros: 0,
-      otrosFmt: "$0",
-      extra: 0,
-      extraFmt: "$0",
-      multa: 0,
-      multaFmt: "$0",
-      ser_pub: 0,
-      serPubFmt: "$0",
-      ser_serv: 0,
-      serServFmt: "$0",
-      notas_dc: 0,
-      notasDcFmt: "$0",
-      valdesc: 0,
-      valdescFmt: "$0",
-      valpag: valAdmon,
-      valpagFmt: "$" + valAdmon.toLocaleString("es-CO"),
-      saldoPendiente: "$0",
-      cuotaMensual: "$" + valAdmon.toLocaleString("es-CO"),
-      interesMora: "$0",
-      totalPagar: "$" + valAdmon.toLocaleString("es-CO"),
-      totalNum: valAdmon,
-      estado: "Al Día"
-    });
-  }
-  return unidades;
-}
-
-
 function getUnidadesManchester7480Master() {
 
-  const cj = (typeof listaCopropiedadesSuperadmin !== "undefined") ? listaCopropiedadesSuperadmin.find(c => c.codigo === "7480") : null;
+  let cj = null; try { if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) { cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '7480'); } } catch(e) {}
 
   if (cj && cj.unidades && cj.unidades.length > 10 && cj.unidades[0].actual !== undefined) {
 
@@ -40319,7 +40209,7 @@ async function ejecutarCreacionEdificioFusion3en1() {
       const ndncpVal = (u.ndncp !== undefined) ? u.ndncp : 0;
       const valdescVal = (u.valdesc !== undefined) ? u.valdesc : 0;
       const totalNumVal = (u.totalNum !== undefined) ? u.totalNum : (actualVal + pendVal + intaVal + intpVal + otrosaVal + otrospVal);
-      const valpagVal = (u.valpag !== undefined) ? u.valpag : (totalNumVal - valdescVal);
+      const valpagVal = (u.valpag !== undefined && u.valpag !== null) ? Number(u.valpag) : 0;
 
       const uFiltrada = {
         unidad: u.unidad,

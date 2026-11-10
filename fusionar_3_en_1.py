@@ -192,7 +192,7 @@ def fusionar_3_archivos(
             p_nd = p_ndnca + p_ndncp
             p_calc_tot = p_actual + p_pend + p_int + p_otr + p_ext + p_mul + p_sp + p_ss + p_nd
             p_tot = float(cart.get("totalNum", cart.get("TOTAL", p_calc_tot)) or p_calc_tot)
-            p_valpag = float(cart.get("valpag", cart.get("VALPAG", cart.get("valor_pagar", p_tot - p_valdesc))) or (p_tot - p_valdesc))
+            p_valpag = float(cart.get("valpag") if cart.get("valpag") is not None else (cart.get("VALPAG") if cart.get("VALPAG") is not None else 0.0))
 
             u_merged = {
                 "unidad": u_num,

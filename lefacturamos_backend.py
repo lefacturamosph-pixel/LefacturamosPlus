@@ -178,9 +178,8 @@ def serve_parqueaderos_direct():
 @app.get("/superadmin")
 @app.get("/superadmin/")
 def serve_superadmin_direct():
-    if os.path.exists("./www/index.html"):
-        return FileResponse("./www/index.html", headers=NO_CACHE_HEADERS)
-    raise HTTPException(status_code=404)
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/?rol=superadmin")
 
 @app.get("/superadmin/app.js")
 def serve_superadmin_app_js():
