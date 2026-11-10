@@ -32560,13 +32560,13 @@ let listaCopropiedadesSuperadmin = [
 
     recaudoPagos: "83 cuotas facturadas",
 
-    carteraPendiente: "$11.072.990",
+    carteraPendiente: "$11.498.390",
 
     totalFinalEdificio: "$50.409.390",
 
     carteraInmuebles: "18 inmuebles con saldo en mora",
 
-    carteraVencida: "$11.072.990",
+    carteraVencida: "$11.498.390",
 
     carteraJuridica: "1 cuenta en cobro jurídico",
 
@@ -41286,12 +41286,10 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
       if (pend > 0 || (totUni > admon)) {
         inmueblesConPendiente++;
       }
-      if (totUni > 0) {
-        totalMesSum += totUni;
-      }
+      totalMesSum += totUni;
     });
 
-    // Cartera Pendiente del Mes: saldos pendientes totales
+    // Cartera Pendiente del Mes: saldos pendientes totales (neto considerando saldos a favor)
     if (totalMesSum > cuotaMesTotal) {
       carteraPendienteTotal = totalMesSum - cuotaMesTotal;
     } else {
@@ -41302,7 +41300,7 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
       carteraPendienteTotal = sumPend;
     }
 
-    // Total del Mes: Cuota del Mes + Cartera Pendiente del Mes
+    // Total del Mes: Cuota del Mes + Cartera Pendiente del Mes (exacto con Listado de Facturación)
     totalMesSum = cuotaMesTotal + carteraPendienteTotal;
 
     const kpiAptoTotal = document.getElementById("dashboard-kpi-apto-total");
@@ -41355,7 +41353,7 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
     const finVencida = document.getElementById("dashboard-fin-vencida-total");
     if (finVencida) finVencida.innerText = carteraPendienteTotal > 0 ? formatoCOP(carteraPendienteTotal) : (encontrado.carteraVencida || "$0");
     const finVencidaSub = document.getElementById("dashboard-fin-vencida-sub");
-    if (finVencidaSub) finVencidaSub.innerText = "";
+    if (finVencidaSub) finVencidaSub.innerText = inmueblesConPendiente > 0 ? `${inmueblesConPendiente} inmuebles con saldo pendiente` : "";
 
     // Actualizar Subtítulos en los Menús por Rol
 
