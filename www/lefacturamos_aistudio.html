@@ -45685,7 +45685,12 @@ function getUnidadesClass480127Master() {
 
 
 function getUnidadesRiachuelo4160Master() {
-  let cj = null; try { if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) { cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '4160'); } } catch(e) {}
+  let cj = null;
+  try {
+    if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) {
+      cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '4160');
+    }
+  } catch(e) {}
   if (cj && cj.unidades && cj.unidades.length > 10 && cj.unidades[0].actual !== undefined) {
     return JSON.parse(JSON.stringify(cj.unidades));
   }
@@ -45848,8 +45853,8 @@ function getUnidadesRiachuelo4160Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 425500.0,
-    "valpagFmt": "$425.500",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$211.690",
     "cuotaMensual": "$211.690",
     "totalNum": 425500.0,
@@ -46240,8 +46245,8 @@ function getUnidadesRiachuelo4160Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 436370.0,
-    "valpagFmt": "$436.370",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$217.100",
     "cuotaMensual": "$217.100",
     "totalNum": 436370.0,
@@ -46744,8 +46749,8 @@ function getUnidadesRiachuelo4160Master() {
     "notasDcFmt": "$0",
     "valdesc": 0.0,
     "valdescFmt": "$0",
-    "valpag": 436910.0,
-    "valpagFmt": "$436.910",
+    "valpag": 0.0,
+    "valpagFmt": "$0",
     "saldoPendiente": "$217.370",
     "cuotaMensual": "$217.370",
     "totalNum": 436910.0,
@@ -47092,7 +47097,6 @@ function getUnidadesRiachuelo4160Master() {
   }
 ];
 }
-
 
 function getUnidadesRobleAlto4901Master() {
   let cj = null;
