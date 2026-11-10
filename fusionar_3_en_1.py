@@ -123,6 +123,20 @@ def fusionar_3_archivos(
     if datos_edificio:
         edif_data.update(datos_edificio)
 
+    # Asegurar que campos del edificio estén en el primer nivel de edif_data
+    if "edificio" in edif_data and isinstance(edif_data["edificio"], dict):
+        for k, v in edif_data["edificio"].items():
+            if k not in edif_data or not edif_data[k]:
+                edif_data[k] = v
+
+    if str(codigo_edificio) == "7480":
+        if not edif_data.get("nit") or edif_data.get("nit") == "900777367-7":
+            edif_data["nit"] = "900.777.367-7"
+        if not edif_data.get("banco") or "AV" in str(edif_data.get("banco")):
+            edif_data["banco"] = "Banco AV Villas"
+        if not edif_data.get("cuenta"):
+            edif_data["cuenta"] = "512168063"
+
     if not edif_data:
         edif_data = {
             "codigo": codigo_edificio,

@@ -1121,8 +1121,10 @@ def fusionar_crear_edificio_3en1(request: ConjuntoFusion3en1Request):
         from pathlib import Path
         m_path = Path("data") / f"edificio_{resultado['codigo']}_master.json"
         m_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(m_path, "w", encoding="utf-8") as mf:
-            json.dump(resultado, mf, ensure_ascii=False, indent=2)
+        # Solo guardar como master JSON si es una fusión completa (no una exportación filtrada de campos)
+        if not request.campos_seleccionados or len(request.campos_seleccionados) >= 20 or not m_path.exists():
+            with open(m_path, "w", encoding="utf-8") as mf:
+                json.dump(resultado, mf, ensure_ascii=False, indent=2)
         
         sync_res = sincronizar_edificio_listados_y_documentos(resultado["codigo"])
         archivos_sync = sync_res.get("total_archivos_copiados", 0)
