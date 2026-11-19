@@ -1,0 +1,11 @@
+<USER_REQUEST>
+con estos archivos es que hay que crear el edificio con todos los saldos, coeficientes, nombres, edificio, nit, banco todo lo que se necesita esta hay
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-17T08:29:38-05:00.
+
+The user has uploaded 2 image(s):
+- C:/Users/CARLOS/.gemini/antigravity/brain/de963477-d937-4673-b142-7982134fb1b8/.user_uploaded/media_1792243492881_ae280aa0.png
+- C:/Users/CARLOS/.gemini/antigravity/brain/de963477-d937-4673-b142-7982134fb1b8/.user_uploaded/media_1792243505297_70016896.png
+You can embed these images in an artifact if you need the USER to review them.
+</ADDITIONAL_METADATA>

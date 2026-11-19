@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+venv/
+.venv/
+
+# Credenciales y Secretos de Google (Bloqueados por GitHub)
+credentials.json
+token.json
+client_secret*.json
+
+# Binarios y temporales
+cloudflared.exe
+*.apk
+*.idsig
+scratch/
+data/cache_pdf/
+
+# Android build cache
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+
+# OS files
+Thumbs.db
+.DS_Store
