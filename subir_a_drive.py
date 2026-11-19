@@ -1,3 +1,4 @@
+import re
 import os
 import os.path
 from google.auth.transport.requests import Request
@@ -45,6 +46,49 @@ def autenticar_google_drive():
 
     return build('drive', 'v3', credentials=creds)
 
+
+MESES_OFICIALES = [
+    "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+    "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+]
+
+def extraer_anio_y_mes_archivo(nombre_archivo, anio_defecto=2026, mes_defecto="NOVIEMBRE"):
+    name_up = nombre_archivo.upper()
+    
+    # 1. Buscar año de 4 dígitos (2020 a 2099)
+    anio_match = re.search(r'\b(20[2-9][0-9])\b', name_up)
+    anio = int(anio_match.group(1)) if anio_match else int(anio_defecto)
+    
+    # 2. Buscar mes exacto en el nombre
+    mes_encontrado = None
+    for m in MESES_OFICIALES:
+        if m in name_up:
+            mes_encontrado = m
+            break
+            
+    # 3. Si no tiene mes en el nombre, deducir según tipo contable y mes defecto
+    if not mes_encontrado:
+        mes_def_up = str(mes_defecto).strip().upper()
+        idx_def = MESES_OFICIALES.index(mes_def_up) if mes_def_up in MESES_OFICIALES else 10
+        if any(k in name_up for k in ["PAGO", "DESCUENTO", "RECIBO"]):
+            # Mes anterior
+            if idx_def == 0: # ENERO
+                mes_encontrado = "DICIEMBRE"
+                anio = anio - 1
+            else:
+                mes_encontrado = MESES_OFICIALES[idx_def - 1]
+        elif "PLANILLA" in name_up:
+            # Mes siguiente
+            if idx_def == len(MESES_OFICIALES) - 1: # DICIEMBRE
+                mes_encontrado = "ENERO"
+                anio = anio + 1
+            else:
+                mes_encontrado = MESES_OFICIALES[idx_def + 1]
+        else:
+            mes_encontrado = mes_def_up
+            
+    return anio, mes_encontrado
+
 def obtener_o_crear_carpeta(service, nombre_carpeta, id_padre=None):
     # Buscar si la carpeta ya existe dentro del padre
     query = f"name = '{nombre_carpeta}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
@@ -79,6 +123,7 @@ def subir_archivos_dbplus(codigo_edificio, anio, mes):
     
     # Buscar posibles rutas de Envio en C:\dbplus
     rutas_candidatas = [
+        os.path.join("C:\\dbplus", "T_IMPRE"),
         os.path.join("C:\\dbplus", codigo_limpio, "Envio"),
         os.path.join("C:\\dbplus", codigo_4digitos, "Envio"),
         os.path.join("C:\\dbplus", codigo_limpio, "envio"),
@@ -105,34 +150,15 @@ def subir_archivos_dbplus(codigo_edificio, anio, mes):
 
     codigo_final = codigo_4digitos if os.path.exists(os.path.join("C:\\dbplus", codigo_4digitos)) else codigo_limpio
 
-    print(f"\n🔍 Buscando estructura en Google Drive para: Lefacturamos ➔ {codigo_final} ➔ {anio} ➔ {str(mes).upper()}...")
+    print(f"\n🔍 Clasificando informes por periodo contable (Año y Mes) para: Lefacturamos ➔ {codigo_final}...")
     
-    # Navegar o crear la estructura en Google Drive dentro de la carpeta oficial compartida
     id_edificio = obtener_o_crear_carpeta(service, codigo_final, CARPETA_RAIZ_DRIVE_ID)
-    id_anio = obtener_o_crear_carpeta(service, str(anio).strip(), id_edificio)
-    id_mes = obtener_o_crear_carpeta(service, str(mes).strip().upper(), id_anio)
+    
+    # Cache para ids de carpetas de año y mes en Drive y sus archivos existentes
+    carpetas_mes_cache = {} # (anio_str, mes_str): id_mes
+    archivos_existentes_por_mes = {} # id_mes: {nombre_archivo: file_id}
 
-    # Consultar archivos que ya existen en esa carpeta para evitar duplicar
-    archivos_existentes = {}
-    try:
-        query_existentes = f"'{id_mes}' in parents and trashed = false"
-        page_token = None
-        while True:
-            resp = service.files().list(
-                q=query_existentes,
-                spaces='drive',
-                fields='nextPageToken, files(id, name)',
-                pageToken=page_token
-            ).execute()
-            for f in resp.get('files', []):
-                archivos_existentes[f['name']] = f['id']
-            page_token = resp.get('nextPageToken')
-            if not page_token:
-                break
-    except Exception as e:
-        print(f"⚠️ Nota: No se pudo consultar archivos existentes ({e}), se procederá normalmente.")
-
-    print(f"🚀 Iniciando traslado de {len(archivos_locales)} archivos desde {ruta_envio} a Google Drive...\n")
+    print(f"🚀 Iniciando clasificación y traslado inteligente de {len(archivos_locales)} archivos a Google Drive...\n")
     
     subidos = 0
     actualizados = 0
@@ -140,21 +166,55 @@ def subir_archivos_dbplus(codigo_edificio, anio, mes):
 
     for idx, archivo in enumerate(archivos_locales, 1):
         ruta_archivo_local = os.path.join(ruta_envio, archivo)
+        # Extraer el año y mes exactos del archivo (teniendo en cuenta cambio de año)
+        target_anio, target_mes = extraer_anio_y_mes_archivo(archivo, anio, mes)
+        key_periodo = (str(target_anio), target_mes)
+        
+        # Obtener o crear carpeta del año y mes correspondiente en Google Drive
+        if key_periodo not in carpetas_mes_cache:
+            id_target_anio = obtener_o_crear_carpeta(service, str(target_anio), id_edificio)
+            id_target_mes = obtener_o_crear_carpeta(service, target_mes, id_target_anio)
+            carpetas_mes_cache[key_periodo] = id_target_mes
+            
+            # Cargar archivos existentes en esta subcarpeta de Drive
+            existentes_mes = {}
+            try:
+                query_ex = f"'{id_target_mes}' in parents and trashed = false"
+                page_token = None
+                while True:
+                    resp = service.files().list(
+                        q=query_ex,
+                        spaces='drive',
+                        fields='nextPageToken, files(id, name)',
+                        pageToken=page_token
+                    ).execute()
+                    for f in resp.get('files', []):
+                        existentes_mes[f['name']] = f['id']
+                    page_token = resp.get('nextPageToken')
+                    if not page_token:
+                        break
+            except Exception as e_q:
+                pass
+            archivos_existentes_por_mes[id_target_mes] = existentes_mes
+
+        id_mes_destino = carpetas_mes_cache[key_periodo]
+        archivos_en_destino = archivos_existentes_por_mes.get(id_mes_destino, {})
+
         try:
             media = MediaFileUpload(ruta_archivo_local, resumable=True)
             
-            if archivo in archivos_existentes:
-                file_id = archivos_existentes[archivo]
+            if archivo in archivos_en_destino:
+                file_id = archivos_en_destino[archivo]
                 service.files().update(fileId=file_id, media_body=media).execute()
-                print(f"[{idx}/{len(archivos_locales)}] 🔄 Actualizado en Drive (reemplazo): {archivo}")
+                print(f"[{idx}/{len(archivos_locales)}] 🔄 Actualizado en Drive [{target_anio} / {target_mes}]: {archivo}")
                 actualizados += 1
             else:
                 file_metadata = {
                     'name': archivo,
-                    'parents': [id_mes]
+                    'parents': [id_mes_destino]
                 }
                 service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-                print(f"[{idx}/{len(archivos_locales)}] ✅ Subido con éxito: {archivo}")
+                print(f"[{idx}/{len(archivos_locales)}] ✅ Subido con éxito [{target_anio} / {target_mes}]: {archivo}")
                 subidos += 1
         except Exception as err:
             print(f"[{idx}/{len(archivos_locales)}] ❌ Error al subir {archivo}: {err}")

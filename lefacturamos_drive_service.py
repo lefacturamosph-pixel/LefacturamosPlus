@@ -634,7 +634,7 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                 })
 
             if u_ap_low not in aptos_con_rec:
-                nom_rec = f"RECIBO CAJA -{rec_num}- {tag_prefix}{u_ap}{tag_suffix} - {m_ant} DE {anio_int}- {prop}.PDF"
+                nom_rec = f"RECIBO CAJA -{rec_num}- {tag_prefix}{u_ap}{tag_suffix} - {m_ant} DE {anio_ant}- {prop}.PDF"
                 documentos_inmuebles.append({
                     "id": f"rec_{cod}_{u_ap}_{anio_int}_{m_ant}",
                     "tipo": "RECIBO_CAJA",
@@ -642,7 +642,7 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "propietario": prop,
                     "numero_consecutivo": rec_num,
                     "numero": rec_num,
-                    "periodo": f"{m_ant} DE {anio_int}",
+                    "periodo": f"{m_ant} DE {anio_ant}",
                     "valor": valpag_fmt,
                     "valpag": valpag,
                     "nombre_archivo": nom_rec,
@@ -682,15 +682,15 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
             {
                 "id": f"inf_desc_{cod}_{anio_int}_{mes_upper}",
                 "tipo": "DESCUENTOS",
-                "titulo": f"{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_int}",
+                "titulo": f"{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_anterior}",
                 "descripcion": f"Descuentos pronto pago y beneficios financieros aplicados a copropietarios en {mes_anterior} {anio_int}.",
                 "formatos": ["PDF", "XLSX"],
-                "archivo_pdf": f"{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_int}.PDF",
-                "archivo_xlsx": f"{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_int}.XLSX",
+                "archivo_pdf": f"{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_anterior}.PDF",
+                "archivo_xlsx": f"{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_anterior}.XLSX",
                 "tam_pdf": "420 KB",
                 "tam_xlsx": "65 KB",
-                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_int}.PDF')}",
-                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_int}.PDF')}&descargar=true",
+                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_anterior}.PDF')}",
+                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE DESCUENTOS  -- {mes_anterior} DE {anio_anterior}.PDF')}&descargar=true",
                 "drive_url": f"{GOOGLE_DRIVE_ROOT_URL}"
             },
             {
@@ -710,43 +710,43 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
             {
                 "id": f"inf_pagos_{cod}_{anio_int}_{mes_upper}",
                 "tipo": "PAGOS",
-                "titulo": f"{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_int}",
+                "titulo": f"{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_anterior}",
                 "descripcion": f"Relación de pagos bancarios recibidos (Bre-B, PSE, transferencias) durante {mes_anterior} {anio_int}.",
                 "formatos": ["PDF", "XLSX"],
-                "archivo_pdf": f"{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_int}.PDF",
-                "archivo_xlsx": f"{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_int}.XLSX",
+                "archivo_pdf": f"{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_anterior}.PDF",
+                "archivo_xlsx": f"{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_anterior}.XLSX",
                 "tam_pdf": "526 KB",
                 "tam_xlsx": "72 KB",
-                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_int}.PDF')}",
-                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_int}.PDF')}&descargar=true",
+                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_anterior}.PDF')}",
+                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE PAGOS  -- {mes_anterior} DE {anio_anterior}.PDF')}&descargar=true",
                 "drive_url": f"{GOOGLE_DRIVE_ROOT_URL}"
             },
             {
                 "id": f"inf_recibos_{cod}_{anio_int}_{mes_upper}",
                 "tipo": "RECIBOS_CAJA",
-                "titulo": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}",
+                "titulo": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}",
                 "descripcion": f"Libro oficial consecutivo de recibos de caja expedidos para copropietarios en {mes_anterior} {anio_int}.",
                 "formatos": ["PDF", "XLSX"],
-                "archivo_pdf": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.PDF",
-                "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.XLSX",
+                "archivo_pdf": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}.PDF",
+                "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}.XLSX",
                 "tam_pdf": "451 KB",
                 "tam_xlsx": "69 KB",
-                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.PDF')}",
-                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.PDF')}&descargar=true",
+                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}.PDF')}",
+                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}.PDF')}&descargar=true",
                 "drive_url": f"{GOOGLE_DRIVE_ROOT_URL}"
             },
             {
                 "id": f"inf_planilla_{cod}_{anio_int}_{mes_upper}",
                 "tipo": "PLANILLA",
-                "titulo": f"PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_int}.xlsx",
+                "titulo": f"PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_siguiente}.xlsx",
                 "descripcion": f"Plantilla electrónica en Excel para cargue bancario y conciliación de pagos en {mes_siguiente} {anio_int}.",
                 "formatos": ["XLSX"],
                 "archivo_pdf": "",
-                "archivo_xlsx": f"PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_int}.xlsx",
+                "archivo_xlsx": f"PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_siguiente}.xlsx",
                 "tam_pdf": "",
                 "tam_xlsx": "27 KB",
-                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_int}.xlsx')}&descargar=true",
-                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_int}.xlsx')}&descargar=true",
+                "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_siguiente}.xlsx')}&descargar=true",
+                "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'PLANILLA PARA ENTRADA DE PAGOS -{cod}- {nom_edif}. {mes_siguiente} DE {anio_siguiente}.xlsx')}&descargar=true",
                 "drive_url": f"{GOOGLE_DRIVE_ROOT_URL}"
             }
         ]
@@ -775,7 +775,7 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
             ]
             for apto, prop, fac_num, rec_num, valor in unidades_muestra:
                 nom_fac = f"FACTURA -{fac_num}- {apto} - {mes_upper} DE {anio_int}- {prop}.PDF"
-                nom_rec = f"RECIBO CAJA -{rec_num}- {apto} - {mes_anterior} DE {anio_int}- {prop}.PDF"
+                nom_rec = f"RECIBO CAJA -{rec_num}- {apto} - {mes_anterior} DE {anio_anterior}- {prop}.PDF"
                 documentos_inmuebles.append({
                     "id": f"fac_{cod}_{apto}_{anio_int}_{mes_upper}",
                     "tipo": "FACTURA",
@@ -800,7 +800,7 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "numero_consecutivo": rec_num,
                     "numero": rec_num,
                     "nombre_archivo": nom_rec,
-                    "periodo": f"{mes_anterior} DE {anio_int}",
+                    "periodo": f"{mes_anterior} DE {anio_anterior}",
                     "valor": valor,
                     "formato": "PDF",
                     "tam": "47 KB",
@@ -854,7 +854,7 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
 
                 tag_apto = f"APTO-{apto_clean}-AP" if cod == "4901" else apto_clean
                 nom_fac = f"FACTURA -{fac_num}- {tag_apto} - {mes_upper} DE {anio_int}- {prop}.PDF"
-                nom_rec = f"RECIBO CAJA -{rec_num}- {tag_apto} - {mes_anterior} DE {anio_int}- {prop}.PDF"
+                nom_rec = f"RECIBO CAJA -{rec_num}- {tag_apto} - {mes_anterior} DE {anio_anterior}- {prop}.PDF"
                 val_fmt = f"${tot_num:,.0f}".replace(",", ".")
                 rec_fmt = f"${val_pag:,.0f}".replace(",", ".")
 
@@ -888,7 +888,7 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "propietario": prop,
                     "numero_consecutivo": rec_num,
                     "numero": rec_num,
-                    "periodo": f"{mes_anterior} DE {anio_int}",
+                    "periodo": f"{mes_anterior} DE {anio_anterior}",
                     "valor": rec_fmt,
                     "valpag": val_pag,
                     "nombre_archivo": nom_rec,
@@ -897,10 +897,10 @@ def obtener_documentos_mes(codigo: str, anio: int, mes: str) -> Dict[str, Any]:
                     "formatos": ["PDF", "XLSX"],
                     "tam": "47 KB",
                     "tam_xlsx": "73 KB",
-                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.XLSX",
+                    "archivo_xlsx": f"{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}.XLSX",
                     "url_ver": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_rec)}",
                     "url_descarga": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(nom_rec)}&descargar=true",
-                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_int}.XLSX')}&descargar=true",
+                    "url_xlsx": f"/api/drive/archivo?edificio={cod}&anio={anio_int}&mes={mes_upper}&archivo={quote(f'{nom_edif}.-- LISTADO DE RECIBOS DE CAJA  -- {mes_anterior} DE {anio_anterior}.XLSX')}&descargar=true",
                     "drive_url": GOOGLE_DRIVE_ROOT_URL
                 })
 
