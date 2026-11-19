@@ -19292,6 +19292,7 @@ const MENUS_POR_ROL = {
         subitems: [
           { id: "modal-nueva-copropiedad", label: "Crear Nueva Copropiedad", icono: "plus-circle", action: "abrirModalNuevaCopropiedad()" },
           { id: "cargamasiva-fusion", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'fusion3en1')" },
+          { id: "mapeador-visual", label: "Mapeador Visual de Columnas", icono: "git-pull-request", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'mapeador')" },
           { id: "config-edificio", label: "Configurar Edificio Actual", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
           { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" }
         ]
@@ -26487,49 +26488,29 @@ function toggleModoAsignacionEdificio(modo) {
 
 
 function cambiarSubtabModalConversor(subtab) {
-
-  const tabs = ["carga", "fusion3en1", "plantillas", "python"];
-
+  const tabs = ["carga", "fusion3en1", "mapeador", "plantillas", "python"];
   tabs.forEach(t => {
-
     const btn = document.getElementById(`subtab-modal-cm-${t}`);
-
     const view = document.getElementById(`modal-cm-view-${t}`);
-
     if (btn) {
-
       if (t === subtab) {
-
         btn.className = "subtab-modal-cm-btn active px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 flex items-center gap-2 shadow-sm";
-
       } else {
-
         btn.className = "subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2";
-
       }
-
     }
-
     if (view) {
-
       if (t === subtab) view.classList.remove("hidden");
-
       else view.classList.add("hidden");
-
     }
-
   });
 
-
-
   if (subtab === "fusion3en1") {
-
     inicializarVistaFusion3en1();
-
+  } else if (subtab === "mapeador") {
+    inicializarVistaMapeadorVisual();
   }
-
   safeCreateIcons();
-
 }
 
 
@@ -41104,6 +41085,686 @@ function confirmarBorrarDatosEdificio(id) {
 }
 
 
+
+// ==============================================================================
+// MAPEADOR VISUAL INTERACTIVO DE COLUMNAS (EXCEL / CSV / TXT A MEDIDA)
+// ==============================================================================
+
+const CAMPOS_DESTINO_MAPEADOR = [
+  // Bloque 1: Inmuebles y Unidades
+  { id: "apto", categoria: "inmueble", label: "Apartamento / Unidad *", obligatorio: true, icono: "home", desc: "Número o identificador del predio (101, 202, Casa 5)", sinonimos: ["APTO", "UNIDAD", "INMUEBLE", "APARTAMENTO", "PREDIO", "NUMERO", "CASA", "LOCAL", "IDENT", "NRO", "COD_INMUEBLE"] },
+  { id: "bloque", categoria: "inmueble", label: "Bloque / Torre", obligatorio: false, icono: "building", desc: "Torre, interior o etapa (T1, Bloque A)", sinonimos: ["BLOQUE", "BLOQ", "TORRE", "INTERIOR", "ETAPA", "SECTOR"] },
+  { id: "coeficiente", categoria: "inmueble", label: "Coeficiente (%) Ley 675", obligatorio: false, icono: "percent", desc: "Porcentaje de copropiedad (ej: 1.250)", sinonimos: ["COEF_URB", "COEF_APA", "COEFICIENTE", "COEF", "PORCENTAJE", "%", "PONDERADO", "COEF_MOD_A"] },
+  { id: "tipo", categoria: "inmueble", label: "Tipo de Inmueble", obligatorio: false, icono: "tag", desc: "Apartamento, Local, Oficina, Parqueadero, Útil", sinonimos: ["TIPO", "TIPO_INMUEBLE", "CLASE", "DESTINO"] },
+  { id: "ubicacion", categoria: "inmueble", label: "Parqueadero / Útil", obligatorio: false, icono: "map-pin", desc: "Depósito o parqueadero asignado", sinonimos: ["UBICA", "UBICACION", "PARQUEADERO", "UTIL", "GARAJE", "DEPOSITO"] },
+
+  // Bloque 2: Directorio y Propietarios
+  { id: "propietario", categoria: "propietario", label: "Nombre Propietario / Titular", obligatorio: false, icono: "user", desc: "Nombre completo o razón social del titular", sinonimos: ["NOM", "PROPIETARIO", "NOMBRE", "TITULAR", "TERCERO", "RAZON SOCIAL", "COPROPIETARIO", "CLIENTE"] },
+  { id: "cc", categoria: "propietario", label: "Cédula / NIT / Documento", obligatorio: false, icono: "credit-card", desc: "Documento de identificación tributario", sinonimos: ["CC_NIT", "CC", "NIT", "CEDULA", "DOCUMENTO", "IDENTIFICACION", "DOC", "NIF"] },
+  { id: "telefono", categoria: "propietario", label: "Teléfono / Celular / WhatsApp", obligatorio: false, icono: "phone", desc: "Móvil principal para notificaciones", sinonimos: ["TEL", "CEL", "TELEFONO", "CELULAR", "WHATSAPP", "MOVIL", "BEP_CEL"] },
+  { id: "email", categoria: "propietario", label: "Correo Electrónico (Facturas)", obligatorio: false, icono: "mail", desc: "Email para facturas y asambleas", sinonimos: ["EMAIL", "EMAIL1", "CORREO", "CORREO ELECTRONICO", "E-MAIL", "MAIL"] },
+
+  // Bloque 3: Facturación y Cartera
+  { id: "admon", categoria: "cartera", label: "Cuota Ordinaria / Expensa Mes ($)", obligatorio: false, icono: "dollar-sign", desc: "Valor de la administración presupuestada", sinonimos: ["ACTUAL", "VALOR", "ADMON", "CUOTA", "EXPENSA", "ORDINARIA", "ADMINISTRACION", "VR_CUOTA", "VALOR_EXPENSA"] },
+  { id: "saldoPendiente", categoria: "cartera", label: "Saldo Anterior / Mora Cartera ($)", obligatorio: false, icono: "alert-circle", desc: "Deuda acumulada o saldo pendiente anterior", sinonimos: ["PEND", "SALDO", "ANTERIOR", "SALDO_ANT", "MORA", "DEUDA", "CARTERA", "SALDO_PENDIENTE", "SALDO_MORA"] },
+  { id: "interes", categoria: "cartera", label: "Intereses de Mora ($)", obligatorio: false, icono: "trending-up", desc: "Intereses de mora causados", sinonimos: ["INTA", "INTP", "INT", "INTERES", "INTERESES", "INTERES_MORA"] },
+  { id: "extra", categoria: "cartera", label: "Cuota Extraordinaria ($)", obligatorio: false, icono: "plus-circle", desc: "Cuota extra aprobada en asamblea", sinonimos: ["EXTRAA", "EXTRAP", "EXTRA", "CUOTA_EXTRA", "EXTRAORDINARIA"] },
+  { id: "otros", categoria: "cartera", label: "Otros Conceptos / Multas ($)", obligatorio: false, icono: "file-plus", desc: "Sanciones, multas o ajustes", sinonimos: ["OTROSA", "OTROSP", "OTROS", "MULTA", "MULTAA", "SANCION", "AJUSTES"] },
+  { id: "fac", categoria: "cartera", label: "No. Factura / Prefijo", obligatorio: false, icono: "hash", desc: "Consecutivo contable previo", sinonimos: ["FAC", "FACTURA", "NRO_FAC", "CUENTA_COBRO", "DOCUMENTO_NUM"] }
+];
+
+let estadoMapeadorVisual = {
+  workbook: null,
+  sheetNames: [],
+  activeSheet: "",
+  rawRows: [],
+  headers: [],
+  mapping: {},
+  sampleRow: {},
+  fileName: "",
+  edificioCodigo: ""
+};
+
+function inicializarVistaMapeadorVisual() {
+  const selEd = document.getElementById("mv-select-edificio");
+  if (selEd) {
+    const codActivo = AppState.codigoEdificio || codigoEdificioActivoFusion || "4901";
+    selEd.innerHTML = listaCopropiedadesSuperadmin.map(c => `
+      <option value="${c.codigo}" ${c.codigo === codActivo ? 'selected' : ''}>[${c.codigo}] ${c.nombre}</option>
+    `).join("");
+    estadoMapeadorVisual.edificioCodigo = selEd.value;
+  }
+
+  cargarPerfilesGuardadosEnSelect();
+
+  if (estadoMapeadorVisual.headers.length > 0) {
+    renderizarTablaMapeador();
+    renderizarPrevisualizacionMapeador();
+  }
+}
+
+function alCambiarEdificioMapeador(cod) {
+  estadoMapeadorVisual.edificioCodigo = cod;
+}
+
+function cargarPerfilesGuardadosEnSelect() {
+  const sel = document.getElementById("mv-select-perfil");
+  if (!sel) return;
+  try {
+    const raw = localStorage.getItem("lefacturamos_perfiles_mapeo_custom");
+    if (raw) {
+      const perfiles = JSON.parse(raw);
+      const opcionesBase = `
+        <option value="auto">✨ Auto-Detección Inteligente (Sinónimos)</option>
+        <option value="siigo">📊 Perfil Siigo Nube PH</option>
+        <option value="daytona">🏢 Perfil Daytona Intercloud</option>
+        <option value="sisco">📑 Perfil SISCO P.H.</option>
+        <option value="propiedata">📱 Perfil Propiedata / PHPlus</option>
+      `;
+      const opcionesUser = Object.keys(perfiles).map(k => `
+        <option value="custom_${k}">⭐ ${k} (Guardado)</option>
+      `).join("");
+      sel.innerHTML = opcionesBase + opcionesUser;
+    }
+  } catch(e) {}
+}
+
+async function cargarArchivoEnMapeadorVisual(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+
+  mostrarToast(`Analizando archivo '${file.name}'...`);
+  estadoMapeadorVisual.fileName = file.name;
+
+  try {
+    const data = await file.arrayBuffer();
+    if (typeof XLSX === "undefined") {
+      mostrarToast("⚠️ Librería SheetJS no encontrada. Verifique la conexión a internet.", true);
+      return;
+    }
+
+    const workbook = XLSX.read(data, { type: "array" });
+    estadoMapeadorVisual.workbook = workbook;
+    estadoMapeadorVisual.sheetNames = workbook.SheetNames || [];
+    estadoMapeadorVisual.activeSheet = estadoMapeadorVisual.sheetNames[0] || "";
+
+    const selHojas = document.getElementById("mv-select-hoja");
+    if (selHojas) {
+      selHojas.disabled = false;
+      selHojas.innerHTML = estadoMapeadorVisual.sheetNames.map(s => `
+        <option value="${s}" ${s === estadoMapeadorVisual.activeSheet ? 'selected' : ''}>${s}</option>
+      `).join("");
+    }
+
+    procesarHojaActivaMapeador();
+  } catch (err) {
+    console.error("Error leyendo archivo en Mapeador:", err);
+    mostrarToast("⚠️ Error al leer el archivo. Asegúrate que sea un Excel (.xlsx, .xls) o CSV válido.", true);
+  }
+}
+
+function cambiarHojaMapeadorVisual(sheetName) {
+  estadoMapeadorVisual.activeSheet = sheetName;
+  procesarHojaActivaMapeador();
+}
+
+function procesarHojaActivaMapeador() {
+  const wb = estadoMapeadorVisual.workbook;
+  if (!wb || !estadoMapeadorVisual.activeSheet) return;
+
+  const worksheet = wb.Sheets[estadoMapeadorVisual.activeSheet];
+  const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+  if (!jsonRows || jsonRows.length === 0) {
+    mostrarToast(`⚠️ La hoja '${estadoMapeadorVisual.activeSheet}' no contiene filas con datos.`, true);
+    return;
+  }
+
+  estadoMapeadorVisual.rawRows = jsonRows;
+  estadoMapeadorVisual.sampleRow = jsonRows[0] || {};
+  estadoMapeadorVisual.headers = Object.keys(jsonRows[0] || {});
+
+  const badgeBox = document.getElementById("mv-info-archivo-badge");
+  if (badgeBox) badgeBox.classList.remove("hidden");
+  const lblNombre = document.getElementById("mv-nombre-archivo");
+  if (lblNombre) lblNombre.innerText = estadoMapeadorVisual.fileName;
+  const lblFilas = document.getElementById("mv-conteo-filas");
+  if (lblFilas) lblFilas.innerText = `${jsonRows.length} filas leídas`;
+  const lblCols = document.getElementById("mv-conteo-cols");
+  if (lblCols) lblCols.innerText = `${estadoMapeadorVisual.headers.length} columnas detectadas`;
+
+  document.getElementById("mv-seccion-mapeo")?.classList.remove("hidden");
+  document.getElementById("mv-seccion-preview")?.classList.remove("hidden");
+  document.getElementById("mv-seccion-acciones")?.classList.remove("hidden");
+
+  autoDetectarColumnasMapeador();
+  mostrarToast(`✓ '${estadoMapeadorVisual.fileName}' cargado. ${jsonRows.length} registros listos para mapear.`);
+}
+
+function cargarMuestraDemoMapeador() {
+  estadoMapeadorVisual.fileName = "DEMO_CARTERA_CLIENTE_EXTERNO.xlsx";
+  const demoRows = [
+    { "Nro_Predio": "101", "Torre_Sector": "Torre 1", "Titular_Copropietario": "CARLOS ALBERTO GÓMEZ", "Nit_Cedula": "71.234.567", "Celular_Contacto": "3104567890", "Email_Envio": "carlos.gomez@gmail.com", "Ponderado_Ley675": "1.250", "Expensa_Mensual": 350000, "Deuda_Vencida": 0, "Mora_Intereses": 0 },
+    { "Nro_Predio": "102", "Torre_Sector": "Torre 1", "Titular_Copropietario": "MARÍA EUGENIA MONTOYA", "Nit_Cedula": "43.567.890", "Celular_Contacto": "3159876543", "Email_Envio": "mariaeugenia@hotmail.com", "Ponderado_Ley675": "1.250", "Expensa_Mensual": 350000, "Deuda_Vencida": 350000, "Mora_Intereses": 8500 },
+    { "Nro_Predio": "201", "Torre_Sector": "Torre 1", "Titular_Copropietario": "JUAN PABLO ESCOBAR", "Nit_Cedula": "98.765.432", "Celular_Contacto": "3001234567", "Email_Envio": "juan.escobar@yahoo.com", "Ponderado_Ley675": "1.400", "Expensa_Mensual": 392000, "Deuda_Vencida": 0, "Mora_Intereses": 0 },
+    { "Nro_Predio": "202", "Torre_Sector": "Torre 1", "Titular_Copropietario": "ANA LUCÍA ARANGO", "Nit_Cedula": "32.456.789", "Celular_Contacto": "3123456789", "Email_Envio": "analucia.arango@gmail.com", "Ponderado_Ley675": "1.400", "Expensa_Mensual": 392000, "Deuda_Vencida": 784000, "Mora_Intereses": 19200 },
+    { "Nro_Predio": "301", "Torre_Sector": "Torre 1", "Titular_Copropietario": "ROBERTO MEJÍA RESTREPO", "Nit_Cedula": "70.123.456", "Celular_Contacto": "3187654321", "Email_Envio": "roberto.mejia@empresa.com", "Ponderado_Ley675": "1.500", "Expensa_Mensual": 420000, "Deuda_Vencida": 0, "Mora_Intereses": 0 }
+  ];
+
+  estadoMapeadorVisual.rawRows = demoRows;
+  estadoMapeadorVisual.sampleRow = demoRows[0];
+  estadoMapeadorVisual.headers = Object.keys(demoRows[0]);
+  estadoMapeadorVisual.sheetNames = ["Datos_Cartera"];
+  estadoMapeadorVisual.activeSheet = "Datos_Cartera";
+
+  const selHojas = document.getElementById("mv-select-hoja");
+  if (selHojas) {
+    selHojas.disabled = false;
+    selHojas.innerHTML = `<option value="Datos_Cartera">Datos_Cartera</option>`;
+  }
+
+  const badgeBox = document.getElementById("mv-info-archivo-badge");
+  if (badgeBox) badgeBox.classList.remove("hidden");
+  document.getElementById("mv-nombre-archivo").innerText = estadoMapeadorVisual.fileName;
+  document.getElementById("mv-conteo-filas").innerText = `${demoRows.length} filas leídas`;
+  document.getElementById("mv-conteo-cols").innerText = `${estadoMapeadorVisual.headers.length} columnas detectadas`;
+
+  document.getElementById("mv-seccion-mapeo")?.classList.remove("hidden");
+  document.getElementById("mv-seccion-preview")?.classList.remove("hidden");
+  document.getElementById("mv-seccion-acciones")?.classList.remove("hidden");
+
+  autoDetectarColumnasMapeador();
+  mostrarToast("✓ Muestra Demo cargada con columnas personalizadas para probar el Mapeador.");
+}
+
+function autoDetectarColumnasMapeador() {
+  estadoMapeadorVisual.mapping = {};
+  const headers = estadoMapeadorVisual.headers;
+
+  CAMPOS_DESTINO_MAPEADOR.forEach(campo => {
+    let mejorMatch = "";
+
+    for (const syn of campo.sinonimos) {
+      const match = headers.find(h => h.toUpperCase().trim() === syn);
+      if (match) {
+        mejorMatch = match;
+        break;
+      }
+    }
+
+    if (!mejorMatch) {
+      for (const syn of campo.sinonimos) {
+        const match = headers.find(h => {
+          const upper = h.toUpperCase().trim();
+          return upper.includes(syn) || syn.includes(upper);
+        });
+        if (match) {
+          mejorMatch = match;
+          break;
+        }
+      }
+    }
+
+    estadoMapeadorVisual.mapping[campo.id] = mejorMatch || "";
+  });
+
+  renderizarTablaMapeador();
+  renderizarPrevisualizacionMapeador();
+}
+
+function renderizarTablaMapeador() {
+  const container = document.getElementById("mv-grid-mapeo");
+  if (!container) return;
+
+  const cats = [
+    { id: "inmueble", titulo: "1. Inmuebles y Unidades", color: "indigo", badge: "Clave Relacional" },
+    { id: "propietario", titulo: "2. Directorio y Propietarios", color: "purple", badge: "Censo & Facturas" },
+    { id: "cartera", titulo: "3. Facturación y Cartera", color: "teal", badge: "Saldos Ley 675" }
+  ];
+
+  container.innerHTML = cats.map(cat => {
+    const camposDeCat = CAMPOS_DESTINO_MAPEADOR.filter(c => c.categoria === cat.id);
+
+    const filasHtml = camposDeCat.map(campo => {
+      const colSeleccionada = estadoMapeadorVisual.mapping[campo.id] || "";
+      const valorMuestra = colSeleccionada && estadoMapeadorVisual.sampleRow ? estadoMapeadorVisual.sampleRow[colSeleccionada] : "";
+      const muestraTexto = valorMuestra !== undefined && valorMuestra !== "" ? `Fila 1: "${String(valorMuestra).substring(0, 25)}"` : "Sin valor";
+
+      const opciones = [
+        `<option value="">-- No Asignar / Dejar Vacío --</option>`,
+        ...estadoMapeadorVisual.headers.map(h => `
+          <option value="${h}" ${h === colSeleccionada ? 'selected' : ''}>${h}</option>
+        `)
+      ].join("");
+
+      return `
+        <div class="p-2.5 rounded-xl bg-slate-950/80 border ${colSeleccionada ? 'border-teal-500/40 bg-teal-950/10' : 'border-slate-800'} space-y-1.5 transition-all">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-white font-bold text-xs truncate">
+              <i data-lucide="${campo.icono}" class="w-3.5 h-3.5 text-${cat.color}-400 shrink-0"></i>
+              <span class="truncate">${campo.label}</span>
+            </div>
+            ${colSeleccionada ? '<span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">✓ Mapeado</span>' : (campo.obligatorio ? '<span class="text-[9px] px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-400 font-bold">Requerido</span>' : '')}
+          </div>
+          <div class="space-y-1">
+            <select onchange="alCambiarMapeoCampo('${campo.id}', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:border-teal-500 focus:outline-none">
+              ${opciones}
+            </select>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono px-1">
+              <span class="truncate text-teal-300/80" id="mv-sample-${campo.id}">${muestraTexto}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="text-xs font-black text-white flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-${cat.color}-400"></span>
+            <span>${cat.titulo}</span>
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono">${cat.badge}</span>
+        </div>
+        <div class="space-y-2">
+          ${filasHtml}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  safeCreateIcons();
+}
+
+function alCambiarMapeoCampo(campoId, columnaSeleccionada) {
+  estadoMapeadorVisual.mapping[campoId] = columnaSeleccionada;
+
+  const lblMuestra = document.getElementById(`mv-sample-${campoId}`);
+  if (lblMuestra) {
+    const val = columnaSeleccionada && estadoMapeadorVisual.sampleRow ? estadoMapeadorVisual.sampleRow[columnaSeleccionada] : "";
+    lblMuestra.innerText = val !== undefined && val !== "" ? `Fila 1: "${String(val).substring(0, 25)}"` : "Sin valor";
+  }
+
+  renderizarPrevisualizacionMapeador();
+}
+
+function limpiarMapeoCampos() {
+  estadoMapeadorVisual.mapping = {};
+  renderizarTablaMapeador();
+  renderizarPrevisualizacionMapeador();
+  mostrarToast("Mapeo de columnas limpiado.");
+}
+
+function renderizarPrevisualizacionMapeador() {
+  const rows = estadoMapeadorVisual.rawRows || [];
+  const map = estadoMapeadorVisual.mapping;
+
+  const colApto = map.apto;
+  const colProp = map.propietario;
+  const colCoef = map.coeficiente;
+  const colAdmon = map.admon;
+  const colSaldo = map.saldoPendiente;
+  const colTel = map.telefono;
+  const colEmail = map.email;
+
+  let totalUnidades = 0;
+  let sumaCoef = 0;
+  let totalCuota = 0;
+  let totalCartera = 0;
+
+  const filasMapeadas = rows.map(r => {
+    const apto = colApto ? String(r[colApto] || "").trim() : "";
+    if (apto) totalUnidades++;
+
+    const prop = colProp ? String(r[colProp] || "").trim() : `PROPIETARIO ${apto}`;
+    const coef = colCoef ? (parseFloat(String(r[colCoef] || 0).replace("%", "").replace(",", ".")) || 0) : 0;
+    sumaCoef += coef;
+
+    const admon = colAdmon ? (parseFloat(String(r[colAdmon] || 0).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    totalCuota += admon;
+
+    const saldo = colSaldo ? (parseFloat(String(r[colSaldo] || 0).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    totalCartera += saldo;
+
+    const tel = colTel ? String(r[colTel] || "").trim() : "";
+    const email = colEmail ? String(r[colEmail] || "").trim() : "";
+
+    return { apto, prop, coef, admon, saldo, tel, email };
+  });
+
+  const kpiU = document.getElementById("mv-kpi-unidades");
+  if (kpiU) kpiU.innerText = `${totalUnidades} Aptos`;
+
+  const kpiQuorum = document.getElementById("mv-kpi-quorum");
+  if (kpiQuorum) {
+    kpiQuorum.innerText = sumaCoef > 0 ? (sumaCoef.toFixed(3) + "%") : "0.000%";
+    if (Math.abs(sumaCoef - 100.0) <= 0.05) {
+      kpiQuorum.className = "text-base sm:text-lg font-black text-emerald-400 font-mono";
+    } else {
+      kpiQuorum.className = "text-base sm:text-lg font-black text-amber-400 font-mono";
+    }
+  }
+
+  const kpiC = document.getElementById("mv-kpi-cuota");
+  if (kpiC) kpiC.innerText = "$" + Math.round(totalCuota).toLocaleString("es-CO");
+
+  const kpiCart = document.getElementById("mv-kpi-cartera");
+  if (kpiCart) kpiCart.innerText = "$" + Math.round(totalCartera).toLocaleString("es-CO");
+
+  const thead = document.getElementById("mv-thead-preview");
+  if (thead) {
+    thead.innerHTML = `
+      <tr>
+        <th class="py-2 px-3">APTO</th>
+        <th class="py-2 px-3">PROPIETARIO</th>
+        <th class="py-2 px-3 text-right">COEFICIENTE (%)</th>
+        <th class="py-2 px-3 text-right">CUOTA ADMÓN</th>
+        <th class="py-2 px-3 text-right">SALDO MORA</th>
+        <th class="py-2 px-3">TELÉFONO</th>
+        <th class="py-2 px-3">EMAIL</th>
+      </tr>
+    `;
+  }
+
+  const tbody = document.getElementById("mv-tbody-preview");
+  if (tbody) {
+    const previewRows = filasMapeadas.filter(f => f.apto).slice(0, 8);
+    if (previewRows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-500 font-sans text-xs">Por favor mapea al menos la columna del <strong>Apartamento / Unidad</strong> para ver la previsualización.</td></tr>`;
+    } else {
+      tbody.innerHTML = previewRows.map(f => `
+        <tr class="hover:bg-slate-800/40 transition-colors">
+          <td class="py-1.5 px-3 font-bold text-white">${f.apto}</td>
+          <td class="py-1.5 px-3 truncate max-w-[160px] text-slate-200">${f.prop}</td>
+          <td class="py-1.5 px-3 text-right text-emerald-400 font-mono">${f.coef > 0 ? f.coef.toFixed(3) + '%' : '--'}</td>
+          <td class="py-1.5 px-3 text-right text-sky-300 font-mono">${f.admon > 0 ? '$' + Math.round(f.admon).toLocaleString('es-CO') : '$0'}</td>
+          <td class="py-1.5 px-3 text-right ${f.saldo > 0 ? 'text-rose-400 font-bold' : 'text-slate-400'} font-mono">${f.saldo > 0 ? '$' + Math.round(f.saldo).toLocaleString('es-CO') : '$0'}</td>
+          <td class="py-1.5 px-3 text-slate-400">${f.tel || '--'}</td>
+          <td class="py-1.5 px-3 text-slate-400 truncate max-w-[140px]">${f.email || '--'}</td>
+        </tr>
+      `).join("");
+    }
+  }
+}
+
+function aplicarPerfilMapeo(perfilId) {
+  if (perfilId === "auto") {
+    autoDetectarColumnasMapeador();
+    return;
+  }
+
+  if (perfilId.startsWith("custom_")) {
+    const nombre = perfilId.replace("custom_", "");
+    try {
+      const raw = localStorage.getItem("lefacturamos_perfiles_mapeo_custom");
+      if (raw) {
+        const perfiles = JSON.parse(raw);
+        if (perfiles[nombre]) {
+          estadoMapeadorVisual.mapping = Object.assign({}, perfiles[nombre]);
+          renderizarTablaMapeador();
+          renderizarPrevisualizacionMapeador();
+          mostrarToast(`✓ Perfil '${nombre}' aplicado exitosamente.`);
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
+  const presets = {
+    siigo: {
+      apto: ["NRO INMUEBLE", "CENTRO DE COSTOS", "SUB-CENTRO", "TERCERO CODIGO", "INMUEBLE", "NRO_PREDIO"],
+      propietario: ["NOMBRE TERCERO", "TERCERO", "RAZON SOCIAL", "NOMBRE", "TITULAR_COPROPIETARIO"],
+      cc: ["IDENTIFICACION", "NIT", "CEDULA", "CC", "NIT_CEDULA"],
+      telefono: ["TELEFONO 1", "TELEFONO", "CELULAR", "MOVIL", "CELULAR_CONTACTO"],
+      email: ["CORREO", "EMAIL", "CORREO ELECTRONICO", "EMAIL_ENVIO"],
+      admon: ["VALOR DEBITO", "CUOTA", "EXPENSA", "VALOR", "EXPENSA_MENSUAL"],
+      saldoPendiente: ["SALDO CARTERA", "SALDO TOTAL", "SALDO ANTERIOR", "SALDO", "DEUDA_VENCIDA"]
+    },
+    daytona: {
+      apto: ["UNIDAD", "INMUEBLE", "APARTAMENTO", "APTO", "NRO_PREDIO"],
+      bloque: ["TORRE", "BLOQUE", "ETAPA", "TORRE_SECTOR"],
+      propietario: ["TITULAR", "PROPIETARIO", "NOMBRE", "TITULAR_COPROPIETARIO"],
+      coeficiente: ["COEFICIENTE", "COEF", "%", "PONDERADO_LEY675"],
+      admon: ["EXPENSA", "CUOTA ORDINARIA", "VALOR", "EXPENSA_MENSUAL"],
+      saldoPendiente: ["SALDO VENCIDO", "MORA", "SALDO PENDIENTE", "DEUDA_VENCIDA"]
+    },
+    sisco: {
+      apto: ["COD_INMUEBLE", "INMUEBLE", "APARTAMENTO", "NRO_PREDIO"],
+      bloque: ["BLOQUE", "TORRE", "TORRE_SECTOR"],
+      propietario: ["NOMBRE_PROPIETARIO", "PROPIETARIO", "TITULAR", "TITULAR_COPROPIETARIO"],
+      coeficiente: ["COEF_URB", "COEFICIENTE", "PONDERADO_LEY675"],
+      admon: ["CUOTA_MES", "ACTUAL", "VALOR_EXPENSA", "EXPENSA_MENSUAL"],
+      saldoPendiente: ["SALDO_ANTERIOR", "PENDIENTE", "MORA", "DEUDA_VENCIDA"]
+    },
+    propiedata: {
+      apto: ["UNIDAD PRIVADA", "APARTAMENTO", "NUMERO", "NRO_PREDIO"],
+      propietario: ["NOMBRE COMPLETO", "PROPIETARIO", "TITULAR_COPROPIETARIO"],
+      telefono: ["CELULAR", "WHATSAPP", "TELEFONO", "CELULAR_CONTACTO"],
+      email: ["CORREO ELECTRONICO", "EMAIL", "EMAIL_ENVIO"],
+      admon: ["CUOTA EXPENSA", "ADMINISTRACION", "EXPENSA_MENSUAL"],
+      saldoPendiente: ["DEUDA ANTERIOR", "SALDO MORA", "DEUDA_VENCIDA"]
+    }
+  };
+
+  const preset = presets[perfilId];
+  if (!preset) return;
+
+  const headers = estadoMapeadorVisual.headers;
+  estadoMapeadorVisual.mapping = {};
+
+  CAMPOS_DESTINO_MAPEADOR.forEach(campo => {
+    const syns = preset[campo.id] || campo.sinonimos;
+    let match = "";
+    for (const syn of syns) {
+      match = headers.find(h => h.toUpperCase().trim() === syn || h.toUpperCase().includes(syn));
+      if (match) break;
+    }
+    estadoMapeadorVisual.mapping[campo.id] = match || "";
+  });
+
+  renderizarTablaMapeador();
+  renderizarPrevisualizacionMapeador();
+  mostrarToast(`✓ Perfil '${perfilId.toUpperCase()}' aplicado a las columnas detectadas.`);
+}
+
+function guardarPerfilMapeoActual() {
+  const nombre = prompt("Nombre para este perfil de mapeo (ej: 'Exportación Siigo Torre', 'Daytona Mensual'):");
+  if (!nombre || !nombre.trim()) return;
+
+  try {
+    let perfiles = {};
+    const raw = localStorage.getItem("lefacturamos_perfiles_mapeo_custom");
+    if (raw) perfiles = JSON.parse(raw);
+
+    perfiles[nombre.trim()] = Object.assign({}, estadoMapeadorVisual.mapping);
+    localStorage.setItem("lefacturamos_perfiles_mapeo_custom", JSON.stringify(perfiles));
+
+    cargarPerfilesGuardadosEnSelect();
+    mostrarToast(`✓ Perfil '${nombre.trim()}' guardado exitosamente.`);
+  } catch (err) {
+    mostrarToast("Error al guardar el perfil en el navegador.", true);
+  }
+}
+
+function enviarMapeadorAFusion3en1() {
+  const rows = estadoMapeadorVisual.rawRows || [];
+  const map = estadoMapeadorVisual.mapping;
+
+  if (!map.apto) {
+    mostrarToast("⚠️ Debes mapear al menos el campo 'Apartamento / Unidad' antes de enviar a Fusión.", true);
+    return;
+  }
+
+  const unidadesFusion = rows.map(r => {
+    const apto = String(r[map.apto] || "").trim();
+    if (!apto) return null;
+
+    const bloq = map.bloque && r[map.bloque] ? String(r[map.bloque]).trim() : "01";
+    const prop = map.propietario && r[map.propietario] ? String(r[map.propietario]).trim() : `PROPIETARIO APTO ${apto}`;
+    const cc = map.cc && r[map.cc] ? String(r[map.cc]).trim() : "";
+    const tel = map.telefono && r[map.telefono] ? String(r[map.telefono]).trim() : "";
+    const email = map.email && r[map.email] ? String(r[map.email]).trim() : "";
+    const coef = map.coeficiente && r[map.coeficiente] ? (parseFloat(String(r[map.coeficiente]).replace("%", "").replace(",", ".")) || 0) : 0;
+    const admon = map.admon && r[map.admon] ? (parseFloat(String(r[map.admon]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    const saldo = map.saldoPendiente && r[map.saldoPendiente] ? (parseFloat(String(r[map.saldoPendiente]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+
+    return {
+      unidad: apto, apto, bloque: bloq, bloq, propietario: prop, cc, telefono: tel, email,
+      coefNum: coef, coeficiente: coef > 0 ? (coef.toFixed(3) + "%") : "0.000%",
+      admon, admonFmt: "$" + Math.round(admon).toLocaleString("es-CO"),
+      saldoPendiente: "$" + Math.round(saldo).toLocaleString("es-CO"),
+      totalNum: admon + saldo,
+      totalPagar: "$" + Math.round(admon + saldo).toLocaleString("es-CO"),
+      estado: saldo > 0 ? "En Mora" : "Al Día"
+    };
+  }).filter(Boolean);
+
+  if (unidadesFusion.length === 0) {
+    mostrarToast("⚠️ No se extrajeron unidades válidas del archivo.", true);
+    return;
+  }
+
+  estadoFusion3en1.unidades = unidadesFusion;
+  estadoFusion3en1.archivosCargados.inmuebles = true;
+  estadoFusion3en1.archivosNombres.inmuebles = `${estadoMapeadorVisual.fileName} (${unidadesFusion.length} unidades)`;
+
+  cambiarSubtabModalConversor("fusion3en1");
+  renderizarTablaFusion3en1();
+  actualizarBadgesArchivosFusion();
+  actualizarEstadisticasFusion(estadoFusion3en1.edificio?.nombre, estadoFusion3en1.edificio?.codigo);
+  mostrarToast(`✓ ¡${unidadesFusion.length} unidades enviadas exitosamente a la Fusión 3-en-1!`);
+}
+
+async function ejecutarCargaMapeadorVisual() {
+  const map = estadoMapeadorVisual.mapping;
+  if (!map.apto) {
+    mostrarToast("⚠️ Error: El campo 'Apartamento / Unidad' es obligatorio para asociar los registros.", true);
+    return;
+  }
+
+  const cod = estadoMapeadorVisual.edificioCodigo || AppState.codigoEdificio || "4901";
+  const cop = listaCopropiedadesSuperadmin.find(c => c.codigo === cod || c.id === cod || c.id === `cj_${cod}`);
+
+  if (!cop) {
+    mostrarToast(`⚠️ Copropiedad #${cod} no encontrada.`, true);
+    return;
+  }
+
+  const rows = estadoMapeadorVisual.rawRows || [];
+  if (rows.length === 0) {
+    mostrarToast("⚠️ No hay datos cargados en el mapeador.", true);
+    return;
+  }
+
+  mostrarToast(`Sincronizando ${rows.length} registros mapeados con '${cop.nombre}'...`);
+
+  let unidades = [];
+  let sumaCoef = 0;
+  let totalCarteraMora = 0;
+  let totalFacturacionMes = 0;
+
+  rows.forEach(r => {
+    const apto = String(r[map.apto] || "").trim();
+    if (!apto) return;
+
+    const bloq = map.bloque && r[map.bloque] ? String(r[map.bloque]).trim() : "01";
+    const prop = map.propietario && r[map.propietario] ? String(r[map.propietario]).trim() : `PROPIETARIO APTO ${apto}`;
+    const cc = map.cc && r[map.cc] ? String(r[map.cc]).trim() : "";
+    const tel = map.telefono && r[map.telefono] ? String(r[map.telefono]).trim() : "";
+    const email = map.email && r[map.email] ? String(r[map.email]).trim() : "";
+    const tipo = map.tipo && r[map.tipo] ? String(r[map.tipo]).trim() : "APTO";
+    const ubicacion = map.ubicacion && r[map.ubicacion] ? String(r[map.ubicacion]).trim() : "";
+
+    const coef = map.coeficiente && r[map.coeficiente] ? (parseFloat(String(r[map.coeficiente]).replace("%", "").replace(",", ".")) || 0) : 0;
+    sumaCoef += coef;
+
+    const admon = map.admon && r[map.admon] ? (parseFloat(String(r[map.admon]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    totalFacturacionMes += admon;
+
+    const saldo = map.saldoPendiente && r[map.saldoPendiente] ? (parseFloat(String(r[map.saldoPendiente]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    totalCarteraMora += saldo;
+
+    const interes = map.interes && r[map.interes] ? (parseFloat(String(r[map.interes]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    const extra = map.extra && r[map.extra] ? (parseFloat(String(r[map.extra]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    const otros = map.otros && r[map.otros] ? (parseFloat(String(r[map.otros]).replace(/\$|\.|\s/g, "").replace(",", ".")) || 0) : 0;
+    const fac = map.fac && r[map.fac] ? String(r[map.fac]).trim() : "";
+
+    const totalNum = admon + saldo + interes + extra + otros;
+
+    unidades.push({
+      unidad: apto, apto, bloque: bloq, bloq, propietario: prop, cc, telefono: tel, email, tipo, ubicacion, fac,
+      coefNum: coef, coeficiente: coef > 0 ? (coef.toFixed(3) + "%") : "0.000%",
+      admon, admonFmt: "$" + Math.round(admon).toLocaleString("es-CO"),
+      interes, interesFmt: "$" + Math.round(interes).toLocaleString("es-CO"),
+      extra, extraFmt: "$" + Math.round(extra).toLocaleString("es-CO"),
+      otros, otrosFmt: "$" + Math.round(otros).toLocaleString("es-CO"),
+      saldoPendiente: "$" + Math.round(saldo).toLocaleString("es-CO"),
+      totalNum, totalPagar: "$" + Math.round(totalNum).toLocaleString("es-CO"),
+      estado: (saldo + interes) > 0 ? "En Mora" : "Al Día"
+    });
+  });
+
+  if (unidades.length === 0) {
+    mostrarToast("⚠️ No se encontraron unidades con número de apartamento válido.", true);
+    return;
+  }
+
+  if (sumaCoef === 0 && unidades.length > 0) {
+    const cBase = parseFloat((100.0 / unidades.length).toFixed(3));
+    let acum = 0;
+    unidades.forEach((u, i) => {
+      const c = (i === unidades.length - 1) ? parseFloat((100.0 - acum).toFixed(3)) : cBase;
+      acum += c;
+      u.coefNum = c;
+      u.coeficiente = c.toFixed(3) + "%";
+    });
+  }
+
+  cop.unidades = unidades;
+  cop.inmueblesCount = unidades.length;
+  cop.inmueblesOcupados = unidades.length;
+  cop.censoCount = unidades.length;
+  cop.recaudoTotal = "$" + Math.round(totalFacturacionMes).toLocaleString("es-CO");
+  cop.carteraPendiente = "$" + Math.round(totalCarteraMora).toLocaleString("es-CO");
+
+  try {
+    localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
+  } catch(e) {}
+
+  try {
+    const urlApi = (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "http://127.0.0.1:8000";
+    await fetch(`${urlApi}/api/conjuntos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        codigo: cop.codigo,
+        nombre: cop.nombre,
+        tipo: cop.tipo || "Propiedad Horizontal",
+        nit: cop.nit,
+        direccion: cop.direccion,
+        telefono: cop.telefono,
+        email: cop.email,
+        banco: cop.banco,
+        tipo_cuenta: cop.tipoCuenta,
+        numero_cuenta: cop.cuenta,
+        titular_cuenta: cop.administrador || cop.nombre,
+        bre_b_codigo_entidad: cop.breb || `BREB-${cop.codigo}`
+      })
+    });
+  } catch(e) {}
+
+  if (AppState.codigoEdificio === cop.codigo) {
+    AppState.unidades = unidades;
+    actualizarDashboardAdministrador();
+    actualizarTablaApartamentos();
+  }
+
+  const m = document.getElementById("modal-importar-excel-edificio");
+  if (m) m.classList.add("hidden");
+
+  mostrarToast(`🎉 ¡Mapeo exitoso! ${unidades.length} inmuebles aplicados a '${cop.nombre}' (#${cop.codigo}).`, "success");
+}
 
 function cerrarModalBorrarDatosEdificio() {
 
