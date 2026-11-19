@@ -19297,18 +19297,18 @@ const MENUS_POR_ROL = {
         ]
       },
 
-      // SUBMENÚ 2: FACTURACIÓN
+      // SUBMENÚ 2: FACTURACIÓN (Orden Cronológico de Facturación Condominal)
       {
         id: "facturacion-menu",
         label: "Facturación",
         icono: "receipt",
         badge: "Ley 675",
         subitems: [
-          { id: "facturacion", label: "Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
-          { id: "planilla-novedades", label: "Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
-          { id: "saldos", label: "Base de Saldos & Cartera", icono: "wallet" },
-          { id: "devolver-saldos", label: "Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" },
-          { id: "documentos", label: "Listados y Facturas Oficiales", icono: "folder" }
+          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
+          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
+          { id: "facturacion", label: "3. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
+          { id: "documentos", label: "4. Listados y Facturas Oficiales", icono: "folder" },
+          { id: "devolver-saldos", label: "5. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
         ]
       },
 
@@ -22077,12 +22077,17 @@ if (tabId && tabId.startsWith("manual-")) {
   }
 
   if (tabId === "facturacion") {
-    try {
+  try {
+    const contPlan = document.getElementById("subtab-fac-content-planilla");
+    if (contPlan && !contPlan.classList.contains("hidden")) {
+      if (typeof renderizarPlanillaNovedades === "function") renderizarPlanillaNovedades();
+    } else {
       if (typeof renderizarTabFacturacion === "function") renderizarTabFacturacion();
-    } catch (e) {
-      console.error("Error al renderizar facturación:", e);
     }
+  } catch (e) {
+    console.error("Error al renderizar facturación:", e);
   }
+}
 
   if (tabId === "parqueaderos") {
     try {
@@ -63894,29 +63899,29 @@ window.renderizarTabFacturacion = function() {
 };
 
 // ==============================================================================
-// GESTIÓN DE SUBPESTAÑAS DE FACTURACIÓN (LIQUIDACIÓN, PLANILLA D/C, REVERSIÓN)
+// GESTIÓN DE SUBPESTAÑAS DE FACTURACIÓN (1. PLANILLA D/C, 2. LIQUIDACIÓN, 3. REVERSIÓN)
 // ==============================================================================
 
 window.cambiarSubtabFacturacion = function(subtab) {
-  const tabs = ['liquidacion', 'planilla', 'revertir'];
-  const btnLiq = document.getElementById("btn-subtab-fac-liq");
+  const tabs = ['planilla', 'liquidacion', 'revertir'];
   const btnPlan = document.getElementById("btn-subtab-fac-planilla");
+  const btnLiq = document.getElementById("btn-subtab-fac-liq");
   const btnRev = document.getElementById("btn-subtab-fac-revertir");
 
-  const contLiq = document.getElementById("subtab-fac-content-liquidacion");
   const contPlan = document.getElementById("subtab-fac-content-planilla");
+  const contLiq = document.getElementById("subtab-fac-content-liquidacion");
   const contRev = document.getElementById("subtab-fac-content-revertir");
 
   // Reset styles
   const activeClass = "subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md cursor-pointer";
   const inactiveClass = "subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/80 cursor-pointer";
 
-  if (btnLiq) btnLiq.className = (subtab === 'liquidacion') ? activeClass : inactiveClass;
   if (btnPlan) btnPlan.className = (subtab === 'planilla') ? activeClass : inactiveClass;
+  if (btnLiq) btnLiq.className = (subtab === 'liquidacion') ? activeClass : inactiveClass;
   if (btnRev) btnRev.className = (subtab === 'revertir') ? "subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-rose-600 text-white shadow-md cursor-pointer" : inactiveClass;
 
-  if (contLiq) contLiq.classList.toggle("hidden", subtab !== 'liquidacion');
   if (contPlan) contPlan.classList.toggle("hidden", subtab !== 'planilla');
+  if (contLiq) contLiq.classList.toggle("hidden", subtab !== 'liquidacion');
   if (contRev) contRev.classList.toggle("hidden", subtab !== 'revertir');
 
   if (typeof cambiarPestana === "function") {
@@ -63943,33 +63948,72 @@ window.abrirPlanillaNovedadesFacturacion = function() {
 };
 
 // ==============================================================================
-// PLANILLA DE PAGOS, NOTAS DÉBITO Y CRÉDITO (CANCELACIONES Y AMORTIZACIONES)
+// PLANILLA OFICIAL DE PAGOS, NOTAS DÉBITO Y CRÉDITO & CANCELACIONES
+// Con soporte exacto del formato Excel oficial de copropiedades (Carlos / EDIFICIO CLASS 48)
 // ==============================================================================
 
 window._novedadesFacturacionCache = {};
+window._recibosCajaAdicionalesCache = [];
+window._metadatosPlanillaCache = { codigo: "4901", diaPago: 30, mes: "" };
+
+function obtenerCodLimpioActivo() {
+  return String((typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901").replace(/^cj_/, "").trim();
+}
 
 function obtenerKeyNovedades() {
-  const cod = String((typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901").replace(/^cj_/, "").trim();
-  return "novedades_facturacion_" + cod;
+  return "novedades_facturacion_" + obtenerCodLimpioActivo();
+}
+
+function obtenerKeyRecibosAdicionales() {
+  return "recibos_caja_adicionales_" + obtenerCodLimpioActivo();
+}
+
+function obtenerKeyMetadatosPlanilla() {
+  return "metadatos_planilla_" + obtenerCodLimpioActivo();
 }
 
 window.cargarNovedadesFacturacion = function() {
-  const k = obtenerKeyNovedades();
+  const kNov = obtenerKeyNovedades();
+  const kRec = obtenerKeyRecibosAdicionales();
+  const kMeta = obtenerKeyMetadatosPlanilla();
+
   try {
-    const raw = localStorage.getItem(k);
-    if (raw) {
-      window._novedadesFacturacionCache = JSON.parse(raw);
-    } else {
-      window._novedadesFacturacionCache = {};
-    }
+    const rawNov = localStorage.getItem(kNov);
+    window._novedadesFacturacionCache = rawNov ? JSON.parse(rawNov) : {};
   } catch(e) {
     window._novedadesFacturacionCache = {};
   }
+
+  try {
+    const rawRec = localStorage.getItem(kRec);
+    window._recibosCajaAdicionalesCache = rawRec ? JSON.parse(rawRec) : [];
+  } catch(e) {
+    window._recibosCajaAdicionalesCache = [];
+  }
+
+  try {
+    const rawMeta = localStorage.getItem(kMeta);
+    if (rawMeta) {
+      window._metadatosPlanillaCache = Object.assign({ codigo: obtenerCodLimpioActivo(), diaPago: 30, mes: "" }, JSON.parse(rawMeta));
+    }
+  } catch(e) {
+    window._metadatosPlanillaCache = { codigo: obtenerCodLimpioActivo(), diaPago: 30, mes: "" };
+  }
+
   return window._novedadesFacturacionCache;
 };
 
+window.actualizarMetadatosPlanilla = function() {
+  const codInp = document.getElementById("planilla-meta-codigo");
+  const diaInp = document.getElementById("planilla-meta-diapago");
+  if (codInp) window._metadatosPlanillaCache.codigo = codInp.value.trim() || obtenerCodLimpioActivo();
+  if (diaInp) window._metadatosPlanillaCache.diaPago = Number(diaInp.value) || 30;
+  
+  localStorage.setItem(obtenerKeyMetadatosPlanilla(), JSON.stringify(window._metadatosPlanillaCache));
+};
+
 window.renderizarPlanillaNovedades = function(filtroQuery = "") {
-  const codLimpio = String((typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901").replace(/^cj_/, "").trim();
+  const codLimpio = obtenerCodLimpioActivo();
   const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
 
   let unidades = [];
@@ -63980,264 +64024,888 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
   }
 
   cargarNovedadesFacturacion();
-  const tbody = document.getElementById("planilla-tbody-unidades");
-  const selAptoModal = document.getElementById("nov-sel-apto");
-  if (selAptoModal) {
-    selAptoModal.innerHTML = unidades.map(u => `<option value="${u.apto}">Apto ${u.apto} - ${u.nombre || u.propietario || 'Propietario'}</option>`).join("");
+
+  // 1. Actualizar Encabezado Oficial
+  const nomEdificio = (cj && cj.nombre) ? cj.nombre.toUpperCase() : "EDIFICIO ROBLE ALTO P.H.";
+  const fechaActual = new Date();
+  const meses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+  const mesNombre = meses[fechaActual.getMonth()];
+  const anio = fechaActual.getFullYear();
+
+  const tituloEl = document.getElementById("planilla-titulo-completo");
+  if (tituloEl) {
+    tituloEl.innerText = `${nomEdificio} -- PLANILLA PAGOS Y NOVEDADES MES DE ${mesNombre} DE ${anio}`;
   }
 
-  let totalPagos = 0;
-  let totalDebitos = 0;
-  let totalCreditos = 0;
-  let totalCancelado = 0;
+  const codInp = document.getElementById("planilla-meta-codigo");
+  if (codInp) codInp.value = window._metadatosPlanillaCache.codigo || codLimpio;
 
+  const diaInp = document.getElementById("planilla-meta-diapago");
+  if (diaInp) diaInp.value = window._metadatosPlanillaCache.diaPago || 30;
+
+  const mesText = document.getElementById("planilla-meta-mes-texto");
+  if (mesText) mesText.innerText = `${mesNombre} ${anio}`;
+
+  // 2. Renderizar Filas de Inmuebles
+  const tbody = document.getElementById("planilla-tbody-unidades");
+  const tfoot = document.getElementById("planilla-tfoot-totales");
   const q = (filtroQuery || "").toLowerCase().trim();
+
+  let totCoef = 0;
+  let totFacturado = 0;
+  let totPagos1 = 0;
+  let totPagos2 = 0;
+  let totTotalPagos = 0;
+  let totDescto = 0;
+  let totNotasDb = 0;
+  let totNotasCr = 0;
+  let totSaldosPend = 0;
 
   if (tbody) {
     tbody.innerHTML = unidades.map((u, idx) => {
       const apto = String(u.apto || idx + 1);
-      const prop = u.nombre || u.propietario || `Copropietario Apto ${apto}`;
-      const saldoAnt = Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : 0)) || 0;
+      const bloque = String(u.bloque || u.torre || "AP");
+      const prop = u.nombre || u.propietario || `Copropietario ${apto}`;
+      const coef = Number(u.coef !== undefined ? u.coef : (u.coeficiente !== undefined ? u.coeficiente : (100 / unidades.length))) || 0;
+      const nfac = String(u.nfac || u.factura || (3646 + idx));
 
-      const nov = window._novedadesFacturacionCache[apto] || {
-        pago: u.valpag || 0,
-        recibo: "",
-        debito: 0,
-        credito: u.descuento || 0,
-        conceptoDebito: "",
-        conceptoCredito: ""
-      };
+      // Valor facturado (saldo anterior a cancelar o cuota actual si viene en blanco)
+      const valorFacturado = Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : (u.cuota || 0))) || 0;
 
-      const pago = Number(nov.pago) || 0;
-      const debito = Number(nov.debito) || 0;
-      const credito = Number(nov.credito) || 0;
-      const recibo = nov.recibo || "";
+      // Obtener o inicializar fila en cache
+      if (!window._novedadesFacturacionCache[apto]) {
+        window._novedadesFacturacionCache[apto] = {
+          bloque: bloque,
+          apto: apto,
+          nfac: nfac,
+          coef: coef,
+          valorFacturado: valorFacturado,
+          pago1: Number(u.valpag) || 0,
+          dia1: 30,
+          pago2: 0,
+          dia2: 30,
+          descto: Number(u.descuento) || 0,
+          debito: Number(u.debito) || 0,
+          credito: Number(u.credito) ? -Math.abs(Number(u.credito)) : 0,
+          novedad: u.novedadCobro || ""
+        };
+      }
 
-      totalPagos += pago;
-      totalDebitos += debito;
-      totalCreditos += credito;
+      const item = window._novedadesFacturacionCache[apto];
+      // Mantener sincronizado valorFacturado si no fue forzado
+      if (item.valorFacturado === undefined || item.valorFacturado === null) item.valorFacturado = valorFacturado;
+      if (!item.bloque) item.bloque = bloque;
+      if (!item.nfac) item.nfac = nfac;
+      if (!item.coef) item.coef = coef;
 
-      const amortizado = Math.min(saldoAnt, pago + credito);
-      totalCancelado += amortizado;
+      const p1 = Number(item.pago1) || 0;
+      const d1 = Number(item.dia1) || 30;
+      const p2 = Number(item.pago2) || 0;
+      const d2 = Number(item.dia2) || 30;
+      const totalPagosFila = p1 + p2;
+      const desc = Number(item.descto) || 0;
+      const db = Number(item.debito) || 0;
+      // Regla oficial: notas crédito van con signo negativo en la fórmula
+      const cr = Number(item.credito) || 0;
 
-      const nuevoSaldo = Math.max(0, saldoAnt - pago + debito - credito);
-      const cancelado100 = (saldoAnt > 0 && (pago + credito) >= saldoAnt) || (saldoAnt === 0 && pago === 0 && debito === 0);
+      // Fórmula oficial: Valor Facturado - Total Pagos - Descto + Notas Db + Notas Cr (si cr es negativo resta)
+      const saldoPendFila = Math.max(0, item.valorFacturado - totalPagosFila - desc + db + (cr < 0 ? cr : -cr));
 
-      const isMatch = !q || apto.toLowerCase().includes(q) || prop.toLowerCase().includes(q);
+      totCoef += coef;
+      totFacturado += item.valorFacturado;
+      totPagos1 += p1;
+      totPagos2 += p2;
+      totTotalPagos += totalPagosFila;
+      totDescto += desc;
+      totNotasDb += db;
+      totNotasCr += cr;
+      totSaldosPend += saldoPendFila;
+
+      const isMatch = !q || apto.toLowerCase().includes(q) || bloque.toLowerCase().includes(q) || prop.toLowerCase().includes(q);
       const rowStyle = isMatch ? "" : "display: none;";
 
       return `
-        <tr id="fila-planilla-${apto}" style="${rowStyle}" class="hover:bg-slate-800/40 transition-colors">
-          <td class="py-2.5 px-3 font-mono font-bold text-amber-400">
-            <span class="px-2 py-0.5 rounded-lg bg-amber-950/70 border border-amber-800/60">${apto}</span>
+        <tr id="fila-planilla-${apto}" style="${rowStyle}" class="hover:bg-slate-800/50 transition-colors border-b border-slate-800/80">
+          <!-- Bloque -->
+          <td class="py-2 px-2 text-center text-slate-400 font-bold border-r border-slate-800/60">
+            <span class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[11px]">${item.bloque}</span>
           </td>
-          <td class="py-2.5 px-3 font-medium text-slate-200">
-            <div class="truncate max-w-[170px]" title="${prop}">${prop}</div>
+          <!-- Apto -->
+          <td class="py-2 px-2.5 text-center font-bold text-amber-400 border-r border-slate-800/60" title="${prop}">
+            <span class="px-2 py-0.5 rounded-lg bg-amber-950/80 border border-amber-800/70 text-xs">${apto}</span>
           </td>
-          <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-300">
-            $${saldoAnt.toLocaleString('es-CO')}
+          <!-- Nº Factura -->
+          <td class="py-2 px-2 text-center text-slate-400 text-xs border-r border-slate-800/60 font-mono">
+            ${item.nfac}
           </td>
-          <td class="py-2 px-2 text-center">
-            <input type="number" min="0" step="1000" value="${pago || ''}" placeholder="$0" oninput="actualizarFilaPlanilla('${apto}', this.value, 'pago')" class="w-28 text-center bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-emerald-400 font-mono font-bold text-xs focus:outline-none focus:border-emerald-500">
+          <!-- Coeficiente -->
+          <td class="py-2 px-2 text-right text-slate-300 text-xs border-r border-slate-800/60 font-mono">
+            ${coef.toFixed(2)}%
           </td>
-          <td class="py-2 px-2 text-center">
-            <input type="text" value="${recibo}" placeholder="RC-" oninput="actualizarFilaPlanilla('${apto}', this.value, 'recibo')" class="w-20 text-center bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-slate-300 font-mono text-xs uppercase focus:outline-none focus:border-amber-500">
+          <!-- Valor Facturado -->
+          <td class="py-2 px-3 text-right font-black text-slate-200 text-xs border-r border-slate-800/60 bg-slate-950/40">
+            $${Number(item.valorFacturado).toLocaleString('es-CO')}
           </td>
-          <td class="py-2 px-2 text-center">
-            <input type="number" min="0" step="1000" value="${debito || ''}" placeholder="+$0" oninput="actualizarFilaPlanilla('${apto}', this.value, 'debito')" class="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-rose-400 font-mono font-bold text-xs focus:outline-none focus:border-rose-500" title="Nota DÉBITO (+ mora, multas, cargos extra)">
+          <!-- Valor Pagos 1 -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" min="0" step="1000" value="${p1 || ''}" placeholder="0" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'pago1', this.value)" 
+              class="w-24 text-right bg-slate-950 border border-slate-700/80 rounded-lg px-2 py-1 text-emerald-400 font-bold text-xs focus:outline-none focus:border-emerald-500 hover:border-slate-600 transition-all">
           </td>
-          <td class="py-2 px-2 text-center">
-            <input type="number" min="0" step="1000" value="${credito || ''}" placeholder="-$0" oninput="actualizarFilaPlanilla('${apto}', this.value, 'credito')" class="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-cyan-400 font-mono font-bold text-xs focus:outline-none focus:border-cyan-500" title="Nota CRÉDITO (- descuentos, abonos, ajustes)">
+          <!-- Fecha Pago 1 -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" min="1" max="31" value="${d1}" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'dia1', this.value)" 
+              class="w-10 text-center bg-slate-950 border border-slate-800 rounded-lg py-1 text-slate-400 text-xs focus:outline-none focus:border-amber-500">
           </td>
-          <td class="py-2.5 px-3 text-right font-mono font-black" id="col-nuevo-saldo-${apto}">
-            <span class="${nuevoSaldo === 0 ? 'text-emerald-400' : 'text-amber-400'}">
-              $${nuevoSaldo.toLocaleString('es-CO')}
+          <!-- Valor Pagos 2 -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" min="0" step="1000" value="${p2 || ''}" placeholder="0" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'pago2', this.value)" 
+              class="w-24 text-right bg-slate-950 border border-slate-700/80 rounded-lg px-2 py-1 text-emerald-400 font-bold text-xs focus:outline-none focus:border-emerald-500 hover:border-slate-600 transition-all">
+          </td>
+          <!-- Fecha Pago 2 -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" min="1" max="31" value="${d2}" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'dia2', this.value)" 
+              class="w-10 text-center bg-slate-950 border border-slate-800 rounded-lg py-1 text-slate-400 text-xs focus:outline-none focus:border-amber-500">
+          </td>
+          <!-- Total Pagos (Calculado) -->
+          <td class="py-2 px-3 text-right font-black text-emerald-300 text-xs border-r border-slate-800/60 bg-emerald-950/20" id="col-totpagos-${apto}">
+            $${totalPagosFila.toLocaleString('es-CO')}
+          </td>
+          <!-- Valor Descto. -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" min="0" step="1000" value="${desc || ''}" placeholder="0" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'descto', this.value)" 
+              class="w-20 text-right bg-slate-950 border border-slate-700/80 rounded-lg px-2 py-1 text-teal-300 font-bold text-xs focus:outline-none focus:border-teal-500 hover:border-slate-600 transition-all">
+          </td>
+          <!-- Notas Db (+) -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" min="0" step="1000" value="${db || ''}" placeholder="0" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'debito', this.value)" 
+              class="w-20 text-right bg-slate-950 border border-slate-700/80 rounded-lg px-2 py-1 text-rose-400 font-bold text-xs focus:outline-none focus:border-rose-500 hover:border-slate-600 transition-all" title="Cargos adicionales (+) mora, sanciones">
+          </td>
+          <!-- Notas Cr (-) -->
+          <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
+            <input type="number" step="1000" value="${cr || ''}" placeholder="-0" 
+              oninput="actualizarCeldaPlanilla('${apto}', 'credito', this.value)" 
+              class="w-20 text-right bg-slate-950 border border-slate-700/80 rounded-lg px-2 py-1 text-cyan-400 font-bold text-xs focus:outline-none focus:border-cyan-500 hover:border-slate-600 transition-all" title="Notas crédito (-) van con signo negativo">
+          </td>
+          <!-- Saldos Pendientes (Calculado) -->
+          <td class="py-2 px-3 text-right font-black text-xs border-r border-slate-800/60 bg-amber-950/20" id="col-saldopend-${apto}">
+            <span class="${saldoPendFila === 0 ? 'text-emerald-400' : 'text-amber-400'}">
+              $${saldoPendFila.toLocaleString('es-CO')}
             </span>
           </td>
-          <td class="py-2.5 px-3 text-center" id="col-estado-canc-${apto}">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${cancelado100 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : (pago > 0 ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-slate-800 text-slate-400')}">
-              ${cancelado100 ? 'Cancelado 100%' : (pago > 0 ? 'Abono Parcial' : 'Sin Abono')}
-            </span>
+          <!-- Novedades / Otros Cobros -->
+          <td class="py-1.5 px-2">
+            <input type="text" value="${item.novedad || ''}" placeholder="Observaciones / Novedades..." 
+              oninput="actualizarCeldaPlanilla('${apto}', 'novedad', this.value)" 
+              class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs focus:outline-none focus:border-amber-500">
           </td>
         </tr>
       `;
     }).join("");
   }
 
-  // Actualizar métricas de la planilla
-  const elPagos = document.getElementById("planilla-metrica-pagos");
+  // 3. Fila de Totales en Pie de Tabla (tfoot)
+  if (tfoot) {
+    tfoot.innerHTML = `
+      <tr class="bg-slate-950/95 text-slate-200 border-t-2 border-slate-700">
+        <td colspan="3" class="py-3 px-3 text-left font-black uppercase text-amber-400 tracking-wider">
+          TOTALES GENERALES:
+        </td>
+        <td class="py-3 px-2 text-right font-mono font-bold text-slate-300">
+          ${totCoef.toFixed(2)}%
+        </td>
+        <td class="py-3 px-3 text-right font-mono font-black text-white" id="pie-tot-facturado">
+          $${totFacturado.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-2 text-right font-mono font-bold text-emerald-400" id="pie-tot-pagos1">
+          $${totPagos1.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-1 text-center text-slate-500">-</td>
+        <td class="py-3 px-2 text-right font-mono font-bold text-emerald-400" id="pie-tot-pagos2">
+          $${totPagos2.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-1 text-center text-slate-500">-</td>
+        <td class="py-3 px-3 text-right font-mono font-black text-emerald-300 bg-emerald-950/30" id="pie-tot-totalpagos">
+          $${totTotalPagos.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-2 text-right font-mono font-bold text-teal-300" id="pie-tot-descto">
+          $${totDescto.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-2 text-right font-mono font-bold text-rose-400" id="pie-tot-debitos">
+          +$${totNotasDb.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-2 text-right font-mono font-bold text-cyan-400" id="pie-tot-creditos">
+          ${totNotasCr < 0 ? '-' : ''}$${Math.abs(totNotasCr).toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-3 text-right font-mono font-black text-amber-400 bg-amber-950/30" id="pie-tot-saldospend">
+          $${totSaldosPend.toLocaleString('es-CO')}
+        </td>
+        <td class="py-3 px-2 text-slate-500 text-[10px] italic">
+          ${unidades.length} Inmuebles
+        </td>
+      </tr>
+    `;
+  }
+
+  // 4. Actualizar Tarjetas Resumen
+  const elFac = document.getElementById("planilla-metrica-facturado");
+  const elPag = document.getElementById("planilla-metrica-pagos");
+  const elDesc = document.getElementById("planilla-metrica-descuentos");
   const elDeb = document.getElementById("planilla-metrica-debitos");
   const elCred = document.getElementById("planilla-metrica-creditos");
-  const elCanc = document.getElementById("planilla-metrica-cancelado");
+  const elPend = document.getElementById("planilla-metrica-pendientes");
 
-  if (elPagos) elPagos.innerText = "$" + totalPagos.toLocaleString("es-CO");
-  if (elDeb) elDeb.innerText = "+$" + totalDebitos.toLocaleString("es-CO");
-  if (elCred) elCred.innerText = "-$" + totalCreditos.toLocaleString("es-CO");
-  if (elCanc) elCanc.innerText = "$" + totalCancelado.toLocaleString("es-CO");
+  if (elFac) elFac.innerText = "$" + totFacturado.toLocaleString("es-CO");
+  if (elPag) elPag.innerText = "$" + totTotalPagos.toLocaleString("es-CO");
+  if (elDesc) elDesc.innerText = "$" + totDescto.toLocaleString("es-CO");
+  if (elDeb) elDeb.innerText = "+$" + totNotasDb.toLocaleString("es-CO");
+  if (elCred) elCred.innerText = (totNotasCr < 0 ? "-" : "") + "$" + Math.abs(totNotasCr).toLocaleString("es-CO");
+  if (elPend) elPend.innerText = "$" + totSaldosPend.toLocaleString("es-CO");
+
+  // 5. Renderizar Sección de Recibos de Caja Adicionales
+  renderizarRecibosCajaAdicionales();
 
   safeCreateIcons();
 };
 
-window.actualizarFilaPlanilla = function(apto, val, campo) {
+window.actualizarCeldaPlanilla = function(apto, campo, valor) {
   cargarNovedadesFacturacion();
   if (!window._novedadesFacturacionCache[apto]) {
-    window._novedadesFacturacionCache[apto] = { pago: 0, recibo: "", debito: 0, credito: 0 };
+    window._novedadesFacturacionCache[apto] = { pago1: 0, dia1: 30, pago2: 0, dia2: 30, descto: 0, debito: 0, credito: 0, novedad: "" };
   }
 
-  if (campo === 'recibo') {
-    window._novedadesFacturacionCache[apto].recibo = String(val || "").trim();
+  const row = window._novedadesFacturacionCache[apto];
+  if (campo === "novedad") {
+    row.novedad = String(valor || "").trim();
+  } else if (campo === "dia1" || campo === "dia2") {
+    row[campo] = Number(valor) || 30;
+  } else if (campo === "credito") {
+    // Si el usuario escribe 50000 o -50000, respetamos la convención contable (las notas crédito van con signo negativo)
+    const num = Number(valor) || 0;
+    row.credito = (num > 0) ? -num : num;
   } else {
-    window._novedadesFacturacionCache[apto][campo] = Number(val) || 0;
+    row[campo] = Number(valor) || 0;
   }
 
-  // Recalcular saldo de esta fila
-  const codLimpio = String((typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901").replace(/^cj_/, "").trim();
-  const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
-  const u = (cj && cj.unidades ? cj.unidades : []).find(x => String(x.apto) === String(apto));
-  const saldoAnt = Number(u ? (u.pend !== undefined ? u.pend : u.saldoAnterior) : 0) || 0;
+  // Recálculo en tiempo real de la fila
+  const p1 = Number(row.pago1) || 0;
+  const p2 = Number(row.pago2) || 0;
+  const totalPagosFila = p1 + p2;
+  const desc = Number(row.descto) || 0;
+  const db = Number(row.debito) || 0;
+  const cr = Number(row.credito) || 0;
+  const facturado = Number(row.valorFacturado) || 0;
 
-  const nov = window._novedadesFacturacionCache[apto];
-  const nuevoSaldo = Math.max(0, saldoAnt - nov.pago + nov.debito - nov.credito);
-  const cancelado100 = (saldoAnt > 0 && (nov.pago + nov.credito) >= saldoAnt) || (saldoAnt === 0 && nov.pago === 0 && nov.debito === 0);
+  const saldoPendFila = Math.max(0, facturado - totalPagosFila - desc + db + (cr < 0 ? cr : -cr));
 
-  const colSaldo = document.getElementById(`col-nuevo-saldo-${apto}`);
-  if (colSaldo) {
-    colSaldo.innerHTML = `<span class="${nuevoSaldo === 0 ? 'text-emerald-400' : 'text-amber-400'}">$${nuevoSaldo.toLocaleString('es-CO')}</span>`;
+  const celdaTot = document.getElementById(`col-totpagos-${apto}`);
+  if (celdaTot) celdaTot.innerText = "$" + totalPagosFila.toLocaleString('es-CO');
+
+  const celdaPend = document.getElementById(`col-saldopend-${apto}`);
+  if (celdaPend) {
+    celdaPend.innerHTML = `<span class="${saldoPendFila === 0 ? 'text-emerald-400' : 'text-amber-400'}">$${saldoPendFila.toLocaleString('es-CO')}</span>`;
   }
 
-  const colEstado = document.getElementById(`col-estado-canc-${apto}`);
-  if (colEstado) {
-    colEstado.innerHTML = `
-      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${cancelado100 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : (nov.pago > 0 ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-slate-800 text-slate-400')}">
-        ${cancelado100 ? 'Cancelado 100%' : (nov.pago > 0 ? 'Abono Parcial' : 'Sin Abono')}
-      </span>
-    `;
-  }
-
-  // Actualizar totales generales sumando el cache
-  let totP = 0, totD = 0, totC = 0;
+  // Recalcular totales sumando todo el cache
+  let totP1 = 0, totP2 = 0, totPagos = 0, totDesc = 0, totDb = 0, totCr = 0, totPend = 0, totFac = 0;
   Object.values(window._novedadesFacturacionCache).forEach(item => {
-    totP += Number(item.pago) || 0;
-    totD += Number(item.debito) || 0;
-    totC += Number(item.credito) || 0;
+    const f = Number(item.valorFacturado) || 0;
+    const ip1 = Number(item.pago1) || 0;
+    const ip2 = Number(item.pago2) || 0;
+    const itot = ip1 + ip2;
+    const idesc = Number(item.descto) || 0;
+    const idb = Number(item.debito) || 0;
+    const icr = Number(item.credito) || 0;
+    const ipend = Math.max(0, f - itot - idesc + idb + (icr < 0 ? icr : -icr));
+
+    totFac += f;
+    totP1 += ip1;
+    totP2 += ip2;
+    totPagos += itot;
+    totDesc += idesc;
+    totDb += idb;
+    totCr += icr;
+    totPend += ipend;
   });
 
-  const elPagos = document.getElementById("planilla-metrica-pagos");
+  // Actualizar footers
+  const pieP1 = document.getElementById("pie-tot-pagos1");
+  const pieP2 = document.getElementById("pie-tot-pagos2");
+  const pieTot = document.getElementById("pie-tot-totalpagos");
+  const pieDesc = document.getElementById("pie-tot-descto");
+  const pieDb = document.getElementById("pie-tot-debitos");
+  const pieCr = document.getElementById("pie-tot-creditos");
+  const piePend = document.getElementById("pie-tot-saldospend");
+
+  if (pieP1) pieP1.innerText = "$" + totP1.toLocaleString('es-CO');
+  if (pieP2) pieP2.innerText = "$" + totP2.toLocaleString('es-CO');
+  if (pieTot) pieTot.innerText = "$" + totPagos.toLocaleString('es-CO');
+  if (pieDesc) pieDesc.innerText = "$" + totDesc.toLocaleString('es-CO');
+  if (pieDb) pieDb.innerText = "+$" + totDb.toLocaleString('es-CO');
+  if (pieCr) pieCr.innerText = (totCr < 0 ? "-" : "") + "$" + Math.abs(totCr).toLocaleString('es-CO');
+  if (piePend) piePend.innerText = "$" + totPend.toLocaleString('es-CO');
+
+  // Actualizar tarjetas de métricas
+  const elPag = document.getElementById("planilla-metrica-pagos");
+  const elDesc = document.getElementById("planilla-metrica-descuentos");
   const elDeb = document.getElementById("planilla-metrica-debitos");
   const elCred = document.getElementById("planilla-metrica-creditos");
-  if (elPagos) elPagos.innerText = "$" + totP.toLocaleString("es-CO");
-  if (elDeb) elDeb.innerText = "+$" + totD.toLocaleString("es-CO");
-  if (elCred) elCred.innerText = "-$" + totC.toLocaleString("es-CO");
+  const elPend = document.getElementById("planilla-metrica-pendientes");
+
+  if (elPag) elPag.innerText = "$" + totPagos.toLocaleString("es-CO");
+  if (elDesc) elDesc.innerText = "$" + totDesc.toLocaleString("es-CO");
+  if (elDeb) elDeb.innerText = "+$" + totDb.toLocaleString("es-CO");
+  if (elCred) elCred.innerText = (totCr < 0 ? "-" : "") + "$" + Math.abs(totCr).toLocaleString("es-CO");
+  if (elPend) elPend.innerText = "$" + totPend.toLocaleString("es-CO");
 };
 
 window.guardarPlanillaNovedadesYCancelaciones = function(silencioso = false) {
-  const k = obtenerKeyNovedades();
-  localStorage.setItem(k, JSON.stringify(window._novedadesFacturacionCache || {}));
+  const kNov = obtenerKeyNovedades();
+  const kRec = obtenerKeyRecibosAdicionales();
+  const kMeta = obtenerKeyMetadatosPlanilla();
 
-  // Aplicar las novedades a cj.unidades en memoria
-  const codLimpio = String((typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901").replace(/^cj_/, "").trim();
+  localStorage.setItem(kNov, JSON.stringify(window._novedadesFacturacionCache || {}));
+  localStorage.setItem(kRec, JSON.stringify(window._recibosCajaAdicionalesCache || []));
+  localStorage.setItem(kMeta, JSON.stringify(window._metadatosPlanillaCache || {}));
+
+  if (!silencioso && typeof mostrarToast === "function") {
+    mostrarToast("💾 Planilla de pagos y novedades guardada con éxito.", "success");
+  }
+};
+
+window.extraerYAplicarCancelacionesCartera = function() {
+  guardarPlanillaNovedadesYCancelaciones(true);
+  const codLimpio = obtenerCodLimpioActivo();
   const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
 
+  let aplicados = 0;
   if (cj && Array.isArray(cj.unidades)) {
     cj.unidades.forEach(u => {
       const apto = String(u.apto);
-      const nov = window._novedadesFacturacionCache[apto];
-      if (nov) {
-        if (nov.pago !== undefined) u.valpag = nov.pago;
-        if (nov.credito !== undefined) u.descuento = nov.credito;
-        if (nov.debito !== undefined) u.debito = nov.debito;
+      const row = window._novedadesFacturacionCache[apto];
+      if (row) {
+        const p1 = Number(row.pago1) || 0;
+        const p2 = Number(row.pago2) || 0;
+        const totalPagos = p1 + p2;
+        const desc = Number(row.descto) || 0;
+        const db = Number(row.debito) || 0;
+        const cr = Number(row.credito) || 0;
+        const facturado = Number(row.valorFacturado !== undefined ? row.valorFacturado : (u.pend || u.saldoAnterior || 0)) || 0;
+        const nuevoPend = Math.max(0, facturado - totalPagos - desc + db + (cr < 0 ? cr : -cr));
+
+        u.valpag = totalPagos;
+        u.pago1 = p1;
+        u.dia1 = row.dia1 || 30;
+        u.pago2 = p2;
+        u.dia2 = row.dia2 || 30;
+        u.descuento = desc;
+        u.debito = db;
+        u.credito = Math.abs(cr);
+        u.pend = nuevoPend;
+        if (row.novedad) u.novedadCobro = row.novedad;
+        aplicados++;
       }
     });
   }
 
-  if (!silencioso && typeof mostrarToast === "function") {
-    mostrarToast("💾 Planilla de Pagos y Notas D/C guardada y cancelaciones aplicadas con éxito.", "success");
-  }
+  // Guardar estado actualizado
+  guardarPlanillaNovedadesYCancelaciones(true);
 
   if (typeof renderizarBaseSaldosMatriz === "function") {
     renderizarBaseSaldosMatriz();
   }
-};
 
-window.filtrarTablaPlanilla = function(q) {
-  const text = (q || "").toLowerCase().trim();
-  const rows = document.querySelectorAll("#planilla-tbody-unidades tr");
-  rows.forEach(r => {
-    if (!text) {
-      r.style.display = "";
-    } else {
-      r.style.display = r.innerText.toLowerCase().includes(text) ? "" : "none";
-    }
-  });
-};
-
-// ==============================================================================
-// MODAL DE REGISTRAR NOVEDAD PUNTUAL (PAGO / NOTA DÉBITO O CRÉDITO)
-// ==============================================================================
-
-window.abrirModalAgregarNovedad = function() {
-  const m = document.getElementById("modal-agregar-novedad-facturacion");
-  if (m) {
-    m.classList.remove("hidden");
-    const codLimpio = String((typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901").replace(/^cj_/, "").trim();
-    const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
-    const sel = document.getElementById("nov-sel-apto");
-    if (sel && cj && cj.unidades) {
-      sel.innerHTML = cj.unidades.map(u => `<option value="${u.apto}">Apto ${u.apto} - ${u.nombre || u.propietario || 'Propietario'}</option>`).join("");
-    }
-    const valInp = document.getElementById("nov-inp-valor");
-    if (valInp) valInp.value = "";
-    const recInp = document.getElementById("nov-inp-recibo");
-    if (recInp) recInp.value = "";
-    const conInp = document.getElementById("nov-inp-concepto");
-    if (conInp) conInp.value = "";
-    safeCreateIcons();
+  if (typeof mostrarToast === "function") {
+    mostrarToast(`⚡ ¡Cancelaciones aplicadas a cartera con éxito! ${aplicados} inmuebles amortizados y listos para facturar el mes.`, "success");
   }
 };
 
-window.cerrarModalAgregarNovedad = function() {
-  const m = document.getElementById("modal-agregar-novedad-facturacion");
-  if (m) m.classList.add("hidden");
-};
-
-window.guardarNovedadPuntual = function() {
-  const selApto = document.getElementById("nov-sel-apto");
-  const apto = selApto ? selApto.value : null;
-  const val = Number(document.getElementById("nov-inp-valor")?.value) || 0;
-  const recibo = document.getElementById("nov-inp-recibo")?.value || "";
-  const concepto = document.getElementById("nov-inp-concepto")?.value || "";
-  const radio = document.querySelector('input[name="nov-tipo"]:checked');
-  const tipo = radio ? radio.value : "pago";
-
-  if (!apto || val <= 0) {
-    if (typeof mostrarToast === "function") mostrarToast("Por favor digita un valor válido.", "warning");
+window.limpiarPlanillaPagosMes = function() {
+  if (!confirm("¿Deseas limpiar todos los pagos y notas registrados para iniciar una planilla nueva del mes?\n\nLos apartamentos, coeficientes y saldos anteriores se conservarán intactos.")) {
     return;
   }
 
-  cargarNovedadesFacturacion();
-  if (!window._novedadesFacturacionCache[apto]) {
-    window._novedadesFacturacionCache[apto] = { pago: 0, recibo: "", debito: 0, credito: 0, conceptoDebito: "", conceptoCredito: "" };
-  }
+  Object.keys(window._novedadesFacturacionCache).forEach(apto => {
+    const row = window._novedadesFacturacionCache[apto];
+    row.pago1 = 0;
+    row.dia1 = 30;
+    row.pago2 = 0;
+    row.dia2 = 30;
+    row.descto = 0;
+    row.debito = 0;
+    row.credito = 0;
+    row.novedad = "";
+  });
 
-  if (tipo === "pago") {
-    window._novedadesFacturacionCache[apto].pago = val;
-    if (recibo) window._novedadesFacturacionCache[apto].recibo = recibo;
-  } else if (tipo === "debito") {
-    window._novedadesFacturacionCache[apto].debito = val;
-    window._novedadesFacturacionCache[apto].conceptoDebito = concepto;
-  } else if (tipo === "credito") {
-    window._novedadesFacturacionCache[apto].credito = val;
-    window._novedadesFacturacionCache[apto].conceptoCredito = concepto;
-  }
-
+  window._recibosCajaAdicionalesCache = [];
   guardarPlanillaNovedadesYCancelaciones(true);
-  cerrarModalAgregarNovedad();
   renderizarPlanillaNovedades();
 
   if (typeof mostrarToast === "function") {
-    mostrarToast(`✅ Novedad registrada con éxito para el apartamento ${apto}.`, "success");
+    mostrarToast("🧹 Planilla del mes restablecida en blanco.", "info");
   }
 };
+
+window.filtrarTablaPlanilla = function(q) {
+  renderizarPlanillaNovedades(q);
+};
+
+// ==============================================================================
+// GESTIÓN DE ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES
+// ==============================================================================
+
+window.renderizarRecibosCajaAdicionales = function() {
+  const tbody = document.getElementById("planilla-tbody-recibos-adicionales");
+  const tfoot = document.getElementById("planilla-tfoot-recibos-adicionales");
+  if (!tbody) return;
+
+  if (!Array.isArray(window._recibosCajaAdicionalesCache) || window._recibosCajaAdicionalesCache.length === 0) {
+    // Si está vacío, creamos 2 filas de ejemplo para facilitar la digitación
+    window._recibosCajaAdicionalesCache = [
+      { id: 1, bloque: "AP", apto: "", nombre: "", dia: 15, valor: 0, concepto: "" }
+    ];
+  }
+
+  let totalRecibos = 0;
+
+  tbody.innerHTML = window._recibosCajaAdicionalesCache.map((rec, idx) => {
+    const v = Number(rec.valor) || 0;
+    totalRecibos += v;
+
+    return `
+      <tr class="hover:bg-slate-800/40 border-b border-slate-800/80">
+        <td class="py-2 px-3 text-center text-slate-400 font-bold border-r border-slate-800/60">
+          ${idx + 1}
+        </td>
+        <td class="py-1.5 px-2 text-center border-r border-slate-800/60">
+          <input type="text" value="${rec.bloque || 'AP'}" placeholder="AP" 
+            oninput="actualizarReciboCajaAdicional(${rec.id}, 'bloque', this.value)"
+            class="w-16 text-center bg-slate-950 border border-slate-800 rounded-lg py-1 text-slate-300 text-xs focus:outline-none focus:border-amber-500 uppercase">
+        </td>
+        <td class="py-1.5 px-2 text-center border-r border-slate-800/60">
+          <input type="text" value="${rec.apto || ''}" placeholder="0601" 
+            oninput="actualizarReciboCajaAdicional(${rec.id}, 'apto', this.value)"
+            class="w-20 text-center bg-slate-950 border border-slate-800 rounded-lg py-1 text-amber-400 font-bold text-xs focus:outline-none focus:border-amber-500 uppercase">
+        </td>
+        <td class="py-1.5 px-3 border-r border-slate-800/60">
+          <input type="text" value="${rec.nombre || ''}" placeholder="Nombre del pagador / copropietario" 
+            oninput="actualizarReciboCajaAdicional(${rec.id}, 'nombre', this.value)"
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-amber-500">
+        </td>
+        <td class="py-1.5 px-2 text-center border-r border-slate-800/60">
+          <input type="number" min="1" max="31" value="${rec.dia || 15}" 
+            oninput="actualizarReciboCajaAdicional(${rec.id}, 'dia', this.value)"
+            class="w-12 text-center bg-slate-950 border border-slate-800 rounded-lg py-1 text-slate-400 text-xs focus:outline-none focus:border-amber-500">
+        </td>
+        <td class="py-1.5 px-3 text-right border-r border-slate-800/60">
+          <input type="number" min="0" step="1000" value="${v || ''}" placeholder="$0" 
+            oninput="actualizarReciboCajaAdicional(${rec.id}, 'valor', this.value)"
+            class="w-32 text-right bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-emerald-400 font-bold text-xs focus:outline-none focus:border-emerald-500">
+        </td>
+        <td class="py-1.5 px-3 border-r border-slate-800/60">
+          <input type="text" value="${rec.concepto || ''}" placeholder="Ej. Alquiler Salón Social, Parqueadero Adicional..." 
+            oninput="actualizarReciboCajaAdicional(${rec.id}, 'concepto', this.value)"
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs focus:outline-none focus:border-amber-500">
+        </td>
+        <td class="py-1.5 px-2 text-center">
+          <button type="button" onclick="eliminarReciboCajaAdicional(${rec.id})" class="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors" title="Eliminar fila">
+            <i data-lucide="trash" class="w-4 h-4"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  if (tfoot) {
+    tfoot.innerHTML = `
+      <tr>
+        <td colspan="5" class="py-2.5 px-3 text-left font-black uppercase text-amber-400">
+          TOTAL RECIBOS DE CAJA ADICIONALES:
+        </td>
+        <td class="py-2.5 px-3 text-right font-mono font-black text-emerald-400 text-sm">
+          $${totalRecibos.toLocaleString('es-CO')}
+        </td>
+        <td colspan="2" class="py-2.5 px-3 text-slate-500 text-xs">
+          ${window._recibosCajaAdicionalesCache.length} Anotaciones registradas
+        </td>
+      </tr>
+    `;
+  }
+};
+
+window.agregarFilaReciboCajaAdicional = function() {
+  const nextId = (window._recibosCajaAdicionalesCache.length > 0) 
+    ? Math.max(...window._recibosCajaAdicionalesCache.map(r => r.id || 0)) + 1 
+    : 1;
+
+  window._recibosCajaAdicionalesCache.push({
+    id: nextId,
+    bloque: "AP",
+    apto: "",
+    nombre: "",
+    dia: 30,
+    valor: 0,
+    concepto: ""
+  });
+
+  renderizarRecibosCajaAdicionales();
+  guardarPlanillaNovedadesYCancelaciones(true);
+  safeCreateIcons();
+};
+
+window.actualizarReciboCajaAdicional = function(id, campo, val) {
+  const item = window._recibosCajaAdicionalesCache.find(r => r.id === id);
+  if (item) {
+    if (campo === "valor" || campo === "dia") {
+      item[campo] = Number(val) || 0;
+    } else {
+      item[campo] = String(val || "").trim();
+    }
+  }
+
+  // Recalcular pie de recibos adicionales
+  let tot = 0;
+  window._recibosCajaAdicionalesCache.forEach(r => tot += (Number(r.valor) || 0));
+  const tfoot = document.getElementById("planilla-tfoot-recibos-adicionales");
+  if (tfoot) {
+    const valCell = tfoot.querySelector("td.text-emerald-400");
+    if (valCell) valCell.innerText = "$" + tot.toLocaleString('es-CO');
+  }
+};
+
+window.eliminarReciboCajaAdicional = function(id) {
+  window._recibosCajaAdicionalesCache = window._recibosCajaAdicionalesCache.filter(r => r.id !== id);
+  renderizarRecibosCajaAdicionales();
+  guardarPlanillaNovedadesYCancelaciones(true);
+  safeCreateIcons();
+};
+
+// ==============================================================================
+// IMPORTACIÓN Y EXPORTACIÓN DE PLANILLA EXCEL (.XLSX) Y CSV OFICIAL
+// ==============================================================================
+
+window.cargarArchivoPlanillaExcel = function(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = e.target.result;
+      if (typeof XLSX === "undefined") {
+        alert("La biblioteca XLSX de lectura no está disponible en este momento.");
+        return;
+      }
+
+      const workbook = XLSX.read(data, { type: 'binary', cellFormula: false });
+      const sheetName = workbook.SheetNames.includes("Resultado") ? "Resultado" : workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+      if (!json || json.length < 5) {
+        alert("El archivo no contiene suficientes filas válidas para la planilla.");
+        return;
+      }
+
+      // 1. Extraer Metadatos (Filas 1 a 3)
+      const r1 = json[0] || [];
+      const r3 = json[2] || [];
+      let codDetectado = "";
+      let diaDetectado = 30;
+
+      for (let i = 0; i < r3.length; i++) {
+        const val = String(r3[i]).toLowerCase().trim();
+        if (val.includes("código") || val.includes("codigo")) {
+          codDetectado = String(r3[i+1] || "").trim();
+        }
+        if (val.includes("fecha pago")) {
+          diaDetectado = Number(r3[i+1]) || 30;
+        }
+      }
+
+      if (codDetectado) window._metadatosPlanillaCache.codigo = codDetectado;
+      if (diaDetectado) window._metadatosPlanillaCache.diaPago = diaDetectado;
+
+      // 2. Iterar Filas de Inmuebles (a partir de Fila 6, índice 5)
+      let countImportados = 0;
+      let buscandoRecibosAdicionales = false;
+      window._recibosCajaAdicionalesCache = [];
+
+      for (let r = 5; r < json.length; r++) {
+        const row = json[r];
+        if (!row || row.length === 0) continue;
+
+        const col1 = String(row[0] || "").trim();
+        const col2 = String(row[1] || "").trim();
+
+        // Detectar si empieza la sección de recibos de caja adicionales
+        if (col1.includes("ANOTACIONES PARA RECIBOS") || String(row.join(" ")).includes("ANOTACIONES PARA RECIBOS")) {
+          buscandoRecibosAdicionales = true;
+          // Saltar fila de encabezado
+          r++;
+          continue;
+        }
+
+        if (buscandoRecibosAdicionales) {
+          const num = Number(row[0]);
+          const bloque = String(row[1] || "AP").trim();
+          const apto = String(row[2] || "").trim();
+          const nombre = String(row[3] || "").trim();
+          const dia = Number(row[4]) || 30;
+          const valor = Number(row[5]) || 0;
+          const concepto = String(row[6] || "").trim();
+
+          if (apto || nombre || valor > 0) {
+            window._recibosCajaAdicionalesCache.push({
+              id: num || (window._recibosCajaAdicionalesCache.length + 1),
+              bloque: bloque,
+              apto: apto,
+              nombre: nombre,
+              dia: dia,
+              valor: valor,
+              concepto: concepto
+            });
+          }
+          continue;
+        }
+
+        // Si es una fila de inmueble normal:
+        // Col 0: Bloque, Col 1: Apto, Col 2: Nº Fac, Col 3: Coef, Col 4: Facturado
+        // Col 5: Pago 1, Col 6: Día 1, Col 7: Pago 2, Col 8: Día 2...
+        // Col 15: Total Pagos, Col 16: Descto, Col 17: Notas Db, Col 18: Notas Cr, Col 19: Saldo Pend
+        const aptoLimpio = col2.replace(/^0+/, "") || col2;
+        if (!col2 || col1.includes("TOTAL") || col1 === "=") continue;
+
+        const bloque = col1 || "AP";
+        const aptoKey = col2;
+        const nfac = String(row[2] || "");
+        const coef = Number(row[3]) || 0;
+        const valorFacturado = Number(row[4]) || 0;
+        const p1 = Number(row[5]) || 0;
+        const d1 = Number(row[6]) || 30;
+        const p2 = Number(row[7]) || 0;
+        const d2 = Number(row[8]) || 30;
+        const desc = Number(row[16]) || 0;
+        const db = Number(row[17]) || 0;
+        const cr = Number(row[18]) || 0;
+        const nov = String(row[20] || row[21] || "").trim();
+
+        // Guardar tanto bajo apto original como con ceros
+        const record = {
+          bloque: bloque,
+          apto: aptoKey,
+          nfac: nfac,
+          coef: coef,
+          valorFacturado: valorFacturado,
+          pago1: p1,
+          dia1: d1,
+          pago2: p2,
+          dia2: d2,
+          descto: desc,
+          debito: db,
+          credito: (cr > 0 ? -cr : cr),
+          novedad: nov
+        };
+
+        window._novedadesFacturacionCache[aptoKey] = record;
+        if (aptoLimpio !== aptoKey) {
+          window._novedadesFacturacionCache[aptoLimpio] = record;
+        }
+        countImportados++;
+      }
+
+      guardarPlanillaNovedadesYCancelaciones(true);
+      renderizarPlanillaNovedades();
+
+      if (typeof mostrarToast === "function") {
+        mostrarToast(`📥 Planilla oficial cargada con éxito: ${countImportados} inmuebles y ${window._recibosCajaAdicionalesCache.length} recibos adicionales procesados.`, "success");
+      }
+    } catch(err) {
+      console.error("Error al procesar planilla excel:", err);
+      alert("Ocurrió un error al leer el archivo Excel: " + err.message);
+    }
+  };
+
+  reader.readAsBinaryString(file);
+  event.target.value = "";
+};
+
+window.descargarPlanillaExcelOficial = function() {
+  if (typeof XLSX === "undefined") {
+    alert("La biblioteca XLSX no está disponible para exportar.");
+    return;
+  }
+
+  const codLimpio = obtenerCodLimpioActivo();
+  const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
+  const nomEdificio = (cj && cj.nombre) ? cj.nombre.toUpperCase() : "EDIFICIO CLASS 48 P. H.";
+  const fechaActual = new Date();
+  const meses = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+  const mesNombre = meses[fechaActual.getMonth()];
+  const anio = fechaActual.getFullYear();
+
+  let unidades = [];
+  if (cj && cj.unidades && cj.unidades.length > 0) {
+    unidades = cj.unidades;
+  } else if (typeof getUnidadesRobleAlto4901Master === "function") {
+    unidades = getUnidadesRobleAlto4901Master();
+  }
+
+  cargarNovedadesFacturacion();
+
+  // Construir matriz AOA (Array of Arrays) exactamente como el formato de Carlos
+  const aoa = [];
+
+  // Fila 1: Título e indicación
+  const r1 = new Array(26).fill("");
+  r1[0] = `${nomEdificio} --PLANILLA PAGOS Y NOVEDADES MES DE ${mesNombre} DE ${anio}`;
+  r1[16] = "(Las notas crédito van con signo negativo)";
+  aoa.push(r1);
+
+  // Fila 2: Subtítulo
+  const r2 = new Array(26).fill("");
+  r2[16] = "            Abajo: hacer novedades de Recibos de Caja";
+  aoa.push(r2);
+
+  // Fila 3: Código y Fecha Pago
+  const r3 = new Array(26).fill("");
+  r3[0] = "Código";
+  r3[1] = window._metadatosPlanillaCache.codigo || codLimpio;
+  r3[3] = "Fecha Pago";
+  r3[4] = window._metadatosPlanillaCache.diaPago || 30;
+  aoa.push(r3);
+
+  // Fila 4: En blanco
+  aoa.push(new Array(26).fill(""));
+
+  // Fila 5: Encabezados de Columna
+  const headers = [
+    'Bloque', 'Apto. ', 'Nº Fac', 'Coeficiente', 'Valor Facturado', 
+    'Valor Pagos 1', 'Fecha Pago 1', 'Valor Pagos 2', 'Fecha Pago 2', 
+    'Valor Pagos 3', 'Fecha Pago 3', 'Valor Pagos 4', 'Fecha Pago 4', 
+    'Valor Pagos 5', 'Fecha Pago 5', 'Total Pagos', 'Valor descto.', 
+    'Notas Db (+)', 'Notas Cr (-)', 'Saldos Pendientes', 
+    'Novedades para cambios de nombres, correos y otros cambios', 
+    'Novedades para otros cobros', '', '', '', ''
+  ];
+  aoa.push(headers);
+
+  // Filas 6..N: Filas de inmuebles con fórmulas exactas
+  unidades.forEach((u, idx) => {
+    const apto = String(u.apto);
+    const item = window._novedadesFacturacionCache[apto] || {
+      bloque: u.bloque || "AP",
+      apto: apto,
+      nfac: 3646 + idx,
+      coef: Number(u.coef || 1.22),
+      valorFacturado: Number(u.pend || u.saldoAnterior || 0),
+      pago1: 0,
+      dia1: 30,
+      pago2: 0,
+      dia2: 30,
+      descto: 0,
+      debito: 0,
+      credito: 0,
+      novedad: ""
+    };
+
+    const rowNum = aoa.length + 1; // 1-indexed para formulas Excel
+
+    const rRow = new Array(26).fill("");
+    rRow[0] = item.bloque || "AP";
+    rRow[1] = item.apto;
+    rRow[2] = item.nfac || (3646 + idx);
+    rRow[3] = Number(item.coef || 0);
+    rRow[4] = Number(item.valorFacturado || 0);
+    rRow[5] = Number(item.pago1 || 0);
+    rRow[6] = Number(item.dia1 || 30);
+    rRow[7] = Number(item.pago2 || 0);
+    rRow[8] = Number(item.dia2 || 30);
+    rRow[9] = 0;
+    rRow[10] = 30;
+    rRow[11] = 0;
+    rRow[12] = 30;
+    rRow[13] = 0;
+    rRow[14] = 30;
+    rRow[15] = `=F${rowNum}+H${rowNum}+J${rowNum}+L${rowNum}+N${rowNum}`;
+    rRow[16] = Number(item.descto || 0);
+    rRow[17] = Number(item.debito || 0);
+    rRow[18] = Number(item.credito || 0);
+    rRow[19] = `=E${rowNum}-P${rowNum}+Q${rowNum}+R${rowNum}+S${rowNum}`;
+    rRow[20] = item.novedad || "";
+    aoa.push(rRow);
+  });
+
+  // Fila en blanco
+  aoa.push(new Array(26).fill(""));
+
+  // Fila de Sumas
+  const startR = 6;
+  const endR = aoa.length;
+  const rSum = new Array(26).fill("");
+  rSum[3] = `=SUM(D${startR}:D${endR})`;
+  rSum[4] = `=SUM(E${startR}:E${endR})`;
+  rSum[5] = `=SUM(F${startR}:F${endR})`;
+  rSum[7] = `=SUM(H${startR}:H${endR})`;
+  rSum[9] = `=SUM(J${startR}:J${endR})`;
+  rSum[11] = `=SUM(L${startR}:L${endR})`;
+  rSum[13] = `=SUM(N${startR}:N${endR})`;
+  rSum[15] = `=SUM(P${startR}:P${endR})`;
+  rSum[16] = `=SUM(Q${startR}:Q${endR})`;
+  rSum[17] = `=SUM(R${startR}:R${endR})`;
+  rSum[18] = `=SUM(S${startR}:S${endR})`;
+  rSum[19] = `=SUM(T${startR}:T${endR})`;
+  aoa.push(rSum);
+
+  // Fila en blanco
+  aoa.push(new Array(26).fill(""));
+
+  // Sección ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES
+  const rRecTitle = new Array(26).fill("");
+  rRecTitle[0] = "ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES";
+  aoa.push(rRecTitle);
+
+  const rRecHeaders = new Array(26).fill("");
+  rRecHeaders[0] = "No.";
+  rRecHeaders[1] = "Bloque";
+  rRecHeaders[2] = "Apto. ";
+  rRecHeaders[3] = "Nombre";
+  rRecHeaders[4] = "Día";
+  rRecHeaders[5] = "Valor";
+  rRecHeaders[6] = "Concepto del Recibo de Caja (Ej. Salón Social)";
+  aoa.push(rRecHeaders);
+
+  const recibos = Array.isArray(window._recibosCajaAdicionalesCache) ? window._recibosCajaAdicionalesCache : [];
+  for (let k = 0; k < Math.max(recibos.length, 10); k++) {
+    const rec = recibos[k] || { id: k + 1, bloque: "", apto: "", nombre: "", dia: "", valor: "", concepto: "" };
+    const rRec = new Array(26).fill("");
+    rRec[0] = k + 1;
+    rRec[1] = rec.bloque || "";
+    rRec[2] = rec.apto || "";
+    rRec[3] = rec.nombre || "";
+    rRec[4] = rec.dia || "";
+    rRec[5] = rec.valor || "";
+    rRec[6] = rec.concepto || "";
+    aoa.push(rRec);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Resultado");
+
+  const fileName = `PLANILLA_PAGOS_Y_NOVEDADES_${codLimpio}_${mesNombre}_${anio}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+
+  if (typeof mostrarToast === "function") {
+    mostrarToast(`📤 Planilla Excel descargada: ${fileName}`, "success");
+  }
+};
+
 
 // ==============================================================================
 // REVERSIÓN / DEVOLVER SALDOS AL MES ANTERIOR (ROLLBACK PARA REPETIR FACTURACIÓN)

@@ -3708,35 +3708,21 @@
           </div>
         </div>
 
-        <!-- Barra de Subpestañas del Módulo de Facturación -->
+        <!-- Barra de Subpestañas del Módulo de Facturación (Orden Cronológico de Facturación) -->
         <div class="flex flex-wrap items-center gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
-          <button id="btn-subtab-fac-liq" type="button" onclick="cambiarSubtabFacturacion('liquidacion')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md cursor-pointer">
-            <i data-lucide="bolt" class="w-4 h-4"></i>
-            <span>⚡ Facturación y Liquidación Mensual</span>
+          <button id="btn-subtab-fac-planilla" type="button" onclick="cambiarSubtabFacturacion('planilla')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md cursor-pointer">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-300"></i>
+            <span>📋 1. Planilla de Pagos, Notas DÉBITO y CRÉDITO (Cancelaciones)</span>
           </button>
-          <button id="btn-subtab-fac-planilla" type="button" onclick="cambiarSubtabFacturacion('planilla')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/80 cursor-pointer">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-400"></i>
-            <span>📋 Planilla de Pagos, Notas DÉBITO y CRÉDITO (Cancelaciones)</span>
+          <button id="btn-subtab-fac-liq" type="button" onclick="cambiarSubtabFacturacion('liquidacion')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/80 cursor-pointer">
+            <i data-lucide="bolt" class="w-4 h-4 text-emerald-400"></i>
+            <span>⚡ 2. Facturación y Liquidación Mensual</span>
           </button>
           <button id="btn-subtab-fac-revertir" type="button" onclick="cambiarSubtabFacturacion('revertir')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-rose-400 hover:bg-slate-800/80 cursor-pointer">
             <i data-lucide="rotate-ccw" class="w-4 h-4 text-rose-400"></i>
-            <span>🔄 Devolver Saldos Mes Anterior (Reversión)</span>
+            <span>🔄 3. Devolver Saldos Mes Anterior (Reversión)</span>
           </button>
         </div>
-
-        <!-- ==================================================================== -->
-        <!-- SUBTAB 1: FACTURACIÓN & LIQUIDACIÓN MENSUAL                          -->
-        <!-- ==================================================================== -->
-        <div id="subtab-fac-content-liquidacion" class="space-y-5">
-          <!-- Tarjetas de Métricas de Facturación -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Facturado Mes</span>
-              <div class="flex items-baseline justify-between">
-                <h3 id="facturacion-metrica-total" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono">$38.911.000</h3>
-                <span class="text-[11px] font-bold text-slate-400">Cuotas Ordinarias</span>
-              </div>
-            </div>
 
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
               <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cartera Pendiente / Mora</span>
@@ -3864,121 +3850,225 @@
         <!-- ==================================================================== -->
         <!-- SUBTAB 2: PLANILLA DE PAGOS, NOTAS DÉBITO Y CRÉDITO (CANCELACIONES) -->
         <!-- ==================================================================== -->
-        <div id="subtab-fac-content-planilla" class="space-y-5 hidden">
-          <!-- Banner de Instrucciones de la Planilla -->
-          <div class="bg-slate-900/90 border border-amber-500/30 p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1.5">
-                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-amber-400"></i>
-                  <span>Planilla de Cancelaciones y Novedades Previas a Facturar</span>
-                </span>
-                <span class="text-xs font-mono text-slate-400">Mes de Liquidación Actual</span>
+        <div id="subtab-fac-content-planilla" class="space-y-5">
+          <!-- Input oculto para carga de archivos Excel / CSV -->
+          <input type="file" id="input-archivo-planilla-excel" accept=".xlsx,.xls,.csv" class="hidden" onchange="cargarArchivoPlanillaExcel(event)">
+
+          <!-- Encabezado Oficial de la Planilla según Formato de Facturación -->
+          <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-amber-500/30 p-4 sm:p-5 rounded-3xl shadow-2xl space-y-4">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Paso 1 Obligatorio Previo a Facturación</span>
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold">
+                    (Las notas crédito van con signo negativo)
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-medium">
+                    Abajo: Recibos de Caja adicionales
+                  </span>
+                </div>
+                <h2 id="planilla-titulo-completo" class="text-base sm:text-xl font-black text-white font-mono tracking-tight">
+                  PLANILLA PAGOS Y NOVEDADES MES DE FACTURACIÓN
+                </h2>
+                <p class="text-xs text-slate-400 max-w-3xl">
+                  Registra los recaudos de bancos (Pagos 1 y 2), descuentos por pronto pago y notas contables D/C. Al pulsar <strong class="text-emerald-400">"Extraer y Aplicar Cancelaciones"</strong>, la cartera se actualiza automáticamente para proceder a la emisión de cobros del mes.
+                </p>
               </div>
-              <h3 class="text-lg sm:text-xl font-black text-white">Ingreso de Pagos y Notas DÉBITO / CRÉDITO</h3>
-              <p class="text-xs text-slate-400 max-w-2xl">
-                Ingresa aquí las cancelaciones, abonos recibidos o notas contables de cada apartamento. El sistema amortiza la cartera en tiempo real para dejar los saldos listos antes de emitir la facturación.
-              </p>
+
+              <!-- Barra de Acciones Principales -->
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onclick="extraerYAplicarCancelacionesCartera()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center gap-2 shadow-xl shadow-emerald-950/60 transition-all cursor-pointer">
+                  <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+                  <span>⚡ Extraer y Aplicar Cancelaciones</span>
+                </button>
+                <button type="button" onclick="document.getElementById('input-archivo-planilla-excel').click()" class="px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-sky-950/50 transition-all cursor-pointer" title="Cargar archivo Excel (.xlsx) o CSV con pagos y novedades">
+                  <i data-lucide="upload" class="w-4 h-4"></i>
+                  <span>📥 Cargar Excel / CSV</span>
+                </button>
+                <button type="button" onclick="descargarPlanillaExcelOficial()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer" title="Descargar libro Excel oficial (.xlsx) idéntico al formato">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>📤 Exportar Excel (.xlsx)</span>
+                </button>
+                <button type="button" onclick="limpiarPlanillaPagosMes()" class="px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-400 border border-slate-700 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer" title="Limpiar pagos del mes para nuevo periodo">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span>Limpiar Mes</span>
+                </button>
+              </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
-              <button type="button" onclick="abrirModalAgregarNovedad()" class="px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-950/40 transition-all cursor-pointer">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                <span>+ Asentar Novedad Puntual</span>
-              </button>
-              <button type="button" onclick="guardarPlanillaNovedadesYCancelaciones()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
-                <i data-lucide="save" class="w-4 h-4"></i>
-                <span>💾 Guardar & Aplicar Cancelaciones</span>
-              </button>
+            <!-- Metadatos de Cabecera: Código, Fecha Pago y Mes -->
+            <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-800/80 text-xs">
+              <div class="flex items-center gap-2 bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-slate-800 font-mono">
+                <span class="text-slate-400 font-bold">Código Copropiedad:</span>
+                <input type="text" id="planilla-meta-codigo" onchange="actualizarMetadatosPlanilla()" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 text-amber-400 font-black text-xs text-center focus:outline-none focus:border-amber-500" value="4901">
+              </div>
+              <div class="flex items-center gap-2 bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-slate-800 font-mono">
+                <span class="text-slate-400 font-bold">Fecha / Día de Pago:</span>
+                <input type="number" id="planilla-meta-diapago" min="1" max="31" onchange="actualizarMetadatosPlanilla()" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 text-emerald-400 font-black text-xs text-center focus:outline-none focus:border-emerald-500" value="30">
+              </div>
+              <div class="flex items-center gap-2 bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-slate-800 font-mono">
+                <span class="text-slate-400 font-bold">Periodo Facturación:</span>
+                <span id="planilla-meta-mes-texto" class="text-white font-black">Noviembre 2026</span>
+              </div>
+              <div class="ml-auto flex items-center gap-2 text-slate-400 text-[11px]">
+                <i data-lucide="keyboard" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Navega ágilmente de celda a celda con <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px]">Tab</kbd></span>
+              </div>
             </div>
           </div>
 
-          <!-- Métricas de la Planilla -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1.5">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Recaudos / Pagos</span>
-              <div class="flex items-baseline justify-between">
-                <h3 id="planilla-metrica-pagos" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono">$0</h3>
-                <span class="text-[10px] text-emerald-400/80 font-bold">Abonos Entrantes</span>
-              </div>
+          <!-- Métricas Resumen de la Planilla -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">1. Valor Facturado</span>
+              <div class="text-base sm:text-lg font-black text-white font-mono truncate" id="planilla-metrica-facturado">$0</div>
+              <span class="text-[9px] text-slate-400 block">Cartera Anterior</span>
             </div>
-
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1.5">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Notas DÉBITO (+)</span>
-              <div class="flex items-baseline justify-between">
-                <h3 id="planilla-metrica-debitos" class="text-xl sm:text-2xl font-black text-rose-400 font-mono">$0</h3>
-                <span class="text-[10px] text-rose-400/80 font-bold">Cargos Extra / Mora</span>
-              </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">2. Total Recaudos</span>
+              <div class="text-base sm:text-lg font-black text-emerald-400 font-mono truncate" id="planilla-metrica-pagos">$0</div>
+              <span class="text-[9px] text-emerald-400/80 block">Abonos Entrantes</span>
             </div>
-
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1.5">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Notas CRÉDITO (-)</span>
-              <div class="flex items-baseline justify-between">
-                <h3 id="planilla-metrica-creditos" class="text-xl sm:text-2xl font-black text-cyan-400 font-mono">$0</h3>
-                <span class="text-[10px] text-cyan-400/80 font-bold">Descuentos / Ajustes</span>
-              </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">3. Valor Descuento</span>
+              <div class="text-base sm:text-lg font-black text-teal-300 font-mono truncate" id="planilla-metrica-descuentos">$0</div>
+              <span class="text-[9px] text-teal-300/80 block">Pronto Pago</span>
             </div>
-
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1.5">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cartera Amortizada</span>
-              <div class="flex items-baseline justify-between">
-                <h3 id="planilla-metrica-cancelado" class="text-xl sm:text-2xl font-black text-amber-400 font-mono">$0</h3>
-                <span class="text-[10px] text-amber-400/80 font-bold">Cancelaciones</span>
-              </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">4. Notas DÉBITO (+)</span>
+              <div class="text-base sm:text-lg font-black text-rose-400 font-mono truncate" id="planilla-metrica-debitos">+$0</div>
+              <span class="text-[9px] text-rose-400/80 block">Recargos / Mora</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">5. Notas CRÉDITO (-)</span>
+              <div class="text-base sm:text-lg font-black text-cyan-400 font-mono truncate" id="planilla-metrica-creditos">-$0</div>
+              <span class="text-[9px] text-cyan-400/80 block">Ajustes a Favor</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">6. Saldos Pendientes</span>
+              <div class="text-base sm:text-lg font-black text-amber-400 font-mono truncate" id="planilla-metrica-pendientes">$0</div>
+              <span class="text-[9px] text-amber-400/80 block">Saldo Consolidado</span>
             </div>
           </div>
 
-          <!-- Tabla Interactiva de la Planilla -->
+          <!-- Tabla Interactiva Oficial Tipo Hoja de Cálculo -->
           <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 class="text-sm font-black text-white uppercase tracking-wider">Planilla de Inmuebles • Cancelaciones & Novedades</h3>
-                <p class="text-xs text-slate-400">Digita los valores directamente en la fila de cada apartamento. El nuevo saldo pendiente se calcula en tiempo real.</p>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <i data-lucide="table" class="w-4 h-4 text-amber-400"></i>
+                  <span>Planilla de Inmuebles • Cancelaciones y Novedades del Mes</span>
+                </h3>
+                <p class="text-xs text-slate-400">Digita pagos y fechas directamente. Los totales y saldos se calculan automáticamente con cada tecla.</p>
               </div>
 
               <div class="flex items-center gap-2">
-                <div class="relative w-full sm:w-60">
+                <div class="relative w-full sm:w-64">
                   <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                  <input type="text" id="planilla-buscar-unidad" oninput="filtrarTablaPlanilla(this.value)" placeholder="Buscar apartamento..." class="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 uppercase">
+                  <input type="text" id="planilla-buscar-unidad" oninput="filtrarTablaPlanilla(this.value)" placeholder="Buscar apartamento o bloque..." class="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 uppercase">
                 </div>
-                <button type="button" onclick="guardarPlanillaNovedadesYCancelaciones()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 flex items-center gap-1 shadow-md cursor-pointer">
-                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                  <span>Aplicar</span>
+                <button type="button" onclick="guardarPlanillaNovedadesYCancelaciones(false)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shrink-0 flex items-center gap-1 border border-slate-700 shadow-md cursor-pointer">
+                  <i data-lucide="save" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span>Guardar</span>
                 </button>
               </div>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border border-slate-800">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-slate-950/80 text-[10px] font-black uppercase text-slate-400 border-b border-slate-800">
+            <!-- Contenedor scroll horizontal para la tabla con todas las columnas de la planilla oficial -->
+            <div class="overflow-x-auto rounded-xl border border-slate-800 shadow-inner max-h-[600px] overflow-y-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="sticky top-0 bg-slate-950 text-[10px] font-black uppercase text-slate-300 border-b border-slate-800 z-10 select-none shadow-md">
                   <tr>
-                    <th class="py-3 px-3">Unidad</th>
-                    <th class="py-3 px-3">Propietario / Residente</th>
-                    <th class="py-3 px-3 text-right">Saldo Anterior</th>
-                    <th class="py-3 px-3 text-center min-w-[140px]">Pago Recibido ($)</th>
-                    <th class="py-3 px-3 text-center min-w-[100px]">Recibo #</th>
-                    <th class="py-3 px-3 text-center min-w-[120px]">Nota DÉBITO (+)</th>
-                    <th class="py-3 px-3 text-center min-w-[120px]">Nota CRÉDITO (-)</th>
-                    <th class="py-3 px-3 text-right">Nuevo Saldo Pendiente</th>
-                    <th class="py-3 px-3 text-center">Cancelación</th>
+                    <th class="py-2.5 px-2 text-center min-w-[50px] border-r border-slate-800/80">Bloque</th>
+                    <th class="py-2.5 px-2.5 text-center min-w-[65px] border-r border-slate-800/80">Apto.</th>
+                    <th class="py-2.5 px-2 text-center min-w-[65px] border-r border-slate-800/80">Nº Fac</th>
+                    <th class="py-2.5 px-2 text-right min-w-[65px] border-r border-slate-800/80">Coef (%)</th>
+                    <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-800/80 bg-slate-900/60">Valor Facturado</th>
+                    <th class="py-2.5 px-2 text-center min-w-[105px] border-r border-slate-800/80 text-emerald-400">Valor Pagos 1</th>
+                    <th class="py-2.5 px-1 text-center min-w-[45px] border-r border-slate-800/80 text-slate-400">Día 1</th>
+                    <th class="py-2.5 px-2 text-center min-w-[105px] border-r border-slate-800/80 text-emerald-400">Valor Pagos 2</th>
+                    <th class="py-2.5 px-1 text-center min-w-[45px] border-r border-slate-800/80 text-slate-400">Día 2</th>
+                    <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-800/80 text-emerald-300 bg-emerald-950/20 font-black">Total Pagos</th>
+                    <th class="py-2.5 px-2 text-center min-w-[95px] border-r border-slate-800/80 text-teal-300">Valor Descto.</th>
+                    <th class="py-2.5 px-2 text-center min-w-[95px] border-r border-slate-800/80 text-rose-400">Notas Db (+)</th>
+                    <th class="py-2.5 px-2 text-center min-w-[95px] border-r border-slate-800/80 text-cyan-400">Notas Cr (-)</th>
+                    <th class="py-2.5 px-3 text-right min-w-[120px] border-r border-slate-800/80 text-amber-400 bg-amber-950/20 font-black">Saldos Pendientes</th>
+                    <th class="py-2.5 px-3 min-w-[180px]">Novedades / Otros Cobros</th>
                   </tr>
                 </thead>
-                <tbody id="planilla-tbody-unidades" class="divide-y divide-slate-800/60 font-medium">
-                  <!-- Inyectado dinámicamente -->
+                <tbody id="planilla-tbody-unidades" class="divide-y divide-slate-800/60 font-mono text-xs">
+                  <!-- Se inyecta dinámicamente con todas las filas de apartamentos -->
                 </tbody>
+                <tfoot id="planilla-tfoot-totales" class="sticky bottom-0 bg-slate-950 font-black text-xs border-t-2 border-slate-700 z-10 shadow-lg text-slate-200">
+                  <!-- Se inyectan dinámicamente los totales sumados -->
+                </tfoot>
               </table>
             </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
-              <span class="text-xs text-slate-400">💡 Al guardar, los saldos amortizados se consolidan automáticamente para la liquidación mensual.</span>
+            <!-- ==================================================================== -->
+            <!-- SECCIÓN INFERIOR: ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES       -->
+            <!-- ==================================================================== -->
+            <div class="mt-8 pt-6 border-t-2 border-slate-800 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <h4 class="text-sm font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-4 h-4 text-amber-400"></i>
+                    <span>ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES</span>
+                  </h4>
+                  <p class="text-xs text-slate-400 mt-0.5">
+                    Registra ingresos por conceptos no ordinarios (Ej: Alquiler Salón Social, Parqueaderos extras, Mudanzas, Multas de Convivencia, etc.).
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="agregarFilaReciboCajaAdicional()" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>+ Agregar Recibo Adicional</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tabla de Recibos de Caja Adicionales -->
+              <div class="overflow-x-auto rounded-xl border border-slate-800 shadow-inner">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-slate-950 text-[10px] font-black uppercase text-slate-400 border-b border-slate-800 select-none">
+                    <tr>
+                      <th class="py-2.5 px-3 text-center w-12 border-r border-slate-800/80">No.</th>
+                      <th class="py-2.5 px-2 text-center w-20 border-r border-slate-800/80">Bloque</th>
+                      <th class="py-2.5 px-2 text-center w-24 border-r border-slate-800/80">Apto.</th>
+                      <th class="py-2.5 px-3 min-w-[200px] border-r border-slate-800/80">Nombre Copropietario / Pagador</th>
+                      <th class="py-2.5 px-2 text-center w-16 border-r border-slate-800/80">Día</th>
+                      <th class="py-2.5 px-3 text-right w-36 border-r border-slate-800/80 text-emerald-400">Valor ($)</th>
+                      <th class="py-2.5 px-3 min-w-[240px] border-r border-slate-800/80">Concepto del Recibo de Caja (Ej. Salón Social)</th>
+                      <th class="py-2.5 px-2 text-center w-16">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="planilla-tbody-recibos-adicionales" class="divide-y divide-slate-800/60 font-mono text-xs">
+                    <!-- Se inyecta dinámicamente -->
+                  </tbody>
+                  <tfoot id="planilla-tfoot-recibos-adicionales" class="bg-slate-950 font-black text-xs border-t border-slate-800 text-slate-200">
+                    <!-- Total recibos adicionales -->
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Botones Inferiores de Flujo de Trabajo -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-800/80">
+              <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                <span>Al aplicar las cancelaciones, los saldos se envían a la base de cartera para facturar el nuevo mes.</span>
+              </span>
               <div class="flex items-center gap-2">
-                <button type="button" onclick="guardarPlanillaNovedadesYCancelaciones()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer">
-                  <i data-lucide="save" class="w-3.5 h-3.5 text-emerald-400"></i>
-                  <span>Guardar Borrador</span>
+                <button type="button" onclick="extraerYAplicarCancelacionesCartera()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/40 cursor-pointer">
+                  <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+                  <span>1. Aplicar Cancelaciones</span>
                 </button>
-                <button type="button" onclick="cambiarSubtabFacturacion('liquidacion')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 cursor-pointer">
-                  <span>⚡ Proceder a Liquidar Mes</span>
-                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                <button type="button" onclick="cambiarSubtabFacturacion('liquidacion')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs flex items-center gap-2 border border-slate-700 cursor-pointer">
+                  <span>2. Proceder a Facturar Mes</span>
+                  <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-400"></i>
                 </button>
               </div>
             </div>
