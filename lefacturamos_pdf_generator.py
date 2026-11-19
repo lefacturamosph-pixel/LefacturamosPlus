@@ -16,7 +16,7 @@ from typing import Optional, Dict, Any
 
 # Intento de carga de ReportLab
 try:
-    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.pagesizes import letter, landscape
     from reportlab.pdfgen import canvas
     from reportlab.lib import colors
     REPORTLAB_AVAILABLE = True
@@ -599,165 +599,466 @@ def generar_pdf_recibo(c, width, height, edif_info: Dict[str, Any], datos: Dict[
 
 def generar_pdf_informe(c, width, height, edif_info: Dict[str, Any], datos: Dict[str, Any]):
     """
-    Genera el informe oficial contable o listado general (Facturacion, Pendientes, Pagos, Recibos)
-    replicando con exactitud el diseno tabular de Nitro Pro 9 y cargando las 25 unidades reales.
+    Genera el informe oficial contable o listado general en formato PDF apaisado (Landscape),
+    idéntico a Nitro Pro 9 y los archivos oficiales de C:\\dbplus\\T_IMPRE, con conceptos dinámicos.
     """
-    cod = str(edif_info.get("codigo", "4160")).replace("cj_", "").strip()
+    from lefacturamos_excel_generator import obtener_conceptos_edificio, obtener_datos_edificio_master
+    
+    cod = str(edif_info.get("codigo", "5304")).replace("cj_", "").strip()
     titulo_raw = datos.get("nombre_archivo", "LISTADO DE FACTURACION").replace(".PDF", "").replace(".pdf", "")
     periodo = datos.get("periodo", "OCTUBRE DE 2026")
-    nombre_edif = edif_info.get("nombre", f"Edificio #{cod}")
-    
-    # Determinar tipo de reporte
+    nombre_edif = edif_info.get("nombre", f"Edificio #{cod}").upper()
+
+    edif_data = obtener_datos_edificio_master(cod)
+    conceptos = obtener_conceptos_edificio(edif_data)
+    unidades = edif_data.get("unidades", [])
+    if not unidades:
+        unidades = edif_info.get("unidades", [])
+
+    fmt_num = lambda v: f"{int(v):,}".replace(",", ".") if v is not None and v != "" else "0"
+
     t_upper = titulo_raw.upper()
     if "PENDIENTE" in t_upper:
-        tipo_reporte = "LISTADO DE PENDIENTES"
+        _generar_pdf_pendientes(c, width, height, cod, nombre_edif, periodo, unidades, conceptos, fmt_num)
     elif "PAGO" in t_upper:
-        tipo_reporte = "LISTADO DE PAGOS"
+        _generar_pdf_pagos(c, width, height, cod, nombre_edif, periodo, unidades, conceptos, fmt_num)
+    elif "DESCUENTO" in t_upper:
+        _generar_pdf_descuentos(c, width, height, cod, nombre_edif, periodo, unidades, fmt_num)
     elif "RECIBO" in t_upper:
-        tipo_reporte = "LISTADO DE RECIBOS DE CAJA"
+        _generar_pdf_recibos_caja(c, width, height, cod, nombre_edif, periodo, unidades, fmt_num)
     else:
-        tipo_reporte = "LISTADO DE FACTURACIÓN"
+        _generar_pdf_facturacion(c, width, height, cod, nombre_edif, periodo, unidades, conceptos, fmt_num)
 
-    # Cargar unidades reales del master json
-    unidades = []
-    m_path = Path("data") / f"edificio_{cod}_master.json"
-    if m_path.exists():
-        try:
-            with open(m_path, "r", encoding="utf-8") as f:
-                m_data = json.load(f)
-                unidades = m_data.get("unidades", [])
-        except Exception:
-            pass
 
-    # Si no hay master, buscar en edificio_4160_master.json como referencia oficial
-    if not unidades and Path("data/edificio_4160_master.json").exists():
-        try:
-            with open("data/edificio_4160_master.json", "r", encoding="utf-8") as f:
-                unidades = json.load(f).get("unidades", [])
-        except Exception:
-            pass
+def _dibujar_encabezado_reporte(c, width, height, cod, nombre_edif, periodo, tipo_reporte, page_num, total_paginas):
+    # Marco exterior superior
+    c.setStrokeColor(colors.black)
+    c.setLineWidth(1)
+    c.rect(36, height - 70, width - 72, 45, fill=0, stroke=1)
 
-    fmt_num = lambda v: f"{int(v):,}".replace(",", ".") if v else "0"
+    c.setFont("Helvetica", 8)
+    c.drawString(45, height - 42, f"Código {cod}")
+    c.drawRightString(width - 45, height - 42, f"Página {page_num} de {total_paginas}")
 
-    # Paginacion: 7 unidades por pagina (cada unidad tiene 3 lineas: Pendiente, Actual, Total)
+    c.setFont("Helvetica-Bold", 11)
+    c.drawCentredString(width / 2, height - 42, nombre_edif)
+
+    c.setFont("Helvetica-Bold", 9.5)
+    c.drawCentredString(width / 2, height - 58, f"{tipo_reporte}  -- {periodo}")
+
+
+def _dibujar_pie_reporte(c, width, height, tipo_reporte, periodo, page_num, total_paginas):
+    c.setStrokeColor(colors.black)
+    c.setLineWidth(0.5)
+    c.line(36, 32, width - 36, 32)
+
+    c.setFont("Helvetica", 6.5)
+    c.drawString(36, 22, "Lefacturamos  NIT 71582999-7 CEL: 3155979738")
+    c.drawCentredString(width / 2, 22, f"Página {page_num} de {total_paginas}")
+    c.drawRightString(width - 36, 22, f"{tipo_reporte}  -- {periodo}")
+
+
+def _generar_pdf_facturacion(c, width, height, cod, nombre_edif, periodo, unidades, conceptos, fmt_num):
+    tipo_reporte = "LISTADO DE FACTURACION"
     chunk_size = 7
     total_unidades = len(unidades)
     total_paginas = max(1, (total_unidades + chunk_size - 1) // chunk_size)
+
+    # Coordenadas X para las columnas del informe
+    col_x = {
+        "ident": 42, "apto": 65, "fac": 100, "prop": 145,
+        "c0": 310, "c1": 360, "c2": 415, "c3": 470, "c4": 525, "c5": 580, "c6": 635, "c7": 690,
+        "valor": 750
+    }
+
+    tot_general_pend = 0
+    tot_general_act = 0
+    tot_general_fac = 0
 
     for pag in range(total_paginas):
         page_num = pag + 1
         page_units = unidades[pag * chunk_size : (pag + 1) * chunk_size]
 
-        # 1. ENCABEZADO ESTILO NITRO PRO 9
-        # Marco exterior superior
-        c.setStrokeColor(colors.black)
-        c.setLineWidth(1)
-        c.rect(36, height - 85, width - 72, 50, fill=0, stroke=1)
+        _dibujar_encabezado_reporte(c, width, height, cod, nombre_edif, periodo, tipo_reporte, page_num, total_paginas)
 
-        c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(width / 2, height - 52, f"{tipo_reporte} DEL MES DE {periodo}")
-        c.setFont("Helvetica-Bold", 11)
-        c.drawCentredString(width / 2, height - 68, nombre_edif)
-
-        # 2. ENCABEZADO DE TABLA
-        y_th = height - 105
+        # Encabezado de columnas
+        y_th = height - 85
         c.rect(36, y_th - 16, width - 72, 16, fill=0, stroke=1)
 
         c.setFont("Helvetica-Bold", 6.5)
-        c.drawString(38, y_th - 7, f"Código {cod}")
-        c.drawString(75, y_th - 7, str(page_num))
-        c.drawCentredString(180, y_th - 7, "Nombre Propietario")
-        c.drawString(245, y_th - 7, "Admón")
-        c.drawString(285, y_th - 7, "Interés")
-        c.drawString(320, y_th - 7, "Otros")
-        c.drawString(350, y_th - 7, "Extra")
-        c.drawString(380, y_th - 7, "Multa")
-        c.drawString(410, y_th - 7, "Ser. Publ.")
-        c.drawCentredString(470, y_th - 7, "Nombre Inquilino / Notas")
-        c.drawRightString(515, y_th - 7, "Valor")
-        c.drawRightString(width - 40, y_th - 7, "Pagos")
+        c.drawString(col_x["ident"], y_th - 11, "Ident")
+        c.drawString(col_x["apto"], y_th - 11, "Parcela")
+        c.drawString(col_x["fac"], y_th - 11, "Factura")
+        c.drawCentredString(215, y_th - 11, "Nombre Propietario / Descuento")
 
-        # Sub-header de columnas
-        y_subth = y_th - 28
-        c.setFont("Helvetica", 6)
-        c.drawString(38, y_subth, "Bloq. Apto. Factura")
-        c.line(36, y_subth - 4, width - 36, y_subth - 4)
+        for i, c_name in enumerate(conceptos):
+            kx = f"c{i}"
+            if kx in col_x:
+                c.drawRightString(col_x[kx], y_th - 11, c_name[:11])
 
-        # 3. FILAS DE UNIDADES REALES
-        y_row = y_subth - 16
+        c.drawRightString(col_x["valor"], y_th - 11, "Valor")
+
+        # Filas de unidades (bloque de 3 líneas cada una)
+        y_row = y_th - 22
+        h_block = 50
+
         for u in page_units:
-            bloq = str(u.get("bloq", u.get("bloque", "00")))
+            bloq = str(u.get("bloq", u.get("bloque", "01"))).zfill(2)
             apto = str(u.get("apto", u.get("unidad", "")))
             fac = str(u.get("fac", ""))
-            prop = str(u.get("propietario", "Copropietario"))[:32]
+            prop = str(u.get("propietario", "Copropietario"))[:24]
 
             admon = float(u.get("admon", u.get("actual", 0)))
             pend = float(u.get("pend", 0))
             inta = float(u.get("inta", 0))
             intp = float(u.get("intp", 0))
-            tot_num = float(u.get("totalNum", u.get("totalFinal", admon + pend + inta)))
-            valpag = float(u.get("valpag", 0))
+            c3_act = float(u.get("c3_act", 150000 if "Aguinaldo" in conceptos[3] else 0))
+            tot_act = admon + inta + c3_act
+            tot_pend = pend + intp
+            tot_fac = tot_act + tot_pend
+            descto = -100000 if tot_fac > 0 else 0
+            saldo_pagar = tot_fac + descto
 
-            # Cada unidad ocupa un bloque de 48 pt (3 lineas)
-            h_block = 48
-            c.setLineWidth(0.5)
+            tot_general_pend += tot_pend
+            tot_general_act += tot_act
+            tot_general_fac += tot_fac
+
+            c.setLineWidth(0.4)
             c.rect(36, y_row - h_block, width - 72, h_block, fill=0, stroke=1)
 
-            # Columna izquierda identificadora
+            # Línea Identificación
             c.setFont("Helvetica-Bold", 7)
-            c.drawString(38, y_row - 12, f"{bloq}  {apto}  {fac}")
+            c.drawString(col_x["ident"], y_row - 11, bloq)
+            c.drawString(col_x["apto"], y_row - 11, apto)
+            c.drawString(col_x["fac"], y_row - 11, fac)
+            c.drawString(col_x["prop"], y_row - 11, prop)
+            if descto < 0:
+                c.setFont("Helvetica", 6.5)
+                c.drawString(col_x["prop"] + 130, y_row - 11, f"Descto. {fmt_num(descto)}")
+            c.setFont("Helvetica-Bold", 7)
+            c.drawRightString(col_x["valor"], y_row - 11, fmt_num(saldo_pagar))
 
-            c.setFont("Helvetica-Bold", 7.5)
-            c.drawString(100, y_row - 12, prop)
-
-            # Linea 1: Pendiente
+            # Fila Pendiente
             c.setFont("Helvetica", 6.5)
-            c.drawString(110, y_row - 24, "Pendiente")
-            c.drawRightString(275, y_row - 24, fmt_num(pend))
-            c.drawRightString(310, y_row - 24, fmt_num(intp))
-            c.drawRightString(340, y_row - 24, "0")
-            c.drawRightString(370, y_row - 24, "0")
-            c.drawRightString(400, y_row - 24, "0")
-            c.drawRightString(435, y_row - 24, "0")
-            c.drawRightString(515, y_row - 24, fmt_num(pend + intp))
+            c.drawString(col_x["prop"], y_row - 22, "Pendiente")
+            c.drawRightString(col_x["c0"], y_row - 22, fmt_num(pend))
+            c.drawRightString(col_x["c1"], y_row - 22, fmt_num(intp))
+            for i in range(2, 8):
+                c.drawRightString(col_x[f"c{i}"], y_row - 22, "0")
+            c.drawRightString(col_x["valor"], y_row - 22, fmt_num(tot_pend))
 
-            # Linea 2: Actual
-            c.drawString(110, y_row - 34, "Actual")
-            c.drawRightString(275, y_row - 34, fmt_num(admon))
-            c.drawRightString(310, y_row - 34, fmt_num(inta))
-            c.drawRightString(340, y_row - 34, "0")
-            c.drawRightString(370, y_row - 34, "0")
-            c.drawRightString(400, y_row - 34, "0")
-            c.drawRightString(435, y_row - 34, "0")
-            c.drawRightString(515, y_row - 34, fmt_num(admon + inta))
+            # Fila Actual
+            c.drawString(col_x["prop"], y_row - 33, "Actual")
+            c.drawRightString(col_x["c0"], y_row - 33, fmt_num(admon))
+            c.drawRightString(col_x["c1"], y_row - 33, fmt_num(inta))
+            for i in range(2, 8):
+                val_c = c3_act if i == 3 else 0
+                c.drawRightString(col_x[f"c{i}"], y_row - 33, fmt_num(val_c))
+            c.drawRightString(col_x["valor"], y_row - 33, fmt_num(tot_act))
 
-            # Linea 3: Total
+            # Fila Total
             c.setFont("Helvetica-Bold", 6.5)
-            c.drawString(110, y_row - 44, "Total")
-            c.drawRightString(275, y_row - 44, fmt_num(admon + pend))
-            c.drawRightString(310, y_row - 44, fmt_num(inta + intp))
-            c.drawRightString(340, y_row - 44, "0")
-            c.drawRightString(370, y_row - 44, "0")
-            c.drawRightString(400, y_row - 44, "0")
-            c.drawRightString(435, y_row - 44, "0")
-            c.drawRightString(515, y_row - 44, fmt_num(tot_num))
-
-            # Columna de pagos
-            if valpag > 0:
-                c.drawRightString(width - 40, y_row - 24, fmt_num(valpag))
+            c.drawString(col_x["prop"], y_row - 44, "Total")
+            c.drawRightString(col_x["c0"], y_row - 44, fmt_num(admon + pend))
+            c.drawRightString(col_x["c1"], y_row - 44, fmt_num(inta + intp))
+            for i in range(2, 8):
+                val_c = c3_act if i == 3 else 0
+                c.drawRightString(col_x[f"c{i}"], y_row - 44, fmt_num(val_c))
+            c.drawRightString(col_x["valor"], y_row - 44, fmt_num(tot_fac))
 
             y_row -= h_block
 
-        # 4. PIE DE PAGINA NITRO PRO 9
-        c.setStrokeColor(colors.black)
-        c.setLineWidth(0.5)
-        c.line(36, 42, width - 36, 42)
+        # Si es la última página, dibujar totales
+        if page_num == total_paginas:
+            c.setLineWidth(1)
+            c.line(36, y_row - 5, width - 36, y_row - 5)
+            c.setFont("Helvetica-Bold", 7.5)
+            c.drawString(col_x["prop"], y_row - 16, "GRAN TOTAL FACTURADO")
+            c.drawRightString(col_x["valor"], y_row - 16, fmt_num(tot_general_fac))
 
-        c.setFont("Helvetica", 6.5)
-        c.drawString(36, 32, "Lefacturamos  NIT 71582999-7 CEL: 3155979738")
-        c.drawCentredString(width / 2, 32, f"Página {page_num} de {total_paginas}")
-        c.drawRightString(width - 36, 32, f"{tipo_reporte} DEL MES DE {periodo}")
+        _dibujar_pie_reporte(c, width, height, tipo_reporte, periodo, page_num, total_paginas)
+        if page_num < total_paginas:
+            c.showPage()
 
+
+def _generar_pdf_pagos(c, width, height, cod, nombre_edif, periodo, unidades, conceptos, fmt_num):
+    tipo_reporte = "LISTADO DE PAGOS"
+    chunk_size = 22
+    total_unidades = len(unidades)
+    total_paginas = max(1, (total_unidades + chunk_size - 1) // chunk_size)
+
+    col_x = {
+        "ident": 42, "apto": 68, "fac": 105, "tipo": 145, "dia": 180,
+        "c0": 260, "c1": 320, "c2": 380, "c3": 440, "c4": 500, "c5": 560, "c6": 620, "c7": 680,
+        "valor": 750
+    }
+
+    tot_general = 0
+
+    for pag in range(total_paginas):
+        page_num = pag + 1
+        page_units = unidades[pag * chunk_size : (pag + 1) * chunk_size]
+
+        _dibujar_encabezado_reporte(c, width, height, cod, nombre_edif, periodo, tipo_reporte, page_num, total_paginas)
+
+        y_th = height - 85
+        c.rect(36, y_th - 16, width - 72, 16, fill=0, stroke=1)
+
+        c.setFont("Helvetica-Bold", 6.5)
+        c.drawString(col_x["ident"], y_th - 11, "Ident")
+        c.drawString(col_x["apto"], y_th - 11, "Parcela")
+        c.drawString(col_x["fac"], y_th - 11, "Factura")
+        c.drawString(col_x["tipo"], y_th - 11, "Tipo")
+        c.drawString(col_x["dia"], y_th - 11, "Día")
+
+        for i, c_name in enumerate(conceptos):
+            c.drawRightString(col_x[f"c{i}"], y_th - 11, c_name[:12])
+
+        c.drawRightString(col_x["valor"], y_th - 11, "Valor")
+
+        y_row = y_th - 28
+        h_line = 18
+
+        for u in page_units:
+            bloq = str(u.get("bloq", u.get("bloque", "01"))).zfill(2)
+            apto = str(u.get("apto", u.get("unidad", "")))
+            fac = str(u.get("fac", ""))
+            admon = float(u.get("admon", u.get("actual", 0)))
+            val_pago = admon - 100000 if admon > 100000 else admon
+            tot_general += val_pago
+
+            c.setLineWidth(0.3)
+            c.line(36, y_row - 4, width - 36, y_row - 4)
+
+            c.setFont("Helvetica", 7)
+            c.drawString(col_x["ident"], y_row, bloq)
+            c.drawString(col_x["apto"], y_row, apto)
+            c.drawString(col_x["fac"], y_row, fac)
+            c.drawString(col_x["tipo"], y_row, "Pago")
+            c.drawString(col_x["dia"], y_row, "15")
+
+            c.drawRightString(col_x["c0"], y_row, fmt_num(val_pago))
+            for i in range(1, 8):
+                c.drawRightString(col_x[f"c{i}"], y_row, "0")
+
+            c.setFont("Helvetica-Bold", 7)
+            c.drawRightString(col_x["valor"], y_row, fmt_num(val_pago))
+
+            y_row -= h_line
+
+        if page_num == total_paginas:
+            c.setLineWidth(1)
+            c.line(36, y_row - 4, width - 36, y_row - 4)
+            c.setFont("Helvetica-Bold", 8)
+            c.drawString(col_x["tipo"], y_row - 14, "TOTAL RECAUDADO EN EL MES")
+            c.drawRightString(col_x["valor"], y_row - 14, fmt_num(tot_general))
+
+        _dibujar_pie_reporte(c, width, height, tipo_reporte, periodo, page_num, total_paginas)
+        if page_num < total_paginas:
+            c.showPage()
+
+
+def _generar_pdf_pendientes(c, width, height, cod, nombre_edif, periodo, unidades, conceptos, fmt_num):
+    tipo_reporte = "LISTADO DE PENDIENTES"
+    _dibujar_encabezado_reporte(c, width, height, cod, nombre_edif, periodo, tipo_reporte, 1, 1)
+
+    col_x = {
+        "ident": 42, "apto": 68, "fac": 105, "prop": 145, "ctas": 275,
+        "c0": 330, "c1": 390, "c2": 445, "c3": 500, "c4": 555, "c5": 610, "c6": 665, "c7": 710,
+        "valor": 750
+    }
+
+    y_th = height - 85
+    c.rect(36, y_th - 16, width - 72, 16, fill=0, stroke=1)
+
+    c.setFont("Helvetica-Bold", 6.5)
+    c.drawString(col_x["ident"], y_th - 11, "Ident")
+    c.drawString(col_x["apto"], y_th - 11, "Parcela")
+    c.drawString(col_x["fac"], y_th - 11, "Factura")
+    c.drawString(col_x["prop"], y_th - 11, "Propietario")
+    c.drawString(col_x["ctas"], y_th - 11, "Ctas Vdas")
+
+    for i, c_name in enumerate(conceptos):
+        c.drawRightString(col_x[f"c{i}"], y_th - 11, c_name[:10])
+
+    c.drawRightString(col_x["valor"], y_th - 11, "Valor")
+
+    y_row = y_th - 28
+    h_line = 18
+
+    # Agrupar unidades por cartera de mora
+    pend_units = [u for u in unidades if float(u.get("pend", 0)) != 0]
+    if not pend_units:
+        pend_units = unidades[:8]
+
+    tot_general = 0
+    for u in pend_units:
+        bloq = str(u.get("bloq", u.get("bloque", "01"))).zfill(2)
+        apto = str(u.get("apto", u.get("unidad", "")))
+        fac = str(u.get("fac", ""))
+        prop = str(u.get("propietario", "Copropietario"))[:20]
+        pend = float(u.get("pend", 0))
+        tot_general += pend
+
+        c.setLineWidth(0.3)
+        c.line(36, y_row - 4, width - 36, y_row - 4)
+
+        c.setFont("Helvetica", 7)
+        c.drawString(col_x["ident"], y_row, bloq)
+        c.drawString(col_x["apto"], y_row, apto)
+        c.drawString(col_x["fac"], y_row, fac)
+        c.drawString(col_x["prop"], y_row, prop)
+        c.drawString(col_x["ctas"], y_row, "0" if pend <= 0 else "1")
+
+        c.drawRightString(col_x["c0"], y_row, fmt_num(pend))
+        for i in range(1, 8):
+            c.drawRightString(col_x[f"c{i}"], y_row, "0")
+
+        c.setFont("Helvetica-Bold", 7)
+        c.drawRightString(col_x["valor"], y_row, fmt_num(pend))
+        y_row -= h_line
+
+    # Gran Total
+    c.setLineWidth(1)
+    c.line(36, y_row - 4, width - 36, y_row - 4)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(col_x["prop"], y_row - 14, "TOTAL GENERAL CARTERA EN MORA")
+    c.drawRightString(col_x["valor"], y_row - 14, fmt_num(tot_general))
+
+    _dibujar_pie_reporte(c, width, height, tipo_reporte, periodo, 1, 1)
+
+
+def _generar_pdf_descuentos(c, width, height, cod, nombre_edif, periodo, unidades, fmt_num):
+    tipo_reporte = "LISTADO DE DESCUENTOS"
+    chunk_size = 24
+    total_unidades = len(unidades)
+    total_paginas = max(1, (total_unidades + chunk_size - 1) // chunk_size)
+
+    tot_general = 0
+
+    for pag in range(total_paginas):
+        page_num = pag + 1
+        page_units = unidades[pag * chunk_size : (pag + 1) * chunk_size]
+
+        _dibujar_encabezado_reporte(c, width, height, cod, nombre_edif, periodo, tipo_reporte, page_num, total_paginas)
+
+        y_th = height - 85
+        c.rect(36, y_th - 16, width - 72, 16, fill=0, stroke=1)
+
+        c.setFont("Helvetica-Bold", 7)
+        c.drawString(50, y_th - 11, "Ident")
+        c.drawString(90, y_th - 11, "Parcela")
+        c.drawString(140, y_th - 11, "Factura")
+        c.drawString(210, y_th - 11, "Nombre Copropietario")
+        c.drawRightString(540, y_th - 11, "Total Facturado")
+        c.drawRightString(720, y_th - 11, "Descuento Pronto Pago")
+
+        y_row = y_th - 28
+        h_line = 18
+
+        for u in page_units:
+            bloq = str(u.get("bloq", u.get("bloque", "01"))).zfill(2)
+            apto = str(u.get("apto", u.get("unidad", "")))
+            fac = str(u.get("fac", ""))
+            prop = str(u.get("propietario", "Copropietario"))[:30]
+            admon = float(u.get("admon", u.get("actual", 0)))
+            pend = float(u.get("pend", 0))
+            tot_fac = admon + pend
+            descto = -100000 if tot_fac > 0 else 0
+            tot_general += descto
+
+            c.setLineWidth(0.3)
+            c.line(36, y_row - 4, width - 36, y_row - 4)
+
+            c.setFont("Helvetica", 7)
+            c.drawString(50, y_row, bloq)
+            c.drawString(90, y_row, apto)
+            c.drawString(140, y_row, fac)
+            c.drawString(210, y_row, prop)
+            c.drawRightString(540, y_row, fmt_num(tot_fac))
+
+            c.setFont("Helvetica-Bold", 7)
+            c.drawRightString(720, y_row, fmt_num(descto))
+
+            y_row -= h_line
+
+        if page_num == total_paginas:
+            c.setLineWidth(1)
+            c.line(36, y_row - 4, width - 36, y_row - 4)
+            c.setFont("Helvetica-Bold", 8)
+            c.drawString(210, y_row - 14, "TOTAL DESCUENTOS OTORGADOS")
+            c.drawRightString(720, y_row - 14, fmt_num(tot_general))
+
+        _dibujar_pie_reporte(c, width, height, tipo_reporte, periodo, page_num, total_paginas)
+        if page_num < total_paginas:
+            c.showPage()
+
+
+def _generar_pdf_recibos_caja(c, width, height, cod, nombre_edif, periodo, unidades, fmt_num):
+    tipo_reporte = "LISTADO DE RECIBOS DE CAJA"
+    chunk_size = 24
+    total_unidades = len(unidades)
+    total_paginas = max(1, (total_unidades + chunk_size - 1) // chunk_size)
+
+    rc_base = 5870
+    tot_general = 0
+
+    for pag in range(total_paginas):
+        page_num = pag + 1
+        page_units = unidades[pag * chunk_size : (pag + 1) * chunk_size]
+
+        _dibujar_encabezado_reporte(c, width, height, cod, nombre_edif, periodo, tipo_reporte, page_num, total_paginas)
+
+        y_th = height - 85
+        c.rect(36, y_th - 16, width - 72, 16, fill=0, stroke=1)
+
+        c.setFont("Helvetica-Bold", 7)
+        c.drawString(45, y_th - 11, "Recibo")
+        c.drawString(85, y_th - 11, "Ident")
+        c.drawString(120, y_th - 11, "Parcela")
+        c.drawString(165, y_th - 11, "Mes")
+        c.drawString(195, y_th - 11, "Día")
+        c.drawString(225, y_th - 11, "Nombre Copropietario")
+        c.drawRightString(460, y_th - 11, "Valor")
+        c.drawString(485, y_th - 11, "Concepto del Recibo de Caja")
+
+        y_row = y_th - 28
+        h_line = 18
+
+        for idx, u in enumerate(page_units):
+            num_rc = rc_base + pag * chunk_size + idx
+            bloq = str(u.get("bloq", u.get("bloque", "01"))).zfill(2)
+            apto = str(u.get("apto", u.get("unidad", "")))
+            fac = str(u.get("fac", ""))
+            prop = str(u.get("propietario", "Copropietario"))[:26]
+            admon = float(u.get("admon", u.get("actual", 0)))
+            val_rc = admon - 100000 if admon > 100000 else admon
+            tot_general += val_rc
+
+            c.setLineWidth(0.3)
+            c.line(36, y_row - 4, width - 36, y_row - 4)
+
+            c.setFont("Helvetica-Bold", 7)
+            c.drawString(45, y_row, str(num_rc))
+            c.setFont("Helvetica", 7)
+            c.drawString(85, y_row, bloq)
+            c.drawString(120, y_row, apto)
+            c.drawString(165, y_row, "10")
+            c.drawString(195, y_row, "15")
+            c.drawString(225, y_row, prop)
+            c.drawRightString(460, y_row, fmt_num(val_rc))
+            c.drawString(485, y_row, f"Pago/Abono del mes de {periodo} s/factura {fac}")
+
+            y_row -= h_line
+
+        if page_num == total_paginas:
+            c.setLineWidth(1)
+            c.line(36, y_row - 4, width - 36, y_row - 4)
+            c.setFont("Helvetica-Bold", 8)
+            c.drawString(225, y_row - 14, "TOTAL RECAUDADO EN RECIBOS DE CAJA")
+            c.drawRightString(460, y_row - 14, fmt_num(tot_general))
+
+        _dibujar_pie_reporte(c, width, height, tipo_reporte, periodo, page_num, total_paginas)
         if page_num < total_paginas:
             c.showPage()
 
@@ -777,16 +1078,19 @@ def generar_pdf_documento(edificio: str, anio: str, mes: str, archivo: str, dest
             f.write(b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n0000000052 00000 n\n0000000101 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF\n")
         return destino_path
 
-    c = canvas.Canvas(str(destino_path), pagesize=letter)
-    width, height = letter
-
-    if datos["tipo"] == "FACTURA":
-        generar_pdf_factura(c, width, height, edif_info, datos)
-    elif datos["tipo"] == "FACTURAS_LIBRO":
-        generar_pdf_libro_facturas_individuales(c, width, height, edif_info, datos)
-    elif datos["tipo"] == "RECIBO_CAJA":
-        generar_pdf_recibo(c, width, height, edif_info, datos)
+    # Determinar orientación: Facturas y recibos individuales son Portrait; Informes contables son Landscape (Letter)
+    if datos["tipo"] in ["FACTURA", "FACTURAS_LIBRO", "RECIBO_CAJA"]:
+        c = canvas.Canvas(str(destino_path), pagesize=letter)
+        width, height = letter
+        if datos["tipo"] == "FACTURA":
+            generar_pdf_factura(c, width, height, edif_info, datos)
+        elif datos["tipo"] == "FACTURAS_LIBRO":
+            generar_pdf_libro_facturas_individuales(c, width, height, edif_info, datos)
+        elif datos["tipo"] == "RECIBO_CAJA":
+            generar_pdf_recibo(c, width, height, edif_info, datos)
     else:
+        c = canvas.Canvas(str(destino_path), pagesize=landscape(letter))
+        width, height = landscape(letter)
         generar_pdf_informe(c, width, height, edif_info, datos)
 
     c.save()

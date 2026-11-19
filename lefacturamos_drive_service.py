@@ -255,6 +255,7 @@ def buscar_archivo_disco(edificio: str, anio: str, mes: str, archivo: str) -> Op
     
     # 1. Chequeo de rutas directas
     candidatos = [
+        Path("C:/dbplus/T_IMPRE") / archivo,
         REPO_DRIVE_PATH / edif / anio_str / mes_str / archivo,
         REPO_DRIVE_PATH / edif.zfill(4) / anio_str / mes_str / archivo,
         GOOGLE_DRIVE_LOCAL_PATH / edif / anio_str / mes_str / archivo,
@@ -271,6 +272,7 @@ def buscar_archivo_disco(edificio: str, anio: str, mes: str, archivo: str) -> Op
 
     # 2. Busqueda insensible a mayusculas, espacios, tildes y signos de puntuacion (. - _)
     carpetas_buscar = [
+        Path("C:/dbplus/T_IMPRE"),
         REPO_DRIVE_PATH / edif / anio_str / mes_str,
         REPO_DRIVE_PATH / edif.zfill(4) / anio_str / mes_str,
         GOOGLE_DRIVE_LOCAL_PATH / edif / anio_str / mes_str,

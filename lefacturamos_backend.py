@@ -3915,6 +3915,17 @@ def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: s
                     path_encontrado = cache_p
             except Exception as e:
                 print("Error en fallback PDF de backend:", e)
+        elif archivo.lower().endswith(".xlsx"):
+            try:
+                from lefacturamos_excel_generator import generar_excel_documento
+                cache_dir = Path("data/cache_xlsx")
+                cache_dir.mkdir(parents=True, exist_ok=True)
+                cache_p = cache_dir / f"{edificio}_{anio}_{mes}_{archivo}"
+                generar_excel_documento(edificio, anio, mes, archivo, cache_p)
+                if cache_p.exists():
+                    path_encontrado = cache_p
+            except Exception as e:
+                print("Error en fallback XLSX de backend:", e)
 
     if not path_encontrado or not path_encontrado.exists():
         raise HTTPException(status_code=404, detail=f"Archivo no encontrado en Google Drive o disco local: {archivo}")
