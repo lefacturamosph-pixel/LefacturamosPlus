@@ -22059,6 +22059,13 @@ if (tabId && tabId.startsWith("manual-")) {
 
 
 
+  // Redirección especial si se solicita directamente la planilla de pagos
+  let abrirSubtabPlanilla = false;
+  if (tabId === "planilla-novedades") {
+    tabId = "facturacion";
+    abrirSubtabPlanilla = true;
+  }
+
   // 1. Ocultar de manera estricta todas las pestañas y activar la seleccionada
 
   document.querySelectorAll(".tab-content").forEach(el => {
@@ -22078,17 +22085,21 @@ if (tabId && tabId.startsWith("manual-")) {
   }
 
   if (tabId === "facturacion") {
-  try {
-    const contPlan = document.getElementById("subtab-fac-content-planilla");
-    if (contPlan && !contPlan.classList.contains("hidden")) {
-      if (typeof renderizarPlanillaNovedades === "function") renderizarPlanillaNovedades();
-    } else {
-      if (typeof renderizarTabFacturacion === "function") renderizarTabFacturacion();
+    try {
+      if (abrirSubtabPlanilla && typeof cambiarSubtabFacturacion === "function") {
+        cambiarSubtabFacturacion('planilla');
+      } else {
+        const contPlan = document.getElementById("subtab-fac-content-planilla");
+        if (contPlan && !contPlan.classList.contains("hidden")) {
+          if (typeof renderizarPlanillaNovedades === "function") renderizarPlanillaNovedades();
+        } else {
+          if (typeof renderizarTabFacturacion === "function") renderizarTabFacturacion();
+        }
+      }
+    } catch (e) {
+      console.error("Error al renderizar facturación:", e);
     }
-  } catch (e) {
-    console.error("Error al renderizar facturación:", e);
   }
-}
 
   if (tabId === "parqueaderos") {
     try {
@@ -64591,6 +64602,28 @@ window.cambiarSubtabFacturacion = function(subtab) {
     if (tabFac && !tabFac.classList.contains("active")) {
       cambiarPestana("facturacion");
     }
+  }
+
+  // Sincronizar resaltado en el menú lateral (Sidebar)
+  const mapSubtabs = {
+    'planilla': 'planilla-novedades',
+    'liquidacion': 'facturacion',
+    'revertir': 'devolver-saldos'
+  };
+  const targetSubId = mapSubtabs[subtab];
+  if (targetSubId) {
+    document.querySelectorAll("#sidebar-menu-items button[data-tab]").forEach(btn => {
+      const dt = btn.getAttribute("data-tab");
+      if (['planilla-novedades', 'facturacion', 'devolver-saldos'].includes(dt)) {
+        if (dt === targetSubId) {
+          btn.classList.add("bg-emerald-600", "text-white", "font-bold", "shadow-md");
+          btn.classList.remove("text-slate-300");
+        } else {
+          btn.classList.remove("bg-emerald-600", "text-white", "font-bold", "shadow-md");
+          btn.classList.add("text-slate-300");
+        }
+      }
+    });
   }
 
   if (subtab === 'planilla') {
