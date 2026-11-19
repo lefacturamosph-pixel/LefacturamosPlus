@@ -3674,6 +3674,492 @@
 
       <!-- ================================================================= -->
 
+      <!-- 2.05 VISTA FACTURACIÓN: CENTRO DE FACTURACIÓN Y LIQUIDACIÓN LEY 675 -->
+
+      <!-- ================================================================= -->
+
+      <section id="tab-facturacion" class="tab-content space-y-5">
+        
+        <!-- Header Principal de Facturación -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shadow-md shrink-0">
+              <i data-lucide="receipt" class="w-5 h-5 text-amber-400"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">Centro de Facturación & Liquidación</h2>
+                <span id="facturacion-badge-cod" class="px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-700/60 text-amber-300 text-xs font-mono font-bold shadow-sm">4901</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 text-[10px] font-bold">Ley 675 PH</span>
+              </div>
+              <p id="facturacion-header-nombre" class="text-xs text-slate-400 font-semibold mt-0.5">EDIFICIO ROBLE ALTO P.H. • Gestión contable, cancelaciones y emisión mensual</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <button type="button" onclick="ejecutarLiquidacionMensualPlus()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer active:scale-95">
+              <i data-lucide="bolt" class="w-4 h-4"></i>
+              <span>⚡ Liquidar Facturación del Mes</span>
+            </button>
+            <button type="button" onclick="cambiarPestana('documentos', this)" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer">
+              <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+              <span>Ver 6 Listados PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra de Subpestañas del Módulo de Facturación (Orden Cronológico de Facturación) -->
+        <div class="flex flex-wrap items-center gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
+          <button id="btn-subtab-fac-planilla" type="button" onclick="cambiarSubtabFacturacion('planilla')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md cursor-pointer">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-300"></i>
+            <span>📋 1. Planilla de Pagos, Notas DÉBITO y CRÉDITO (Cancelaciones)</span>
+          </button>
+          <button id="btn-subtab-fac-liq" type="button" onclick="cambiarSubtabFacturacion('liquidacion')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/80 cursor-pointer">
+            <i data-lucide="bolt" class="w-4 h-4 text-emerald-400"></i>
+            <span>⚡ 2. Facturación y Liquidación Mensual</span>
+          </button>
+          <button id="btn-subtab-fac-revertir" type="button" onclick="cambiarSubtabFacturacion('revertir')" class="subtab-fac-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-rose-400 hover:bg-slate-800/80 cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-4 h-4 text-rose-400"></i>
+            <span>🔄 3. Devolver Saldos Mes Anterior (Reversión)</span>
+          </button>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SUBTAB 2: FACTURACIÓN & LIQUIDACIÓN MENSUAL                          -->
+        <!-- ==================================================================== -->
+        <div id="subtab-fac-content-liquidacion" class="space-y-5 hidden">
+          <!-- Tarjetas de Métricas de Facturación -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cartera Pendiente / Mora</span>
+              <div class="flex items-baseline justify-between">
+                <h3 id="facturacion-metrica-cartera" class="text-xl sm:text-2xl font-black text-rose-400 font-mono">$11.203.580</h3>
+                <span class="text-[11px] font-bold text-rose-400/80">Saldos en Mora</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Tasa Mora Mensual (Ley 675)</span>
+              <div class="flex items-baseline justify-between">
+                <h3 id="facturacion-metrica-tasa" class="text-xl sm:text-2xl font-black text-amber-400 font-mono">2.16%</h3>
+                <span class="text-[11px] font-bold text-amber-400/80">Máximo Legal</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Inmuebles Liquidados</span>
+              <div class="flex items-baseline justify-between">
+                <h3 id="facturacion-metrica-inmuebles" class="text-xl sm:text-2xl font-black text-cyan-400 font-mono">83</h3>
+                <span class="text-[11px] font-bold text-cyan-400/80">100% Censo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acceso Rápido a los 6 Listados Oficiales en PDF -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <i data-lucide="files" class="w-4 h-4 text-amber-400"></i>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider">6 Listados Contables Oficiales de Facturación (Ley 675)</h3>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400">Ubicación local: C:\Users\CARLOS\LefacturamosPlus\</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div onclick="cambiarPestana('documentos', this)" class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between group">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-black text-white group-hover:text-emerald-400 transition-colors">1. Listado de Facturación</span>
+                  <p class="text-[10px] text-slate-400">Detallado de cuotas emitidas en el mes</p>
+                </div>
+                <i data-lucide="download" class="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+              </div>
+
+              <div onclick="cambiarPestana('documentos', this)" class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between group">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-black text-white group-hover:text-emerald-400 transition-colors">2. Listado de Pendientes</span>
+                  <p class="text-[10px] text-slate-400">Cartera vencida por edades y mora</p>
+                </div>
+                <i data-lucide="download" class="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+              </div>
+
+              <div onclick="cambiarPestana('documentos', this)" class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between group">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-black text-white group-hover:text-emerald-400 transition-colors">3. Listado de Descuentos</span>
+                  <p class="text-[10px] text-slate-400">Descuentos aplicados por pronto pago</p>
+                </div>
+                <i data-lucide="download" class="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+              </div>
+
+              <div onclick="cambiarPestana('documentos', this)" class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between group">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-black text-white group-hover:text-emerald-400 transition-colors">4. Listado de Pagos</span>
+                  <p class="text-[10px] text-slate-400">Recaudos conciliados del mes anterior</p>
+                </div>
+                <i data-lucide="download" class="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+              </div>
+
+              <div onclick="cambiarPestana('documentos', this)" class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between group">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-black text-white group-hover:text-emerald-400 transition-colors">5. Recibos de Caja</span>
+                  <p class="text-[10px] text-slate-400">Comprobantes oficiales de ingreso</p>
+                </div>
+                <i data-lucide="download" class="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+              </div>
+
+              <div onclick="cambiarPestana('documentos', this)" class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center justify-between group">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-black text-white group-hover:text-emerald-400 transition-colors">6. Facturas Individuales</span>
+                  <p class="text-[10px] text-slate-400">Formato Individual por Copropietario (No Dobles)</p>
+                </div>
+                <i data-lucide="download" class="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Unidades e Historial de Facturación -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider">Detalle de Cobro por Unidad / Apartamento</h3>
+                <p class="text-xs text-slate-400">Consolidado de cuotas, mora liquidada y saldos totales exigibles</p>
+              </div>
+
+              <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="facturacion-buscar-unidad" oninput="filtrarTablaFacturacionUnidades(this.value)" placeholder="Buscar apartamento o propietario..." class="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 uppercase">
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-950/80 text-[10px] font-black uppercase text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th class="py-3 px-3">Unidad</th>
+                    <th class="py-3 px-3">Propietario / Residente</th>
+                    <th class="py-3 px-3">Coeficiente</th>
+                    <th class="py-3 px-3">Cuota Mes</th>
+                    <th class="py-3 px-3">Mora (2.16%)</th>
+                    <th class="py-3 px-3">Desc. Pronto</th>
+                    <th class="py-3 px-3 text-right">Total a Pagar</th>
+                    <th class="py-3 px-3 text-center">Estado</th>
+                    <th class="py-3 px-3 text-center">Aviso Cobro</th>
+                  </tr>
+                </thead>
+                <tbody id="facturacion-tbody-unidades" class="divide-y divide-slate-800/60 font-medium">
+                  <!-- Se inyecta dinámicamente con renderizarTabFacturacion() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SUBTAB 2: PLANILLA DE PAGOS, NOTAS DÉBITO Y CRÉDITO (CANCELACIONES) -->
+        <!-- ==================================================================== -->
+        <div id="subtab-fac-content-planilla" class="space-y-5">
+          <!-- Input oculto para carga de archivos Excel / CSV -->
+          <input type="file" id="input-archivo-planilla-excel" accept=".xlsx,.xls,.csv" class="hidden" onchange="cargarArchivoPlanillaExcel(event)">
+
+          <!-- Encabezado Oficial de la Planilla según Formato de Facturación -->
+          <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-amber-500/30 p-4 sm:p-5 rounded-3xl shadow-2xl space-y-4">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Paso 1 Obligatorio Previo a Facturación</span>
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold">
+                    (Las notas crédito van con signo negativo)
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-medium">
+                    Abajo: Recibos de Caja adicionales
+                  </span>
+                </div>
+                <h2 id="planilla-titulo-completo" class="text-base sm:text-xl font-black text-white font-mono tracking-tight">
+                  PLANILLA PAGOS Y NOVEDADES MES DE FACTURACIÓN
+                </h2>
+                <p class="text-xs text-slate-400 max-w-3xl">
+                  Registra los recaudos de bancos (Pagos 1 y 2), descuentos por pronto pago y notas contables D/C. Al pulsar <strong class="text-emerald-400">"Extraer y Aplicar Cancelaciones"</strong>, la cartera se actualiza automáticamente para proceder a la emisión de cobros del mes.
+                </p>
+              </div>
+
+              <!-- Barra de Acciones Principales -->
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onclick="extraerYAplicarCancelacionesCartera()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center gap-2 shadow-xl shadow-emerald-950/60 transition-all cursor-pointer">
+                  <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+                  <span>⚡ Extraer y Aplicar Cancelaciones</span>
+                </button>
+                <button type="button" onclick="document.getElementById('input-archivo-planilla-excel').click()" class="px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-sky-950/50 transition-all cursor-pointer" title="Cargar archivo Excel (.xlsx) o CSV con pagos y novedades">
+                  <i data-lucide="upload" class="w-4 h-4"></i>
+                  <span>📥 Cargar Excel / CSV</span>
+                </button>
+                <button type="button" onclick="descargarPlanillaExcelOficial()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer" title="Descargar libro Excel oficial (.xlsx) idéntico al formato">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>📤 Exportar Excel (.xlsx)</span>
+                </button>
+                <button type="button" onclick="limpiarPlanillaPagosMes()" class="px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-400 border border-slate-700 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer" title="Limpiar pagos del mes para nuevo periodo">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span>Limpiar Mes</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Metadatos de Cabecera: Código, Fecha Pago y Mes -->
+            <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-800/80 text-xs">
+              <div class="flex items-center gap-2 bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-slate-800 font-mono">
+                <span class="text-slate-400 font-bold">Código Copropiedad:</span>
+                <input type="text" id="planilla-meta-codigo" onchange="actualizarMetadatosPlanilla()" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 text-amber-400 font-black text-xs text-center focus:outline-none focus:border-amber-500" value="4901">
+              </div>
+              <div class="flex items-center gap-2 bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-slate-800 font-mono">
+                <span class="text-slate-400 font-bold">Fecha / Día de Pago:</span>
+                <input type="number" id="planilla-meta-diapago" min="1" max="31" onchange="actualizarMetadatosPlanilla()" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 text-emerald-400 font-black text-xs text-center focus:outline-none focus:border-emerald-500" value="30">
+              </div>
+              <div class="flex items-center gap-2 bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-slate-800 font-mono">
+                <span class="text-slate-400 font-bold">Periodo Facturación:</span>
+                <span id="planilla-meta-mes-texto" class="text-white font-black">Noviembre 2026</span>
+              </div>
+              <div class="ml-auto flex items-center gap-2 text-slate-400 text-[11px]">
+                <i data-lucide="keyboard" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Navega ágilmente de celda a celda con <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px]">Tab</kbd></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Métricas Resumen de la Planilla -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">1. Valor Facturado</span>
+              <div class="text-base sm:text-lg font-black text-white font-mono truncate" id="planilla-metrica-facturado">$0</div>
+              <span class="text-[9px] text-slate-400 block">Cartera Anterior</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">2. Total Recaudos</span>
+              <div class="text-base sm:text-lg font-black text-emerald-400 font-mono truncate" id="planilla-metrica-pagos">$0</div>
+              <span class="text-[9px] text-emerald-400/80 block">Abonos Entrantes</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">3. Valor Descuento</span>
+              <div class="text-base sm:text-lg font-black text-teal-300 font-mono truncate" id="planilla-metrica-descuentos">$0</div>
+              <span class="text-[9px] text-teal-300/80 block">Pronto Pago</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">4. Notas DÉBITO (+)</span>
+              <div class="text-base sm:text-lg font-black text-rose-400 font-mono truncate" id="planilla-metrica-debitos">+$0</div>
+              <span class="text-[9px] text-rose-400/80 block">Recargos / Mora</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">5. Notas CRÉDITO (-)</span>
+              <div class="text-base sm:text-lg font-black text-cyan-400 font-mono truncate" id="planilla-metrica-creditos">-$0</div>
+              <span class="text-[9px] text-cyan-400/80 block">Ajustes a Favor</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">6. Saldos Pendientes</span>
+              <div class="text-base sm:text-lg font-black text-amber-400 font-mono truncate" id="planilla-metrica-pendientes">$0</div>
+              <span class="text-[9px] text-amber-400/80 block">Saldo Consolidado</span>
+            </div>
+          </div>
+
+          <!-- Tabla Interactiva Oficial Tipo Hoja de Cálculo -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <i data-lucide="table" class="w-4 h-4 text-amber-400"></i>
+                  <span>Planilla de Inmuebles • Cancelaciones y Novedades del Mes</span>
+                </h3>
+                <p class="text-xs text-slate-400">Digita pagos y fechas directamente. Los totales y saldos se calculan automáticamente con cada tecla.</p>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <div class="relative w-full sm:w-64">
+                  <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="text" id="planilla-buscar-unidad" oninput="filtrarTablaPlanilla(this.value)" placeholder="Buscar apartamento o bloque..." class="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 uppercase">
+                </div>
+                <button type="button" onclick="guardarPlanillaNovedadesYCancelaciones(false)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shrink-0 flex items-center gap-1 border border-slate-700 shadow-md cursor-pointer">
+                  <i data-lucide="save" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span>Guardar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Contenedor scroll horizontal para la tabla con todas las columnas de la planilla oficial -->
+            <div class="overflow-x-auto rounded-xl border border-slate-800 shadow-inner max-h-[600px] overflow-y-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="sticky top-0 bg-slate-950 text-[10px] font-black uppercase text-slate-300 border-b border-slate-800 z-10 select-none shadow-md">
+                  <tr>
+                    <th class="py-2.5 px-2 text-center min-w-[50px] border-r border-slate-800/80">Bloque</th>
+                    <th class="py-2.5 px-2.5 text-center min-w-[65px] border-r border-slate-800/80">Apto.</th>
+                    <th class="py-2.5 px-2 text-center min-w-[65px] border-r border-slate-800/80">Nº Fac</th>
+                    <th class="py-2.5 px-2 text-right min-w-[65px] border-r border-slate-800/80">Coef (%)</th>
+                    <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-800/80 bg-slate-900/60">Valor Facturado</th>
+                    <th class="py-2.5 px-2 text-center min-w-[105px] border-r border-slate-800/80 text-emerald-400">Valor Pagos 1</th>
+                    <th class="py-2.5 px-1 text-center min-w-[45px] border-r border-slate-800/80 text-slate-400">Día 1</th>
+                    <th class="py-2.5 px-2 text-center min-w-[105px] border-r border-slate-800/80 text-emerald-400">Valor Pagos 2</th>
+                    <th class="py-2.5 px-1 text-center min-w-[45px] border-r border-slate-800/80 text-slate-400">Día 2</th>
+                    <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-800/80 text-emerald-300 bg-emerald-950/20 font-black">Total Pagos</th>
+                    <th class="py-2.5 px-2 text-center min-w-[95px] border-r border-slate-800/80 text-teal-300">Valor Descto.</th>
+                    <th class="py-2.5 px-2 text-center min-w-[95px] border-r border-slate-800/80 text-rose-400">Notas Db (+)</th>
+                    <th class="py-2.5 px-2 text-center min-w-[95px] border-r border-slate-800/80 text-cyan-400">Notas Cr (-)</th>
+                    <th class="py-2.5 px-3 text-right min-w-[120px] border-r border-slate-800/80 text-amber-400 bg-amber-950/20 font-black">Saldos Pendientes</th>
+                    <th class="py-2.5 px-3 min-w-[180px]">Novedades / Otros Cobros</th>
+                  </tr>
+                </thead>
+                <tbody id="planilla-tbody-unidades" class="divide-y divide-slate-800/60 font-mono text-xs">
+                  <!-- Se inyecta dinámicamente con todas las filas de apartamentos -->
+                </tbody>
+                <tfoot id="planilla-tfoot-totales" class="sticky bottom-0 bg-slate-950 font-black text-xs border-t-2 border-slate-700 z-10 shadow-lg text-slate-200">
+                  <!-- Se inyectan dinámicamente los totales sumados -->
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- ==================================================================== -->
+            <!-- SECCIÓN INFERIOR: ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES       -->
+            <!-- ==================================================================== -->
+            <div class="mt-8 pt-6 border-t-2 border-slate-800 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <h4 class="text-sm font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-4 h-4 text-amber-400"></i>
+                    <span>ANOTACIONES PARA RECIBOS DE CAJA ADICIONALES</span>
+                  </h4>
+                  <p class="text-xs text-slate-400 mt-0.5">
+                    Registra ingresos por conceptos no ordinarios (Ej: Alquiler Salón Social, Parqueaderos extras, Mudanzas, Multas de Convivencia, etc.).
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="agregarFilaReciboCajaAdicional()" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>+ Agregar Recibo Adicional</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tabla de Recibos de Caja Adicionales -->
+              <div class="overflow-x-auto rounded-xl border border-slate-800 shadow-inner">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-slate-950 text-[10px] font-black uppercase text-slate-400 border-b border-slate-800 select-none">
+                    <tr>
+                      <th class="py-2.5 px-3 text-center w-12 border-r border-slate-800/80">No.</th>
+                      <th class="py-2.5 px-2 text-center w-20 border-r border-slate-800/80">Bloque</th>
+                      <th class="py-2.5 px-2 text-center w-24 border-r border-slate-800/80">Apto.</th>
+                      <th class="py-2.5 px-3 min-w-[200px] border-r border-slate-800/80">Nombre Copropietario / Pagador</th>
+                      <th class="py-2.5 px-2 text-center w-16 border-r border-slate-800/80">Día</th>
+                      <th class="py-2.5 px-3 text-right w-36 border-r border-slate-800/80 text-emerald-400">Valor ($)</th>
+                      <th class="py-2.5 px-3 min-w-[240px] border-r border-slate-800/80">Concepto del Recibo de Caja (Ej. Salón Social)</th>
+                      <th class="py-2.5 px-2 text-center w-16">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="planilla-tbody-recibos-adicionales" class="divide-y divide-slate-800/60 font-mono text-xs">
+                    <!-- Se inyecta dinámicamente -->
+                  </tbody>
+                  <tfoot id="planilla-tfoot-recibos-adicionales" class="bg-slate-950 font-black text-xs border-t border-slate-800 text-slate-200">
+                    <!-- Total recibos adicionales -->
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Botones Inferiores de Flujo de Trabajo -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-800/80">
+              <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                <span>Al aplicar las cancelaciones, los saldos se envían a la base de cartera para facturar el nuevo mes.</span>
+              </span>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="extraerYAplicarCancelacionesCartera()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/40 cursor-pointer">
+                  <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+                  <span>1. Aplicar Cancelaciones</span>
+                </button>
+                <button type="button" onclick="cambiarSubtabFacturacion('liquidacion')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs flex items-center gap-2 border border-slate-700 cursor-pointer">
+                  <span>2. Proceder a Facturar Mes</span>
+                  <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-400"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SUBTAB 3: DEVOLVER SALDOS AL MES ANTERIOR (REVERSIÓN DE FACTURACIÓN) -->
+        <!-- ==================================================================== -->
+        <div id="subtab-fac-content-revertir" class="space-y-5 hidden">
+          <div class="bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40 p-5 sm:p-6 rounded-3xl shadow-2xl space-y-5">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 shadow-lg">
+                <i data-lucide="rotate-ccw" class="w-6 h-6 text-rose-400"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800 text-[10px] font-bold">Módulo de Seguridad Contable</span>
+                  <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">Edificio 4901</span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white">Devolver Saldos al Mes Anterior & Repetir Facturación</h3>
+                <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  ¿La facturación de este mes salió con errores, faltaron pagos por registrar o notas débito/crédito por aplicar? 
+                  Esta herramienta realiza un <strong>rollback total</strong>: restablece los saldos de todos los apartamentos a como estaban antes de liquidar este mes, cancela las cuotas emitidas y te permite volver a repetir la facturación limpiamente.
+                </p>
+              </div>
+            </div>
+
+            <!-- Paso a Paso Contable -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
+              <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+                <div class="flex items-center gap-2 text-rose-400 font-bold text-xs">
+                  <span class="w-5 h-5 rounded-full bg-rose-500/20 flex items-center justify-center text-[11px] font-black">1</span>
+                  <span>Restaurar Saldos Cartera</span>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                  Devuelve el saldo exigible de los 83 apartamentos a su valor exacto previo a la emisión de cuotas de este mes.
+                </p>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+                <div class="flex items-center gap-2 text-amber-400 font-bold text-xs">
+                  <span class="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-[11px] font-black">2</span>
+                  <span>Anular Cuotas e Intereses</span>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                  Remueve las cuotas ordinarias y los intereses de mora calculados en la última corrida de facturación errónea.
+                </p>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/90 space-y-1.5">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                  <span class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-[11px] font-black">3</span>
+                  <span>Habilitar Repetición Limpia</span>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                  Podrás ir a la Planilla de Pagos/Notas D/C, corregir lo necesario y volver a liquidar la facturación oficial.
+                </p>
+              </div>
+            </div>
+
+            <!-- Resumen del Estado de Reversión -->
+            <div class="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="space-y-0.5">
+                <span class="text-[10px] font-mono uppercase text-slate-500">Estado de la Liquidación:</span>
+                <p id="reversion-estado-texto" class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                  <span>Facturación del mes actual registrada (Lista para revertir si se requiere)</span>
+                </p>
+              </div>
+
+              <button type="button" onclick="abrirModalDevolverSaldosMesAnterior()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-xl shadow-rose-950/60 transition-all cursor-pointer active:scale-95 shrink-0">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                <span>Devolver Saldos al Mes Anterior</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+
+      <!-- ================================================================= -->
+
       <!-- 2.1 VISTA APARTAMENTOS: INVENTARIO DE INMUEBLES (249)             -->
 
       <!-- ================================================================= -->
@@ -11122,29 +11608,25 @@
         </button>
 
         <button type="button" onclick="cambiarSubtabModalConversor('fusion3en1')" id="subtab-modal-cm-fusion3en1" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-amber-300 hover:text-white flex items-center gap-2 border border-transparent hover:border-amber-500/40">
-
           <i data-lucide="layers" class="w-4 h-4 text-amber-400"></i>
-
-          <span>⚡ Fusión 3-en-1: Crear Edificio Completo</span>
-
+          <span>2. Fusión 3-en-1: Crear Edificio</span>
           <span class="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black border border-amber-500/40">NUEVO</span>
+        </button>
 
+        <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" id="subtab-modal-cm-mapeador" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-teal-300 hover:text-white flex items-center gap-2 border border-transparent hover:border-teal-500/40">
+          <i data-lucide="git-pull-request" class="w-4 h-4 text-teal-400"></i>
+          <span>3. Mapeador Visual Interactivo</span>
+          <span class="px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-black border border-teal-500/40">OPCIÓN PRO</span>
         </button>
 
         <button type="button" onclick="cambiarSubtabModalConversor('plantillas')" id="subtab-modal-cm-plantillas" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2">
-
           <i data-lucide="download" class="w-4 h-4 text-slate-400"></i>
-
-          <span>2. Descargar Plantillas Oficiales (.xlsx)</span>
-
+          <span>4. Descargar Plantillas Oficiales (.xlsx)</span>
         </button>
 
         <button type="button" onclick="cambiarSubtabModalConversor('python')" id="subtab-modal-cm-python" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2">
-
           <i data-lucide="terminal" class="w-4 h-4 text-amber-400"></i>
-
-          <span>3. Scripts Python (Windows / Android / iOS)</span>
-
+          <span>5. Scripts Python (Windows / Android / iOS)</span>
         </button>
 
       </div>
@@ -11342,11 +11824,13 @@
             </button>
 
             <button type="button" onclick="document.getElementById('modal-cm-file-input').click()" class="px-5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-xs inline-flex items-center gap-2 transition-all cursor-pointer">
-
               <i data-lucide="plus" class="w-4 h-4"></i>
-
               <span>Subir Siguiente Archivo</span>
+            </button>
 
+            <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" class="px-5 py-2.5 rounded-xl bg-teal-950/70 hover:bg-teal-900/80 text-teal-300 border border-teal-500/40 font-bold text-xs inline-flex items-center gap-2 transition-all cursor-pointer shadow-md" title="Mapea las columnas de tu Excel a medida">
+              <i data-lucide="git-pull-request" class="w-4 h-4 text-teal-400"></i>
+              <span>🗺️ Mapear Columnas a Medida</span>
             </button>
 
           </div>
@@ -11776,15 +12260,14 @@
           </div>
 
           <div class="flex flex-col sm:flex-row items-center gap-2.5 shrink-0">
-
             <button type="button" id="btn-f3-cargar-datos-reales" onclick="cargarDatosRealesFusionActiva()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-500/50 text-amber-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md">
-
               <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-
               <span id="txt-f3-cargar-datos-reales">Cargar Datos Reales (Edificio Manchester 7480)</span>
-
             </button>
-
+            <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-teal-950/60 hover:bg-teal-900/80 border border-teal-500/40 text-teal-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer" title="Mapear columnas si el Excel viene de otro software">
+              <i data-lucide="git-pull-request" class="w-4 h-4 text-teal-400"></i>
+              <span>🗺️ Mapeador Visual</span>
+            </button>
           </div>
 
         </div>
@@ -12695,7 +13178,206 @@
 
 
 
-      <!-- VISTA 2: DESCARGAR PLANTILLAS OFICIALES (.XLSX) SEGÚN SCREENSHOT -->
+      <!-- VISTA 3: MAPEADOR VISUAL INTERACTIVO DE COLUMNAS -->
+      <div id="modal-cm-view-mapeador" class="hidden space-y-6">
+
+        <!-- Banner Principal del Mapeador -->
+        <div class="border border-teal-500/40 bg-gradient-to-r from-teal-950/40 via-slate-900/95 to-indigo-950/30 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-lg bg-teal-500/20 border border-teal-500/40 text-teal-300 font-mono font-black text-xs uppercase tracking-wide">
+                🗺️ MAPEADOR VISUAL INTERACTIVO
+              </span>
+              <span class="text-xs text-slate-400 font-semibold">• Universal para Cualquier Software</span>
+            </div>
+            <h4 class="text-base sm:text-lg font-black text-white">
+              Adapta Cualquier Excel o CSV de Administradores a LefacturamosPlus
+            </h4>
+            <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              Compatible con exportaciones de <strong class="text-white">Siigo, Daytona, SISCO, Propiedata, Helisa</strong> o planillas artesanales. Examina las columnas de tu archivo, relaciónalas con los campos contables del programa y valida el resultado en vivo con quórum y saldos antes de cargar.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="cargarMuestraDemoMapeador()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-400"></i>
+              <span>Cargar Muestra Demo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 1: SELECCIÓN DE COPROPIEDAD DESTINO Y ARCHIVO -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-teal-600 text-white font-black flex items-center justify-center text-xs">1</span>
+              <h5 class="text-sm font-black text-white">Paso 1: Copropiedad Destino y Archivo Fuente</h5>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">Soporta .xlsx, .xls, .csv, .txt</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <!-- Selector Edificio Destino -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-300">Copropiedad Destino:</label>
+              <select id="mv-select-edificio" onchange="alCambiarEdificioMapeador(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-semibold focus:border-teal-500 focus:outline-none">
+                <!-- Se llena dinámicamente -->
+              </select>
+            </div>
+
+            <!-- Selector Perfil de Mapeo Predefinido / Guardado -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-300">Perfil de Mapeo:</label>
+              <div class="flex items-center gap-1.5">
+                <select id="mv-select-perfil" onchange="aplicarPerfilMapeo(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-teal-300 text-xs font-semibold focus:border-teal-500 focus:outline-none">
+                  <option value="auto">✨ Auto-Detección Inteligente (Sinónimos)</option>
+                  <option value="siigo">📊 Perfil Siigo Nube PH</option>
+                  <option value="daytona">🏢 Perfil Daytona Intercloud</option>
+                  <option value="sisco">📑 Perfil SISCO P.H.</option>
+                  <option value="propiedata">📱 Perfil Propiedata / PHPlus</option>
+                </select>
+                <button type="button" onclick="guardarPerfilMapeoActual()" title="Guardar perfil actual" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
+                  <i data-lucide="save" class="w-4 h-4 text-teal-400"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Selector de Hoja (si el Excel trae más de 1 hoja) -->
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-300">Hoja del Libro:</label>
+              <select id="mv-select-hoja" onchange="cambiarHojaMapeadorVisual(this.value)" disabled class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 text-xs font-semibold focus:border-teal-500 focus:outline-none">
+                <option value="">(Sube un archivo primero)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Zona de Carga Drag & Drop -->
+          <div class="border-2 border-dashed border-slate-800 hover:border-teal-500/60 rounded-2xl p-5 text-center bg-slate-950/50 hover:bg-slate-950/80 transition-all space-y-2">
+            <input type="file" id="mv-file-input" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="cargarArchivoEnMapeadorVisual(event)">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-teal-950/60 border border-teal-500/40 text-teal-400 flex items-center justify-center shrink-0">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+              </div>
+              <div class="text-center sm:text-left">
+                <p class="text-xs font-bold text-white">Haz clic para examinar o arrastra el archivo de tu cliente aquí</p>
+                <p class="text-[11px] text-slate-400">Lee hojas de Excel (.xlsx, .xls) o texto delimitado (.csv, .txt con comas o punto y coma)</p>
+              </div>
+              <button type="button" onclick="document.getElementById('mv-file-input').click()" class="sm:ml-auto px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
+                <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                <span>Examinar Archivo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Badge de Archivo Cargado -->
+          <div id="mv-info-archivo-badge" class="hidden flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-teal-500/30 text-xs">
+            <div class="flex items-center gap-2 flex-wrap">
+              <i data-lucide="check-circle" class="w-4 h-4 text-teal-400"></i>
+              <span class="text-white font-bold" id="mv-nombre-archivo">--</span>
+              <span class="text-slate-500">•</span>
+              <span class="text-slate-400" id="mv-conteo-filas">0 filas leídas</span>
+              <span class="text-slate-500">•</span>
+              <span class="text-teal-400 font-semibold" id="mv-conteo-cols">0 columnas detectadas</span>
+            </div>
+            <button type="button" onclick="document.getElementById('mv-file-input').click()" class="text-[11px] text-teal-400 hover:underline">
+              Cambiar archivo
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: MAPEO VISUAL DE COLUMNAS -->
+        <div id="mv-seccion-mapeo" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-teal-600 text-white font-black flex items-center justify-center text-xs">2</span>
+              <div>
+                <h5 class="text-sm font-black text-white">Paso 2: Relaciona las Columnas del Archivo con los Campos del Sistema</h5>
+                <p class="text-[11px] text-slate-400">Verifica la muestra de datos de la fila 1 para asegurarte que coincida cada dato.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="autoDetectarColumnasMapeador()" class="px-2.5 py-1 rounded-lg bg-teal-950/80 border border-teal-500/40 text-teal-300 hover:bg-teal-900 text-xs font-bold transition-all">
+                ✨ Auto-Reasignar
+              </button>
+              <button type="button" onclick="limpiarMapeoCampos()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-bold transition-all">
+                ✕ Limpiar
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenedor dinámico de categorías y campos mapeables -->
+          <div id="mv-grid-mapeo" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Se inyecta dinámicamente con renderizarTablaMapeador() -->
+          </div>
+        </div>
+
+        <!-- PASO 3: AUDITORÍA Y PREVISUALIZACIÓN EN VIVO -->
+        <div id="mv-seccion-preview" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-teal-600 text-white font-black flex items-center justify-center text-xs">3</span>
+              <div>
+                <h5 class="text-sm font-black text-white">Paso 3: Auditoría y Previsualización en Vivo</h5>
+                <p class="text-[11px] text-slate-400">Los datos cambian en tiempo real cuando modificas un selector arriba.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Métricas en Tiempo Real -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-400 font-bold uppercase block">TOTAL REGISTROS</span>
+              <span id="mv-kpi-unidades" class="text-base sm:text-lg font-black text-white font-mono">0 Aptos</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-400 font-bold uppercase block">QUÓRUM LEY 675</span>
+              <span id="mv-kpi-quorum" class="text-base sm:text-lg font-black text-emerald-400 font-mono">0.000%</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-400 font-bold uppercase block">CUOTA MES TOTAL</span>
+              <span id="mv-kpi-cuota" class="text-base sm:text-lg font-black text-sky-400 font-mono">$0</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-400 font-bold uppercase block">CARTERA MORA TOTAL</span>
+              <span id="mv-kpi-cartera" class="text-base sm:text-lg font-black text-rose-400 font-mono">$0</span>
+            </div>
+          </div>
+
+          <!-- Tabla con las primeras filas mapeadas -->
+          <div class="overflow-x-auto rounded-xl border border-slate-800 max-h-64 overflow-y-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-950 sticky top-0 z-10 border-b border-slate-800 text-[10px] uppercase text-slate-400 font-mono" id="mv-thead-preview">
+                <!-- Inyectado dinámicamente -->
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300 font-mono text-[11px]" id="mv-tbody-preview">
+                <!-- Filas dinámicas -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PASO 4: BARRA DE ACCIÓN FINAL -->
+        <div id="mv-seccion-acciones" class="hidden border-t border-slate-800 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <i data-lucide="shield-check" class="w-4 h-4 text-teal-400 shrink-0"></i>
+            <span>La información se sincronizará con la copropiedad seleccionada sin borrar datos de otros módulos.</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button type="button" onclick="enviarMapeadorAFusion3en1()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <i data-lucide="layers" class="w-4 h-4 text-amber-400"></i>
+              <span>⚡ Enviar a Fusión 3-en-1</span>
+            </button>
+            <button type="button" onclick="ejecutarCargaMapeadorVisual()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 hover:from-teal-500 hover:to-emerald-500 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-teal-950/60 transition-all cursor-pointer">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              <span>Confirmar y Aplicar Mapeo al Edificio</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+
+
+      <!-- VISTA 4: DESCARGAR PLANTILLAS OFICIALES (.XLSX) SEGÚN SCREENSHOT -->
 
       <div id="modal-cm-view-plantillas" class="hidden space-y-4">
 
@@ -16169,7 +16851,7 @@
 
       <div class="flex items-center justify-between pt-3 border-t border-slate-800">
 
-        <a id="det-pago-drive-link" href="https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E" target="_blank" class="px-3.5 py-2 rounded-xl bg-amber-950/60 border border-amber-800 text-amber-300 font-bold hover:bg-amber-900/60 flex items-center gap-1.5 transition-colors">
+        <a id="det-pago-drive-link" href="https://drive.google.com/drive/folders/1u1remh8F3vwpk108ZhibqfDhHErBtYBv" target="_blank" class="px-3.5 py-2 rounded-xl bg-amber-950/60 border border-amber-800 text-amber-300 font-bold hover:bg-amber-900/60 flex items-center gap-1.5 transition-colors">
 
           <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
 
@@ -18435,7 +19117,7 @@
 
         <div class="flex items-center gap-2">
 
-          <a href="https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link" target="_blank" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all">
+          <a href="https://drive.google.com/drive/folders/1u1remh8F3vwpk108ZhibqfDhHErBtYBv?usp=drive_link" target="_blank" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all">
 
             <i data-lucide="folder" class="w-3.5 h-3.5"></i>
 
@@ -18966,6 +19648,117 @@
   </div>
 
 
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ASENTAR NOVEDAD PUNTUAL (PAGO, NOTA DÉBITO O CRÉDITO) -->
+  <!-- ======================================================== -->
+  <div id="modal-agregar-novedad-facturacion" class="hidden fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl animate-fade-in" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-white text-sm">Registrar Novedad / Transacción</h3>
+            <p class="text-[10px] text-slate-400">Pago, Nota Débito o Crédito para Cartera</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalAgregarNovedad()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-novedad-facturacion" onsubmit="event.preventDefault(); guardarNovedadPuntual();" class="space-y-3.5 text-xs">
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Apartamento / Unidad *</label>
+          <select id="nov-sel-apto" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-amber-500">
+            <!-- Inyectado dinámicamente -->
+          </select>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Tipo de Movimiento *</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-700 bg-slate-950/60 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-950/30">
+              <input type="radio" name="nov-tipo" value="pago" checked class="hidden">
+              <span class="font-bold text-emerald-400 text-[11px]">Pago / Abono</span>
+              <span class="text-[9px] text-slate-400">Recibo de Caja</span>
+            </label>
+            <label class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-700 bg-slate-950/60 cursor-pointer has-[:checked]:border-rose-500 has-[:checked]:bg-rose-950/30">
+              <input type="radio" name="nov-tipo" value="debito" class="hidden">
+              <span class="font-bold text-rose-400 text-[11px]">Nota DÉBITO (+)</span>
+              <span class="text-[9px] text-slate-400">Multa / Mora / Cargo</span>
+            </label>
+            <label class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-700 bg-slate-950/60 cursor-pointer has-[:checked]:border-cyan-500 has-[:checked]:bg-cyan-950/30">
+              <input type="radio" name="nov-tipo" value="credito" class="hidden">
+              <span class="font-bold text-cyan-400 text-[11px]">Nota CRÉDITO (-)</span>
+              <span class="text-[9px] text-slate-400">Descuento / Ajuste</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Valor en Pesos ($) *</label>
+            <input type="number" id="nov-inp-valor" required min="1" step="100" placeholder="Ej: 450000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="font-bold text-slate-300 block mb-1">Número de Recibo / Ref</label>
+            <input type="text" id="nov-inp-recibo" placeholder="Ej: RC-1048 o BANCOLOMBIA" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono uppercase focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">Concepto o Detalle *</label>
+          <input type="text" id="nov-inp-concepto" required placeholder="Ej: Consignación cuota octubre / Descuento pronto pago / Multa asamblea" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="cerrarModalAgregarNovedad()" class="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-bold text-xs cursor-pointer">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-950/50 cursor-pointer">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Asentar en la Planilla</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CONFIRMAR DEVOLUCIÓN DE SALDOS AL MES ANTERIOR    -->
+  <!-- ======================================================== -->
+  <div id="modal-confirmar-reversion-facturacion" class="hidden fixed inset-0 z-[130] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-rose-500/50 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+      <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-400"></i>
+        </div>
+        <div>
+          <h3 class="font-black text-white text-base">¿Devolver Saldos al Mes Anterior?</h3>
+          <p class="text-[10px] text-rose-400 font-bold">Esta acción anulará la liquidación de este mes</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-300 space-y-2">
+        <p class="font-semibold text-white">Al confirmar, el sistema ejecutará los siguientes cambios:</p>
+        <ul class="list-disc list-inside space-y-1 text-slate-400 text-[11px]">
+          <li>Restablecerá la cartera de los 83 apartamentos al saldo previo exacto.</li>
+          <li>Eliminará las cuotas emitidas en la liquidación errónea.</li>
+          <li>Removerá los intereses de mora calculados en la última corrida.</li>
+          <li>Habilitará nuevamente la Planilla de Pagos para que puedas hacer ajustes y <strong class="text-emerald-400">volver a repetir la facturación</strong>.</li>
+        </ul>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">
+        <button type="button" onclick="cerrarModalDevolverSaldos()" class="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-bold text-xs cursor-pointer">Cancelar</button>
+        <button type="button" onclick="ejecutarReversionFacturacion()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs flex items-center gap-2 shadow-xl shadow-rose-950/60 cursor-pointer">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          <span>Sí, Devolver Saldos al Mes Anterior</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
