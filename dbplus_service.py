@@ -173,20 +173,20 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
     ss_rows = read_dbf_binary(ss_chosen) if ss_chosen else []
     ss_map = {str(r.get('APTO','')).strip(): r for r in ss_rows}
 
-    # Metadatos del Edificio
+    # Metadatos del Edificio - Nunca inventar datos si no existen en los archivos
     nom_edif = str(target_ed.get('NOMURBAN') or target_ed.get('NOMADMON') or target_ed.get('NOM') or f"Edificio {clean_cod}").strip()
-    nit_edif = str(target_ed.get('NITURBAN') or target_ed.get('NIT') or "901690778-9").strip()
-    banco_edif = str(target_ed.get('BANCO') or "BANCOLOMBIA AHO").strip()
+    nit_edif = str(target_ed.get('NITURBAN') or target_ed.get('NIT') or "").strip()
+    banco_edif = str(target_ed.get('BANCO') or "").strip()
     cta_edif = str(target_ed.get('CUENTA') or "").strip()
-    admin_edif = str(target_ed.get('NOMTEL') or target_ed.get('ADMINISTRADOR') or "Administración").strip()
+    admin_edif = str(target_ed.get('NOMTEL') or target_ed.get('ADMINISTRADOR') or "").strip()
     tel_edif = str(target_ed.get('TEL') or "").strip()
     if tel_edif == '0': tel_edif = ""
     email_edif = str(target_ed.get('EMAILURBAN') or target_ed.get('EMAIL') or "").strip()
     dir_edif = str(target_ed.get('DIREC') or "").strip()
-    mora_val = target_ed.get('MORA') or target_ed.get('INTPORC') or '2.118%'
-    if str(mora_val).upper() == "SUPER" or not mora_val:
-        mora_val = target_ed.get('INTPORC') or '2.118%'
-    mora_edif = f"{mora_val}%" if "%" not in str(mora_val) else str(mora_val)
+    mora_val = target_ed.get('MORA') or target_ed.get('INTPORC') or ''
+    if str(mora_val).upper() == "SUPER":
+        mora_val = target_ed.get('INTPORC') or ''
+    mora_edif = f"{mora_val}%" if (mora_val and "%" not in str(mora_val)) else str(mora_val)
 
     edificio_info = {
         "codigo": clean_cod,
@@ -309,27 +309,8 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
             "tipo": "APTO"
         })
 
-    # Quórum: Ajuste matemático exacto al 100.000% Ley 675
-    if unidades:
-        if tot_coef == 0.0:
-            c_base = round(100.0 / len(unidades), 3)
-            acum = 0.0
-            for idx, u in enumerate(unidades):
-                c = round(100.0 - acum, 3) if idx == len(unidades) - 1 else c_base
-                acum += c
-                u["coefNum"] = c
-                u["coeficiente"] = f"{c:.3f}%"
-        elif abs(tot_coef - 100.0) > 0.05 and tot_coef > 0:
-            factor = 100.0 / tot_coef
-            acum = 0.0
-            for idx, u in enumerate(unidades):
-                if idx == len(unidades) - 1:
-                    c = round(100.0 - acum, 3)
-                else:
-                    c = round(u["coefNum"] * factor, 3)
-                    acum += c
-                u["coefNum"] = c
-                u["coeficiente"] = f"{c:.3f}%"
+    # Respetar estrictamente los coeficientes reales de los archivos sin inventar ni recalcular
+    # Si un archivo no trae coeficientes, permanecen en 0.0 tal como vienen en la fuente original
 
     # Actualizar automáticamente data/edificio_{clean_cod}_master.json para sincronización perfecta con Render Cloud
     try:
@@ -352,7 +333,7 @@ def obtener_datos_dbplus_edificio(codigo: str) -> Optional[Dict[str, Any]]:
                 "unidades": unidades_save,
                 "anios": existing.get("anios", [2026, 2025, 2024, 2023, 2022]),
                 "inmueblesCount": len(unidades_save),
-                "coeficienteTotal": f"{tot_coef:.3f}%" if tot_coef > 0 else "100.000%"
+                "coeficienteTotal": f"{tot_coef:.3f}%" if tot_coef > 0 else "0.000%"
             })
             os.makedirs(os.path.dirname(master_path), exist_ok=True)
             with open(master_path, "w", encoding="utf-8") as f:
