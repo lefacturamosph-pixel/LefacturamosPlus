@@ -4564,7 +4564,15 @@ function sincronizarAdministradorEdificio(cod) {
 
   }
 
-  if (topAvatarRol) topAvatarRol.innerText = "Administradora";
+  if (topAvatarRol) topAvatarRol.innerText = "Administrador(a)";
+
+  const topNombre = document.getElementById("top-header-edificio-nombre");
+  if (topNombre) {
+    const cop = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
+    if (cop && cop.nombre) {
+      topNombre.innerText = `${cop.codigo} ${cop.nombre.toUpperCase()}`;
+    }
+  }
 
 
 

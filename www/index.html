@@ -1271,25 +1271,15 @@
         <div>
 
           <div class="flex items-center gap-1">
-
-            <select id="sel-conjunto" onchange="cambiarConjuntoActivo(this.value)" class="bg-transparent border-none text-white text-xs sm:text-sm font-black focus:outline-none cursor-pointer">
-
-              <option value="cj_4901" selected>4901 EDIFICIO ROBLE ALTO P.H.</option>
-
+            <span id="top-header-edificio-nombre" class="text-white text-xs sm:text-sm font-black tracking-tight leading-tight select-none">0950 EDIFICIO LA FORTALEZA</span>
+            <select id="sel-conjunto" onchange="cambiarConjuntoActivo(this.value)" class="hidden" aria-hidden="true">
+              <option value="cj_0950" selected>0950 EDIFICIO LA FORTALEZA</option>
+              <option value="cj_4901">4901 EDIFICIO ROBLE ALTO P.H.</option>
               <option value="cj_5304">5304 PARCELACION VALLADOS DE GRATAMIRA.</option>
-
               <option value="cj_7480">7480 EDIFICIO MANCHESTER APTOS PH</option>
-
               <option value="cj_0127">0127 EDIFICIO CLASS 48 P. H.</option>
-
               <option value="cj_0202">0202 EDIFICIO LAURELES COLONIAL</option>
-
-
-
             </select>
-
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
-
           </div>
 
           <p id="top-header-ciudad" class="text-[10px] text-slate-400 font-medium">Medellín • Antioquia</p>
@@ -1368,7 +1358,7 @@
 
             <p id="top-avatar-nombre" class="text-xs font-bold text-white leading-tight truncate max-w-[110px] sm:max-w-[170px] md:max-w-none">Sofía Jiménez Rangel</p>
 
-            <p id="top-avatar-rol" class="text-[10px] text-slate-400 font-medium leading-tight truncate">Administradora</p>
+            <p id="top-avatar-rol" class="text-[10px] text-slate-400 font-medium leading-tight truncate">Administrador(a)</p>
 
           </div>
 
@@ -2005,23 +1995,10 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 shrink-0">
-
-                  <button type="button" onclick="iniciarCreacionEdificioSuperadmin()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-blue-900/40 transition-all">
-
+                  <button type="button" onclick="iniciarCreacionEdificioSuperadmin()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-950/40 transition-all cursor-pointer">
                     <i data-lucide="plus" class="w-4 h-4"></i>
-
-                    <span>+ Crear Manual</span>
-
+                    <span>+ Crear Edificio</span>
                   </button>
-
-                  <button type="button" onclick="iniciarCreacionEdificioSuperadmin()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-emerald-600 hover:from-amber-500 hover:to-emerald-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-950/40 transition-all">
-
-                    <i data-lucide="layers" class="w-4 h-4 text-amber-200"></i>
-
-                    <span>⚡ Fusión 3-en-1 (Crear Edificio Completo)</span>
-
-                  </button>
-
                 </div>
 
               </div>
@@ -3696,17 +3673,6 @@
               </div>
               <p id="facturacion-header-nombre" class="text-xs text-slate-400 font-semibold mt-0.5">EDIFICIO ROBLE ALTO P.H. • Gestión contable, cancelaciones y emisión mensual</p>
             </div>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <button type="button" onclick="ejecutarLiquidacionMensualPlus()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer active:scale-95">
-              <i data-lucide="bolt" class="w-4 h-4"></i>
-              <span>⚡ Liquidar Facturación del Mes</span>
-            </button>
-            <button type="button" onclick="cambiarPestana('documentos', this)" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer">
-              <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
-              <span>Ver 6 Listados PDF</span>
-            </button>
           </div>
         </div>
 
@@ -8068,13 +8034,6 @@
 
             </button>
 
-            <button id="btn-manual-subir-propio" type="button" onclick="abrirModalSubirPDFEdificio()" class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
-
-              <i data-lucide="upload" class="w-3.5 h-3.5 text-slate-400"></i>
-
-              <span>Subir PDF Propio</span>
-
-            </button>
 
             <button type="button" onclick="generarPDFManualEdificio()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all">
 
@@ -8777,10 +8736,6 @@
               <button type="button" onclick="abrirModalNuevoItemInventario()" class="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-950/50 transition-all cursor-pointer">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
                 <span>Crear Más Detalles</span>
-              </button>
-              <button type="button" onclick="abrirModalRelevo()" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-950/50 transition-all cursor-pointer">
-                <i data-lucide="repeat" class="w-4 h-4"></i>
-                <span>Relevo de Turno</span>
               </button>
               <button type="button" onclick="imprimirInventarioPuesto()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" title="Exportar o Imprimir Acta Oficial PDF">
                 <i data-lucide="printer" class="w-4 h-4 text-emerald-400"></i>
@@ -11830,10 +11785,6 @@
               <span>Subir Siguiente Archivo</span>
             </button>
 
-            <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" class="px-5 py-2.5 rounded-xl bg-teal-950/70 hover:bg-teal-900/80 text-teal-300 border border-teal-500/40 font-bold text-xs inline-flex items-center gap-2 transition-all cursor-pointer shadow-md" title="Mapea las columnas de tu Excel a medida">
-              <i data-lucide="git-pull-request" class="w-4 h-4 text-teal-400"></i>
-              <span>🗺️ Mapear Columnas a Medida</span>
-            </button>
 
           </div>
 
@@ -12265,10 +12216,6 @@
             <button type="button" id="btn-f3-cargar-datos-reales" onclick="cargarDatosRealesFusionActiva()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-500/50 text-amber-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md">
               <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
               <span id="txt-f3-cargar-datos-reales">Cargar Datos Reales (Edificio Manchester 7480)</span>
-            </button>
-            <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-teal-950/60 hover:bg-teal-900/80 border border-teal-500/40 text-teal-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer" title="Mapear columnas si el Excel viene de otro software">
-              <i data-lucide="git-pull-request" class="w-4 h-4 text-teal-400"></i>
-              <span>🗺️ Mapeador Visual</span>
             </button>
           </div>
 
