@@ -3376,9 +3376,11 @@
 
                 <select id="admin-banco-sel" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white">
 
-                  <option value="Banco AV Villas" selected>Banco AV Villas</option>
+                  <option value="" disabled selected>Seleccione Banco Receptor</option>
 
                   <option value="Bancolombia">Bancolombia</option>
+
+                  <option value="Banco AV Villas">Banco AV Villas</option>
 
                   <option value="Davivienda">Davivienda</option>
 
@@ -3430,9 +3432,9 @@
 
                 <select id="admin-tipo-cuenta-sel" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white">
 
-                  <option value="Corriente" selected>Cuenta Corriente</option>
+                  <option value="Ahorros" selected>Cuenta de Ahorros</option>
 
-                  <option value="Ahorros">Cuenta de Ahorros</option>
+                  <option value="Corriente">Cuenta Corriente</option>
 
                 </select>
 
@@ -3444,7 +3446,7 @@
 
                 <label class="font-bold text-slate-400 block mb-1">Número de Cuenta Bancaria</label>
 
-                <input type="text" id="admin-numero-cuenta" value="512168063" placeholder="Ej: 512168063" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-brand-300">
+                <input type="text" id="admin-numero-cuenta" value="" placeholder="Ej: 61300060942" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-brand-300">
 
               </div>
 
@@ -3458,7 +3460,7 @@
 
                 <label class="font-bold text-slate-400 block mb-1">Titular de la Cuenta (Copropiedad)</label>
 
-                <input type="text" id="admin-titular-cuenta" value="Agrupación Residencial Edificio Manchester APTOS PH" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="admin-titular-cuenta" value="" placeholder="Nombre Oficial de la Copropiedad" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
 
               </div>
 
@@ -3466,7 +3468,7 @@
 
                 <label class="font-bold text-slate-400 block mb-1">NIT de la Copropiedad</label>
 
-                <input type="text" id="admin-nit-cuenta" value="900.777.367-7" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white">
+                <input type="text" id="admin-nit-cuenta" value="" placeholder="NIT de la Copropiedad" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white">
 
               </div>
 
@@ -3474,7 +3476,7 @@
 
                 <label class="font-bold text-slate-400 block mb-1">Llave Bre-B Interoperable</label>
 
-                <input type="text" id="admin-breb-llave" value="BREB-AVV-7480" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-emerald-400">
+                <input type="text" id="admin-breb-llave" value="" placeholder="Llave Bre-B" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-emerald-400">
 
               </div>
 
@@ -4914,7 +4916,7 @@
 
                 <span class="text-[10px] text-slate-400 font-bold uppercase block">Banco Oficial</span>
 
-                <span id="pago-copropiedad-banco" class="font-bold text-white text-xs mt-0.5 block">Banco AV Villas</span>
+                <span id="pago-copropiedad-banco" class="font-bold text-white text-xs mt-0.5 block">--</span>
 
               </div>
 
@@ -4922,7 +4924,7 @@
 
                 <span class="text-[10px] text-slate-400 font-bold uppercase block">Tipo de Cuenta</span>
 
-                <span id="pago-copropiedad-tipo" class="font-bold text-white text-xs mt-0.5 block">Cuenta Corriente</span>
+                <span id="pago-copropiedad-tipo" class="font-bold text-white text-xs mt-0.5 block">Cuenta de Ahorros</span>
 
               </div>
 
@@ -4930,7 +4932,7 @@
 
                 <span class="text-[10px] text-slate-400 font-bold uppercase block">Número de Cuenta</span>
 
-                <span id="pago-copropiedad-cuenta" class="font-mono font-bold text-brand-400 text-xs mt-0.5 block">512168063</span>
+                <span id="pago-copropiedad-cuenta" class="font-mono font-bold text-brand-400 text-xs mt-0.5 block">--</span>
 
               </div>
 
@@ -4938,7 +4940,7 @@
 
                 <span class="text-[10px] text-slate-400 font-bold uppercase block">NIT Copropiedad</span>
 
-                <span id="pago-copropiedad-nit" class="font-mono font-bold text-slate-200 text-xs mt-0.5 block">900.777.367-7</span>
+                <span id="pago-copropiedad-nit" class="font-mono font-bold text-slate-200 text-xs mt-0.5 block">--</span>
 
               </div>
 
@@ -4946,9 +4948,9 @@
 
             <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/60">
 
-              <span><strong>Titular:</strong> <span id="pago-copropiedad-titular">Agrupación Residencial Edificio Manchester APTOS PH</span></span>
+              <span><strong>Titular:</strong> <span id="pago-copropiedad-titular">--</span></span>
 
-              <span><strong>Llave Bre-B:</strong> <span id="pago-copropiedad-breb" class="font-mono text-emerald-400 font-bold">BREB-AVV-7480/0301/329800</span></span>
+              <span><strong>Llave Bre-B:</strong> <span id="pago-copropiedad-breb" class="font-mono text-emerald-400 font-bold">--</span></span>
 
             </div>
 
