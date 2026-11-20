@@ -62,33 +62,33 @@ function actualizarPerfilResidente(codigoEdificio, aptoInput) {
 
     AppState.aptoNumero = unidadEncontrada.unidad || unidadEncontrada.apto || aptoLimpio;
 
-    AppState.propietario = unidadEncontrada.propietario || "SANDRA LORENA MOLINA";
+    AppState.propietario = unidadEncontrada.propietario || unidadEncontrada.nombre || "";
 
-    AppState.documento = unidadEncontrada.cc || "1042764783";
+    AppState.documento = unidadEncontrada.cc || unidadEncontrada.cedula || unidadEncontrada.nit || "";
 
-    AppState.email = unidadEncontrada.email || "moly8712@gmail.com";
+    AppState.email = unidadEncontrada.email || unidadEncontrada.correo || "";
 
-    AppState.coeficiente = unidadEncontrada.coefNum || parseFloat(unidadEncontrada.coeficiente) || 1.11;
+    AppState.coeficiente = unidadEncontrada.coefNum || parseFloat(unidadEncontrada.coeficiente) || 0;
 
-    AppState.coeficienteFmt = unidadEncontrada.coeficiente || `${AppState.coeficiente}%`;
+    AppState.coeficienteFmt = unidadEncontrada.coeficiente || (AppState.coeficiente > 0 ? `${AppState.coeficiente}%` : "0.000%");
 
-    AppState.admon = (unidadEncontrada.admon !== undefined) ? unidadEncontrada.admon : (unidadEncontrada.actual || 451000);
+    AppState.admon = (unidadEncontrada.admon !== undefined) ? unidadEncontrada.admon : (unidadEncontrada.actual || unidadEncontrada.cuota || 0);
 
-    AppState.pend = (unidadEncontrada.pend !== undefined) ? unidadEncontrada.pend : 500610;
+    AppState.pend = (unidadEncontrada.pend !== undefined) ? unidadEncontrada.pend : (unidadEncontrada.saldoAnterior || 0);
 
-    AppState.inta = (unidadEncontrada.inta !== undefined) ? unidadEncontrada.inta : 10600;
+    AppState.inta = (unidadEncontrada.inta !== undefined) ? unidadEncontrada.inta : (unidadEncontrada.interes || 0);
 
     AppState.intp = (unidadEncontrada.intp !== undefined) ? unidadEncontrada.intp : 0;
 
     AppState.saldoTotal = unidadEncontrada.totalNum || (AppState.admon + AppState.pend + AppState.inta);
 
-    AppState.valpag = (unidadEncontrada.valpag !== undefined) ? unidadEncontrada.valpag : 625000;
+    AppState.valpag = (unidadEncontrada.valpag !== undefined) ? unidadEncontrada.valpag : 0;
 
     AppState.estado = unidadEncontrada.estado || (AppState.pend > 0 ? "En Mora" : "Al Dia");
 
-    AppState.fac = unidadEncontrada.fac || 2745;
+    AppState.fac = unidadEncontrada.fac || unidadEncontrada.nfac || "";
 
-    AppState.rec = unidadEncontrada.rec || 2501;
+    AppState.rec = unidadEncontrada.rec || "";
 
     const cuFound = unidadEncontrada.cuartoUtil || unidadEncontrada.cuarto_util || "";
     AppState.cuartoUtil = normalizarDatoInmueble(cuFound, "CU-");
@@ -100,33 +100,33 @@ function actualizarPerfilResidente(codigoEdificio, aptoInput) {
 
     AppState.aptoNumero = aptoLimpio;
 
-    AppState.propietario = "SANDRA LORENA MOLINA";
+    AppState.propietario = "";
 
-    AppState.documento = "1042764783";
+    AppState.documento = "";
 
-    AppState.email = "moly8712@gmail.com";
+    AppState.email = "";
 
-    AppState.coeficiente = 1.11;
+    AppState.coeficiente = 0;
 
-    AppState.coeficienteFmt = "1.11%";
+    AppState.coeficienteFmt = "0.000%";
 
-    AppState.admon = 451000;
+    AppState.admon = 0;
 
-    AppState.pend = 500610;
+    AppState.pend = 0;
 
-    AppState.inta = 10600;
+    AppState.inta = 0;
 
     AppState.intp = 0;
 
-    AppState.saldoTotal = 962210;
+    AppState.saldoTotal = 0;
 
-    AppState.valpag = 625000;
+    AppState.valpag = 0;
 
-    AppState.estado = "En Mora";
+    AppState.estado = "Al Dia";
 
-    AppState.fac = 2745;
+    AppState.fac = "";
 
-    AppState.rec = 2501;
+    AppState.rec = "";
 
     AppState.cuartoUtil = "";
 
@@ -504,9 +504,9 @@ function actualizarTopAvatarResidente() {
 
 
 
-  const nomProp = AppState.propietario || "SANDRA LORENA MOLINA";
+  const nomProp = AppState.propietario || (AppState.aptoNumero ? `Apto ${AppState.aptoNumero}` : "Usuario");
 
-  const aptoNum = AppState.aptoNumero || "0107";
+  const aptoNum = AppState.aptoNumero || "";
 
   const partes = nomProp.trim().split(/\s+/).filter(p => !["de", "del", "la", "las", "los", "y"].includes(p.toLowerCase()));
 
@@ -38797,31 +38797,31 @@ function procesarDatosEdificio(rows, fileName = "") {
 
 
 
-  const cod = String(fila.CODIGO || fila.codigo || codActivo || "4901").trim();
+  const cod = String(fila.CODIGO || fila.codigo || codActivo || "").trim();
 
-  const nom = String(fila.NOMURBAN || fila.NOMADMON || fila.NOM || fila.NOMBRE || fila.nombre || `Edificio ${cod}`).trim();
+  const nom = String(fila.NOMURBAN || fila.NOMADMON || fila.NOM || fila.NOMBRE || fila.nombre || (cod ? `Edificio ${cod}` : "Edificio")).trim();
 
-  const nit = String(fila.NITURBAN || fila.NIT || fila.nit || "901690778-9").trim();
+  const nit = String(fila.NITURBAN || fila.NIT || fila.nit || "").trim();
 
-  const dir = String(fila.DIREC || fila.DIRECCION || fila.direccion || `DG 79A No 76-250/252/254/256`).trim();
+  const dir = String(fila.DIREC || fila.DIRECCION || fila.direccion || "").trim();
 
-  let tel = String(fila.TEL || fila.TELEFONO || fila.CELULAR || fila.NOMTEL || fila.telefono || "3137856910").trim();
+  let tel = String(fila.TEL || fila.TELEFONO || fila.CELULAR || fila.NOMTEL || fila.telefono || "").trim();
 
   if (tel === "0") tel = "";
 
-  const email = String(fila.EMAILURBAN || fila.EMAIL || fila.CORREO || fila.email || "admonedificioroblealto@gmail.com").trim();
+  const email = String(fila.EMAILURBAN || fila.EMAIL || fila.CORREO || fila.email || "").trim();
 
-  const banco = String(fila.BANCO || fila.banco || "BANCOLOMBIA AHO").trim();
+  const banco = String(fila.BANCO || fila.banco || "").trim();
 
-  const cta = String(fila.CUENTA || fila.cuenta || "991-000017-17").trim();
+  const cta = String(fila.CUENTA || fila.cuenta || "").trim();
 
-  const admin = String(fila.NOMTEL || fila.ADMINISTRADOR || fila.NOMADMON || fila.administrador || "Sofía Jiménez Rangel").trim();
+  const admin = String(fila.ADMINISTRADOR || fila.NOMADMON || fila.administrador || "").trim();
 
-  let intMora = String(fila.MORA || fila.INTPORC || fila.INTERES || fila.interesMora || "2.118%").trim();
+  let intMora = String(fila.MORA || fila.INTPORC || fila.INTERES || fila.interesMora || "").trim();
 
-  if (intMora.toUpperCase() === "SUPER" || !intMora) intMora = "2.118%";
+  if (intMora.toUpperCase() === "SUPER") intMora = "";
 
-  if (!intMora.includes("%")) intMora += "%";
+  if (intMora && !intMora.includes("%")) intMora += "%";
 
 
 
@@ -39067,57 +39067,9 @@ function procesarDatosInmuebles(rows, fileName = "") {
 
 
 
-  // Quórum: calibrar al 100.000% exacto Ley 675
-
+  // Respetar estrictamente los coeficientes que vienen en los archivos sin inventar ni recalcular
   let sumaCoef = 0;
-
-  unidadesMap.forEach(u => { sumaCoef += u.coefNum; });
-
-  if (sumaCoef === 0 && unidadesMap.size > 0) {
-
-    const cBase = parseFloat((100.0 / unidadesMap.size).toFixed(3));
-
-    let acum = 0;
-
-    let i = 0;
-
-    unidadesMap.forEach(u => {
-
-      i++;
-
-      const c = (i === unidadesMap.size) ? parseFloat((100.0 - acum).toFixed(3)) : cBase;
-
-      acum += c;
-
-      u.coefNum = c;
-
-      u.coeficiente = c.toFixed(3) + "%";
-
-    });
-
-  } else if (Math.abs(sumaCoef - 100.0) > 0.05 && sumaCoef > 0) {
-
-    const factor = 100.0 / sumaCoef;
-
-    let acum = 0;
-
-    let i = 0;
-
-    unidadesMap.forEach(u => {
-
-      i++;
-
-      const c = (i === unidadesMap.size) ? parseFloat((100.0 - acum).toFixed(3)) : parseFloat((u.coefNum * factor).toFixed(3));
-
-      acum += c;
-
-      u.coefNum = c;
-
-      u.coeficiente = c.toFixed(3) + "%";
-
-    });
-
-  }
+  unidadesMap.forEach(u => { sumaCoef += (u.coefNum || 0); });
 
 
 
@@ -39720,23 +39672,8 @@ function ajustarQuorum100Fusion() {
 
 
   if (totalActual === 0) {
-
-    const base = parseFloat((100.0 / unidades.length).toFixed(3));
-
-    let acum = 0;
-
-    unidades.forEach((u, idx) => {
-
-      const c = (idx === unidades.length - 1) ? parseFloat((100.0 - acum).toFixed(3)) : base;
-
-      acum += c;
-
-      u.coefNum = c;
-
-      u.coeficiente = c.toFixed(3) + "%";
-
-    });
-
+    mostrarToast("⚠️ Las unidades cargadas no contienen coeficientes en los listados originales. No se deben inventar datos.", "warning");
+    return;
   } else {
 
     const factor = 100.0 / totalActual;
@@ -41745,14 +41682,11 @@ async function ejecutarCargaMapeadorVisual() {
     return;
   }
 
+  // Respetar estrictamente los coeficientes originales; nunca inventar coeficientes si no existen en el archivo
   if (sumaCoef === 0 && unidades.length > 0) {
-    const cBase = parseFloat((100.0 / unidades.length).toFixed(3));
-    let acum = 0;
-    unidades.forEach((u, i) => {
-      const c = (i === unidades.length - 1) ? parseFloat((100.0 - acum).toFixed(3)) : cBase;
-      acum += c;
-      u.coefNum = c;
-      u.coeficiente = c.toFixed(3) + "%";
+    unidades.forEach(u => {
+      u.coefNum = u.coefNum || 0;
+      u.coeficiente = u.coeficiente || "0.000%";
     });
   }
 
@@ -58453,11 +58387,11 @@ function editarInmuebleInventario(unidad) {
 
   document.getElementById("edit-inmueble-tipo").value = item.tipo || "Apartamento";
 
-  document.getElementById("edit-inmueble-area").value = item.area || "75 m²";
+  document.getElementById("edit-inmueble-area").value = item.area || "";
 
-  document.getElementById("edit-inmueble-coef").value = item.coeficiente || "2.272%";
+  document.getElementById("edit-inmueble-coef").value = item.coeficiente || "0.000%";
 
-  document.getElementById("edit-inmueble-propietario").value = item.propietario || "Copropietario";
+  document.getElementById("edit-inmueble-propietario").value = item.propietario || "";
 
   document.getElementById("edit-inmueble-doc").value = item.documento || (item.cc ? `CC: ${item.cc}` : "");
 
@@ -58637,7 +58571,7 @@ function verDetalleInmueble(unidad) {
 
           <span class="text-[10px] text-slate-400 block uppercase">Coeficiente</span>
 
-          <span class="text-xs font-bold text-emerald-400">${item.coeficiente || '2.272%'}</span>
+          <span class="text-xs font-bold text-emerald-400">${item.coeficiente || '0.000%'}</span>
 
         </div>
 
@@ -62085,7 +62019,7 @@ function filtrarDocumentosInmueblesDrive() {
 
       if (bApto) bApto.innerText = `Apartamento ${AppState.aptoNumero}`;
 
-      if (bProp) bProp.innerText = AppState.propietario || "SANDRA LORENA MOLINA";
+      if (bProp) bProp.innerText = AppState.propietario || "Propietario";
 
       if (bTot) bTot.innerText = `$${Number(AppState.saldoTotal).toLocaleString('es-CO')} COP`;
 
@@ -64784,8 +64718,8 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
       const apto = String(u.apto || idx + 1);
       const bloque = String(u.bloque || u.torre || "AP");
       const prop = u.nombre || u.propietario || `Copropietario ${apto}`;
-      const coef = Number(u.coef !== undefined ? u.coef : (u.coeficiente !== undefined ? u.coeficiente : (100 / unidades.length))) || 0;
-      const nfac = String(u.nfac || u.factura || (3646 + idx));
+      const coef = Number(u.coef !== undefined ? u.coef : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0)) || 0;
+      const nfac = String(u.nfac || u.factura || u.fac || "");
 
       // Valor facturado (saldo anterior a cancelar o cuota actual si viene en blanco)
       const valorFacturado = Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : (u.cuota || 0))) || 0;
@@ -65516,11 +65450,13 @@ window.descargarPlanillaExcelOficial = function() {
   // Filas 6..N: Filas de inmuebles con fórmulas exactas
   unidades.forEach((u, idx) => {
     const apto = String(u.apto);
+    const numCoef = Number(u.coef !== undefined ? u.coef : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0)) || 0;
+    const numFac = u.nfac || u.factura || u.fac || "";
     const item = window._novedadesFacturacionCache[apto] || {
       bloque: u.bloque || "AP",
       apto: apto,
-      nfac: 3646 + idx,
-      coef: Number(u.coef || 1.22),
+      nfac: numFac,
+      coef: numCoef,
       valorFacturado: Number(u.pend || u.saldoAnterior || 0),
       pago1: 0,
       dia1: 30,
@@ -65537,7 +65473,7 @@ window.descargarPlanillaExcelOficial = function() {
     const rRow = new Array(26).fill("");
     rRow[0] = item.bloque || "AP";
     rRow[1] = item.apto;
-    rRow[2] = item.nfac || (3646 + idx);
+    rRow[2] = item.nfac || numFac;
     rRow[3] = Number(item.coef || 0);
     rRow[4] = Number(item.valorFacturado || 0);
     rRow[5] = Number(item.pago1 || 0);
