@@ -19165,7 +19165,7 @@ const MENUS_POR_ROL = {
     ],
     items: [
       { id: "superadmin", label: "Superadministrador Global", icono: "globe" },
-      { id: "cargamasiva", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud" },
+      { id: "cargamasiva", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
       { id: "apartamentos", label: "Apartamentos", icono: "home" },
       { id: "residentes", label: "Residentes", icono: "users" },
@@ -19283,20 +19283,10 @@ const MENUS_POR_ROL = {
 
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
 
-      // SUBMENÚ 1: CREACIÓN DE EDIFICIO
-      {
-        id: "creacion-edificio",
-        label: "Creación de Edificio",
-        icono: "building-2",
-        badge: "Plus",
-        subitems: [
-          { id: "modal-nueva-copropiedad", label: "Crear Nueva Copropiedad", icono: "plus-circle", action: "abrirModalNuevaCopropiedad()" },
-          { id: "cargamasiva-fusion", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'fusion3en1')" },
-          { id: "mapeador-visual", label: "Mapeador Visual de Columnas", icono: "git-pull-request", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'mapeador')" },
-          { id: "config-edificio", label: "Configurar Edificio Actual", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
-          { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" }
-        ]
-      },
+      // UN SOLO ICONO PARA CREAR EDIFICIO (Carga uno a uno de archivos Excel, CSV, TXT o PDF)
+      { id: "crear-edificio", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
+      { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" },
+      { id: "config-edificio", label: "Configurar Edificio", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
 
       // SUBMENÚ 2: FACTURACIÓN (Orden Cronológico de Facturación Condominal)
       {
@@ -38652,6 +38642,33 @@ async function leerArchivoEnJSON(file) {
 
 
 
+    if (fn.endsWith(".pdf")) {
+      const formData = new FormData();
+      formData.append("file", file);
+      const urlApi = (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "";
+      fetch(`${urlApi}/api/extraer-datos-archivo`, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.codigo_detectado) {
+          const inpCod = document.getElementById("modal-cm-input-codigo");
+          if (inpCod && (!inpCod.value || inpCod.value === "4901")) inpCod.value = data.codigo_detectado;
+        }
+        if (data && data.nombre_detectado) {
+          const inpNom = document.getElementById("modal-cm-input-nombre");
+          if (inpNom && (!inpNom.value || inpNom.value === "EDIFICIO ROBLE ALTO P.H.")) inpNom.value = data.nombre_detectado;
+        }
+        resolve(data && data.rows ? data.rows : []);
+      })
+      .catch(err => {
+        console.warn("Fallo al extraer PDF desde backend:", err);
+        resolve([]);
+      });
+      return;
+    }
+
     if (fn.endsWith(".csv") || fn.endsWith(".txt")) {
 
       reader.onload = (e) => {
@@ -40865,18 +40882,27 @@ function toggleColumnasVistaPrevia(vista) {
 
 async function ejecutarCargaDatosAnalizados() {
 
-  const cod = document.getElementById("modal-cm-input-codigo")?.value || codigoEdificioActivoFusion || "4901";
+  const cod = document.getElementById("modal-cm-input-codigo")?.value?.trim() || codigoEdificioActivoFusion || "4901";
 
-  const cop = listaCopropiedadesSuperadmin.find(c => c.codigo === cod || c.id === cod || c.id === `cj_${cod}`);
-
-
+  let cop = listaCopropiedadesSuperadmin.find(c => c.codigo === cod || c.id === cod || c.id === `cj_${cod}`);
 
   if (!cop) {
-
-    mostrarToast(`⚠️ Copropiedad #${cod} no encontrada.`, "warning");
-
-    return;
-
+    const nuevoNom = document.getElementById("modal-cm-input-nombre")?.value?.trim() || `EDIFICIO ${cod} P.H.`;
+    cop = {
+      id: `cj_${cod}`,
+      codigo: cod,
+      nombre: nuevoNom,
+      tipo: "Propiedad Horizontal",
+      nit: `901${cod}00-1`,
+      ciudad: "Medellín",
+      inmueblesCount: 0,
+      inmueblesOcupados: 0,
+      censoCount: 0,
+      unidades: [],
+      recaudoTotal: "$0",
+      carteraPendiente: "$0"
+    };
+    listaCopropiedadesSuperadmin.push(cop);
   }
 
 
@@ -40973,9 +40999,13 @@ async function ejecutarCargaDatosAnalizados() {
 
 
 
-  mostrarToast(`✓ ¡Datos sincronizados exitosamente! Registros aplicados a ${cop.nombre} (#${cop.codigo}).`, "success");
+  mostrarToast(`✓ ¡Edificio guardado exitosamente! Registros aplicados a ${cop.nombre} (#${cop.codigo}).`, "success");
 
   cerrarModalImportarExcelEdificio();
+
+  if (typeof cambiarCopropiedadActivaSuperadmin === "function") {
+    cambiarCopropiedadActivaSuperadmin(`cj_${cop.codigo}`);
+  }
 
   renderizarCopropiedadesSuperadmin();
 

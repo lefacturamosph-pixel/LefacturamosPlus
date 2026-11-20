@@ -1145,6 +1145,106 @@ def api_dbplus_disponibles():
     disponibles = listar_edificios_dbplus()
     return {"total": len(disponibles), "edificios": disponibles}
 
+@app.post("/api/extraer-datos-archivo")
+async def api_extraer_datos_archivo(file: UploadFile = File(...)):
+    """
+    Extrae unidades, saldos y metadatos de archivos para creación de edificio.
+    Soporta PDF (.pdf), Excel (.xlsx, .xls), CSV (.csv) y TXT (.txt).
+    """
+    import io, re
+    filename = file.filename or "archivo"
+    content = await file.read()
+    fn_lower = filename.lower()
+    
+    rows = []
+    codigo_detectado = ""
+    nombre_detectado = ""
+    
+    if fn_lower.endswith(".pdf"):
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(io.BytesIO(content))
+            full_text = "\n".join(p.extract_text() or "" for p in reader.pages)
+            
+            # Detectar código de edificio si existe
+            m_cod = re.search(r'C[oó]digo\s+(\d{4})', full_text, re.I)
+            if not m_cod:
+                m_cod = re.search(r'\b(\d{4})\b', filename)
+            codigo_detectado = m_cod.group(1) if m_cod else ""
+            
+            # Detectar nombre de edificio si existe
+            m_nom = re.search(r'(?:EDIFICIO|PARCELACION|CONDOMINIO|CONJUNTO)\s+[^\n]+', full_text, re.I)
+            if m_nom:
+                nombre_detectado = m_nom.group(0).strip().replace("Página", "").strip()
+            
+            lines = full_text.split("\n")
+            i = 0
+            while i < len(lines):
+                line = lines[i].strip()
+                m1 = re.match(r'^([A-Za-z0-9]{1,4})\s+([A-Za-z0-9\-]{2,8})\s+(\d{4,8})\s+([A-ZÁÉÍÓÚÑ\s\.\-]+)$', line)
+                m2 = re.match(r'^([A-Za-z0-9]{1,4})\s+([A-Za-z0-9\-]{2,8})\s+(\d{4,8})\s+([A-ZÁÉÍÓÚÑ\s\.\-]+?)(?:\s+(?:Descto|Pendiente|Actual|Total|0|-?[\d\.]+))', line, re.I) if not m1 else None
+                m = m1 or m2
+                
+                if m and not any(k in line.lower() for k in ['total', 'código', 'página', 'listado']):
+                    bloque = m.group(1)
+                    apto = m.group(2)
+                    nfac = m.group(3)
+                    prop = m.group(4).strip()
+                    cuota = 0
+                    saldo = 0
+                    
+                    j = i + 1
+                    while j < min(i + 5, len(lines)):
+                        nxt = lines[j].strip()
+                        if nxt.startswith('Pendiente'):
+                            parts = nxt.split()
+                            if len(parts) > 1:
+                                try: saldo = float(parts[-1].replace('.', '').replace(',', '.'))
+                                except: pass
+                        elif nxt.startswith('Actual'):
+                            parts = nxt.split()
+                            if len(parts) > 1:
+                                try: cuota = float(parts[-1].replace('.', '').replace(',', '.'))
+                                except: pass
+                        elif re.match(r'^[A-Za-z0-9]{1,4}\s+[A-Za-z0-9\-]{2,8}\s+\d{4,8}', nxt):
+                            break
+                        j += 1
+                        
+                    rows.append({
+                        "bloque": bloque,
+                        "apto": apto,
+                        "factura": nfac,
+                        "propietario": prop,
+                        "nombre": prop,
+                        "cuota": cuota,
+                        "saldo": saldo,
+                        "pend": saldo
+                    })
+                    i = j - 1
+                i += 1
+        except Exception as e:
+            print("Error extrayendo datos de PDF:", e)
+            
+    elif fn_lower.endswith(".csv") or fn_lower.endswith(".txt"):
+        try:
+            import csv
+            text = content.decode("utf-8", errors="ignore")
+            delim = ";" if ";" in text else ("," if "," in text else "\t")
+            reader = csv.DictReader(io.StringIO(text), delimiter=delim)
+            for r in reader:
+                rows.append(dict(r))
+        except Exception as e:
+            print("Error leyendo CSV/TXT:", e)
+            
+    return {
+        "ok": True,
+        "filename": filename,
+        "rows": rows,
+        "total": len(rows),
+        "codigo_detectado": codigo_detectado,
+        "nombre_detectado": nombre_detectado
+    }
+
 @app.get("/api/conjuntos/{conjunto_id}/dashboard")
 
 def obtener_dashboard_indicadores(conjunto_id: str):
