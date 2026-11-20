@@ -39958,12 +39958,6 @@ function renderizarTablaFusion3en1() {
 
               </button>
 
-              <button type="button" onclick="cargarMuestraFusionManchester7480()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold">
-
-                Cargar Muestra Demo
-
-              </button>
-
             </div>
 
           </div>
@@ -40198,7 +40192,7 @@ async function ejecutarCreacionEdificioFusion3en1() {
 
   if (!unidades || unidades.length === 0) {
 
-    mostrarToast("⚠️ La pantalla está limpia y sin registros. Por favor sube los archivos de Excel (MM / SS / EDIFICIO) o pulsa 'Cargar Muestra Demo' antes de crear el edificio.", true);
+    mostrarToast("⚠️ La pantalla está limpia y sin registros. Por favor sube los archivos de Excel (MM / SS / EDIFICIO) antes de crear el edificio.", true);
 
     return;
 
