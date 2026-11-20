@@ -26601,10 +26601,24 @@ function cambiarSubtabModalConversor(subtab) {
     const btn = document.getElementById(`subtab-modal-cm-${t}`);
     const view = document.getElementById(`modal-cm-view-${t}`);
     if (btn) {
-      if (t === subtab) {
-        btn.className = "subtab-modal-cm-btn active px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 flex items-center gap-2 shadow-sm";
+      if (t === 'plantillas' || t === 'python') {
+        btn.className = "hidden";
+      } else if (t === subtab) {
+        if (t === 'fusion3en1') {
+          btn.className = "subtab-modal-cm-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-amber-950/40 text-amber-300 border border-amber-500/50 flex items-center gap-2 shadow-sm";
+        } else if (t === 'mapeador') {
+          btn.className = "subtab-modal-cm-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-teal-950/40 text-teal-300 border border-teal-500/50 flex items-center gap-2 shadow-sm";
+        } else {
+          btn.className = "subtab-modal-cm-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 flex items-center gap-2 shadow-sm";
+        }
       } else {
-        btn.className = "subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2";
+        if (t === 'fusion3en1') {
+          btn.className = "subtab-modal-cm-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-amber-300/80 hover:text-white flex items-center gap-2 border border-transparent hover:border-amber-500/40";
+        } else if (t === 'mapeador') {
+          btn.className = "subtab-modal-cm-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-teal-300/80 hover:text-white flex items-center gap-2 border border-transparent hover:border-teal-500/40";
+        } else {
+          btn.className = "subtab-modal-cm-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2 border border-transparent hover:border-slate-800";
+        }
       }
     }
     if (view) {
