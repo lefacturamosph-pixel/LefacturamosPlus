@@ -4564,7 +4564,15 @@ function sincronizarAdministradorEdificio(cod) {
 
   }
 
-  if (topAvatarRol) topAvatarRol.innerText = "Administradora";
+  if (topAvatarRol) topAvatarRol.innerText = "Administrador(a)";
+
+  const topNombre = document.getElementById("top-header-edificio-nombre");
+  if (topNombre) {
+    const cop = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
+    if (cop && cop.nombre) {
+      topNombre.innerText = `${cop.codigo} ${cop.nombre.toUpperCase()}`;
+    }
+  }
 
 
 
@@ -22509,6 +22517,10 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 
     if (adminNit) adminNit.innerText = `NIT: ${encontrado.nit}`;
 
+    const topNombreHdr = document.getElementById("top-header-edificio-nombre");
+
+    if (topNombreHdr) topNombreHdr.innerText = `${encontrado.codigo} ${encontrado.nombre.toUpperCase()}`;
+
 
 
     // Actualizar Sidebar de Navegación (Solo el código sin • HC)
@@ -22588,6 +22600,10 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
     const topCiudad = document.getElementById("top-header-ciudad");
 
     if (topCiudad) topCiudad.innerText = encontrado.ciudad || "Medellín • Antioquia";
+
+    const topNombre = document.getElementById("top-header-edificio-nombre");
+
+    if (topNombre && encontrado) topNombre.innerText = `${encontrado.codigo} ${encontrado.nombre.toUpperCase()}`;
 
 
 

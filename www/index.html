@@ -1272,9 +1272,13 @@
 
           <div class="flex items-center gap-1">
 
-            <select id="sel-conjunto" onchange="cambiarConjuntoActivo(this.value)" class="bg-transparent border-none text-white text-xs sm:text-sm font-black focus:outline-none cursor-pointer">
+            <span id="top-header-edificio-nombre" class="text-white text-xs sm:text-sm font-black tracking-tight leading-tight select-none">0950 EDIFICIO LA FORTALEZA</span>
 
-              <option value="cj_4901" selected>4901 EDIFICIO ROBLE ALTO P.H.</option>
+            <select id="sel-conjunto" onchange="cambiarConjuntoActivo(this.value)" class="hidden" aria-hidden="true">
+
+              <option value="cj_0950" selected>0950 EDIFICIO LA FORTALEZA</option>
+
+              <option value="cj_4901">4901 EDIFICIO ROBLE ALTO P.H.</option>
 
               <option value="cj_5304">5304 PARCELACION VALLADOS DE GRATAMIRA.</option>
 
@@ -1284,11 +1288,7 @@
 
               <option value="cj_0202">0202 EDIFICIO LAURELES COLONIAL</option>
 
-
-
             </select>
-
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
 
           </div>
 
@@ -1368,7 +1368,7 @@
 
             <p id="top-avatar-nombre" class="text-xs font-bold text-white leading-tight truncate max-w-[110px] sm:max-w-[170px] md:max-w-none">Sofía Jiménez Rangel</p>
 
-            <p id="top-avatar-rol" class="text-[10px] text-slate-400 font-medium leading-tight truncate">Administradora</p>
+            <p id="top-avatar-rol" class="text-[10px] text-slate-400 font-medium leading-tight truncate">Administrador(a)</p>
 
           </div>
 
