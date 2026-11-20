@@ -4672,23 +4672,23 @@ const AppState = {
 
   datosBancarios: {
 
-    banco: "Banco AV Villas",
+    banco: "",
 
-    tipoCuenta: "Cuenta Corriente",
+    tipoCuenta: "Cuenta de Ahorros",
 
-    numeroCuenta: "512168063",
+    numeroCuenta: "",
 
-    titular: "Agrupación Residencial Edificio Manchester APTOS PH",
+    titular: "",
 
-    nit: "900.777.367-7",
+    nit: "",
 
-    breb: "BREB-AVV-7480/0301/329800",
+    breb: "",
 
-    wompiKey: "pub_prod_7480_lefacturamos",
+    wompiKey: "",
 
-    boldKey: "bold_live_7480_key",
+    boldKey: "",
 
-    payuId: "508029"
+    payuId: ""
 
   },
 
@@ -22302,6 +22302,113 @@ function obtenerUnidadesActivas() {
 
 
 
+function sincronizarFormularioBancarioAdmin(cop) {
+  if (!cop) {
+    cop = (typeof obtenerDatosCopropiedad === "function") 
+      ? obtenerDatosCopropiedad(AppState.conjuntoId || AppState.codigoEdificio) 
+      : null;
+  }
+  if (!cop) return;
+
+  const banco = cop.banco || "";
+  const tipoCuenta = cop.tipoCuenta || cop.tipo_cuenta || "Ahorros";
+  const cuenta = cop.cuenta || cop.numero_cuenta || cop.numeroCuenta || "";
+  const nombre = cop.nombre || cop.titular_cuenta || "";
+  const nit = cop.nit || "";
+  const breb = cop.breb || `BREB-${cop.codigo || ''}`;
+
+  // Actualizar AppState.datosBancarios para que todo el sistema lo tenga sincronizado
+  if (!AppState.datosBancarios) AppState.datosBancarios = {};
+  AppState.datosBancarios.banco = banco;
+  AppState.datosBancarios.tipoCuenta = (String(tipoCuenta).toUpperCase().includes("CORRIENTE") ? "Cuenta Corriente" : "Cuenta de Ahorros");
+  AppState.datosBancarios.numeroCuenta = cuenta;
+  AppState.datosBancarios.titular = nombre;
+  AppState.datosBancarios.nit = nit;
+  AppState.datosBancarios.breb = breb;
+  if (cop.wompiKey) AppState.datosBancarios.wompiKey = cop.wompiKey;
+  if (cop.boldKey) AppState.datosBancarios.boldKey = cop.boldKey;
+  if (cop.payuId) AppState.datosBancarios.payuId = cop.payuId;
+
+  // 1. Selector de Banco Receptor en Configuración de Pasarelas (sección-pagos-admin)
+  const bSel = document.getElementById("admin-banco-sel");
+  if (bSel) {
+    if (banco) {
+      const bUpper = banco.trim().toUpperCase();
+      let optCoincidente = Array.from(bSel.options).find(o => {
+        if (!o.value) return false;
+        const valUpper = o.value.trim().toUpperCase();
+        return valUpper === bUpper || bUpper.includes(valUpper) || valUpper.includes(bUpper);
+      });
+      if (optCoincidente) {
+        bSel.value = optCoincidente.value;
+      } else {
+        const nuevaOpt = document.createElement("option");
+        nuevaOpt.value = banco;
+        nuevaOpt.text = banco;
+        bSel.appendChild(nuevaOpt);
+        bSel.value = banco;
+      }
+    } else {
+      bSel.value = "";
+    }
+  }
+
+  // 2. Tipo de Cuenta
+  const tSel = document.getElementById("admin-tipo-cuenta-sel");
+  if (tSel) {
+    const tUpper = String(tipoCuenta).trim().toUpperCase();
+    if (tUpper.includes("CORRIENTE")) {
+      tSel.value = "Corriente";
+    } else {
+      tSel.value = "Ahorros";
+    }
+  }
+
+  // 3. Número de Cuenta
+  const numEl = document.getElementById("admin-numero-cuenta");
+  if (numEl) numEl.value = cuenta;
+
+  // 4. Titular
+  const titEl = document.getElementById("admin-titular-cuenta");
+  if (titEl) titEl.value = nombre;
+
+  // 5. NIT
+  const nitEl = document.getElementById("admin-nit-cuenta");
+  if (nitEl) nitEl.value = nit;
+
+  // 6. Llave Bre-B
+  const brebEl = document.getElementById("admin-breb-llave");
+  if (brebEl) brebEl.value = breb;
+
+  // 7. Pasarelas de Recaudo
+  const wompiEl = document.getElementById("admin-wompi-pub");
+  if (wompiEl) wompiEl.value = cop.wompiKey || `pub_prod_${cop.codigo}_lefacturamos`;
+  const boldEl = document.getElementById("admin-bold-key");
+  if (boldEl) boldEl.value = cop.boldKey || `bold_live_${cop.codigo}_key`;
+  const payuEl = document.getElementById("admin-payu-id");
+  if (payuEl) payuEl.value = cop.payuId || "";
+
+  // 8. Actualizar vista de Pagos de los Copropietarios (Residentes)
+  const pBanco = document.getElementById("pago-copropiedad-banco");
+  if (pBanco) pBanco.innerText = banco || "--";
+
+  const pTipo = document.getElementById("pago-copropiedad-tipo");
+  if (pTipo) pTipo.innerText = AppState.datosBancarios.tipoCuenta;
+
+  const pCuenta = document.getElementById("pago-copropiedad-cuenta");
+  if (pCuenta) pCuenta.innerText = cuenta || "--";
+
+  const pNit = document.getElementById("pago-copropiedad-nit");
+  if (pNit) pNit.innerText = nit || "--";
+
+  const pTitular = document.getElementById("pago-copropiedad-titular");
+  if (pTitular) pTitular.innerText = nombre || "--";
+
+  const pBreb = document.getElementById("pago-copropiedad-breb");
+  if (pBreb) pBreb.innerText = `${breb}/${AppState.aptoNumero || '0101'}/${AppState.saldoTotal || '0'}`;
+}
+window.sincronizarFormularioBancarioAdmin = sincronizarFormularioBancarioAdmin;
+
 function cambiarConjuntoActivo(nuevoConjuntoId) {
 
   if (!nuevoConjuntoId) return;
@@ -22452,19 +22559,8 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 
 
 
-    // Actualizar Datos Bancarios de la Administración
-
-    const adminTitular = document.getElementById("admin-titular-cuenta");
-
-    if (adminTitular) adminTitular.value = encontrado.nombre;
-
-    const pagoTitular = document.getElementById("pago-copropiedad-titular");
-
-    if (pagoTitular) pagoTitular.innerText = encontrado.nombre;
-
-    const pagoBreb = document.getElementById("pago-copropiedad-breb");
-
-    if (pagoBreb) pagoBreb.innerText = encontrado.breb || `BREB-${encontrado.codigo}`;
+    // Actualizar Datos Bancarios de la Administración y Pasarelas de Recaudo
+    sincronizarFormularioBancarioAdmin(encontrado);
 
 
 
@@ -23511,6 +23607,9 @@ function inicializarDatos() {
     }
   }
 
+  if (typeof sincronizarFormularioBancarioAdmin === "function") {
+    sincronizarFormularioBancarioAdmin();
+  }
 }
 
 
@@ -41923,7 +42022,7 @@ function abrirModalEditarEdificio(id) {
 
   setVal("edit-cop-email", cop.email || "");
 
-  setVal("edit-cop-banco", cop.banco || "BANCOLOMBIA AHO");
+  setVal("edit-cop-banco", cop.banco || "");
 
   setVal("edit-cop-tipo-cuenta", cop.tipoCuenta || "Ahorros");
 
@@ -42109,6 +42208,9 @@ async function guardarEdicionEdificio() {
     }
     if (typeof cambiarConjuntoActivo === "function") {
       cambiarConjuntoActivo(cop.id);
+    }
+    if (typeof sincronizarFormularioBancarioAdmin === "function") {
+      sincronizarFormularioBancarioAdmin(cop);
     }
     if (typeof renderizarCopropiedadesSuperadmin === "function") {
       renderizarCopropiedadesSuperadmin();
@@ -42858,6 +42960,8 @@ function guardarCuentaBancariaAdmin() {
 
 
 
+  const tipoNormalizado = (tipo === "Corriente" ? "Cuenta Corriente" : "Ahorros");
+
   AppState.datosBancarios = {
 
     banco: banco,
@@ -42880,7 +42984,49 @@ function guardarCuentaBancariaAdmin() {
 
   };
 
+  // Sincronizar copropiedad activa en catálogo y almacenamiento local
+  let cop = (typeof obtenerDatosCopropiedad === "function") 
+    ? obtenerDatosCopropiedad(AppState.conjuntoId || AppState.codigoEdificio) 
+    : null;
 
+  if (cop) {
+    cop.banco = banco;
+    cop.tipoCuenta = tipoNormalizado;
+    cop.cuenta = num;
+    cop.nombre = tit;
+    cop.nit = nit;
+    cop.breb = breb;
+    cop.wompiKey = wompi;
+    cop.boldKey = bold;
+    cop.payuId = payu;
+
+    if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined" && CATALOGO_OFICIAL_DBPLUS[cop.codigo]) {
+      Object.assign(CATALOGO_OFICIAL_DBPLUS[cop.codigo], {
+        banco: cop.banco,
+        tipoCuenta: cop.tipoCuenta,
+        cuenta: cop.cuenta,
+        nombre: cop.nombre,
+        nit: cop.nit,
+        breb: cop.breb
+      });
+    }
+
+    try {
+      localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
+    } catch (e) {}
+  }
+
+  // Sincronizar también campos del modal de edición si está abierto o se abre luego
+  const editBanco = document.getElementById("edit-cop-banco");
+  if (editBanco) editBanco.value = banco;
+  const editTipo = document.getElementById("edit-cop-tipo-cuenta");
+  if (editTipo) editTipo.value = tipoNormalizado;
+  const editCuenta = document.getElementById("edit-cop-cuenta");
+  if (editCuenta) editCuenta.value = num;
+
+  if (typeof sincronizarFormularioBancarioAdmin === "function") {
+    sincronizarFormularioBancarioAdmin(cop);
+  }
 
   actualizarDatosCuentaBancariaUI();
 
