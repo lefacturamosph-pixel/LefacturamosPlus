@@ -26366,7 +26366,7 @@ function seleccionarEdificioEnModalCM(codigo) {
 
   if (analTagEd) analTagEd.innerText = cop.nombre;
 
-  if (analBtnEd) analBtnEd.innerText = cop.nombre;
+  if (analBtnEd) analBtnEd.innerText = "Crear Edificio";
 
   if (analFootCod) analFootCod.innerText = cop.codigo;
 
@@ -40561,7 +40561,7 @@ async function procesarArchivoExcelEnModalCM(event) {
 
       const fBtnEd = document.getElementById("modal-cm-btn-edificio-nombre");
 
-      if (fBtnEd) fBtnEd.innerText = nom;
+      if (fBtnEd) fBtnEd.innerText = "Crear Edificio";
 
       const fFootCod = document.getElementById("modal-cm-footer-cod");
 
