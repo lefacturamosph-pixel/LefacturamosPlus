@@ -64985,8 +64985,21 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
       const coef = Number(u.coef !== undefined ? u.coef : (u.coefNum !== undefined ? u.coefNum : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0))) || 0;
       const nfac = String(u.nfac || u.factura || u.fac || "");
 
-      // Valor facturado: cuota de administración facturada del mes (actual / admon / cuota / totalNum), NUNCA el saldo en mora pendiente (pend).
-      const valorFacturado = Number(u.actual !== undefined && u.actual !== null ? u.actual : (u.admon !== undefined && u.admon !== null ? u.admon : (u.cuota || u.cuotaMes || u.totalNum || 0))) || 0;
+      // Valor facturado: total completo de todas las casillas (administración + mora/saldo anterior + intereses + cuotas extras + otros conceptos)
+      const valorFacturado = Number(
+        (u.totalNum !== undefined && u.totalNum !== null) ? u.totalNum :
+        (u.total !== undefined && u.total !== null) ? u.total :
+        (u.totalFinal !== undefined && u.totalFinal !== null) ? u.totalFinal :
+        (u.totalPagar !== undefined && u.totalPagar !== null && typeof parseValorCOP === "function") ? parseValorCOP(u.totalPagar) :
+        (
+          (Number(u.actual !== undefined ? u.actual : (u.admon !== undefined ? u.admon : (u.cuota || 0))) || 0) +
+          (Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : 0)) || 0) +
+          (Number(u.intp !== undefined ? u.intp : (u.inta !== undefined ? u.inta : (u.interes || 0))) || 0) +
+          (Number(u.otrosa !== undefined ? u.otrosa : (u.otrosp !== undefined ? u.otrosp : (u.otros || 0))) || 0) +
+          (Number(u.extraa !== undefined ? u.extraa : (u.extrap !== undefined ? u.extrap : (u.extra || 0))) || 0) +
+          (Number(u.multaa !== undefined ? u.multaa : (u.multap !== undefined ? u.multap : (u.multa || 0))) || 0)
+        )
+      ) || 0;
 
       // Obtener o inicializar fila en cache
       if (!window._novedadesFacturacionCache[apto]) {
@@ -65008,10 +65021,8 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
       }
 
       const item = window._novedadesFacturacionCache[apto];
-      // Mantener sincronizado valorFacturado si no fue forzado o si venía con saldo en mora de versiones anteriores
-      if (item.valorFacturado === undefined || item.valorFacturado === null || (valorFacturado > 0 && (item.valorFacturado <= 0 || item.valorFacturado === u.pend))) {
-        item.valorFacturado = valorFacturado;
-      }
+      // Mantener sincronizado valorFacturado con el total completo de todas las casillas
+      item.valorFacturado = valorFacturado;
       if (!item.bloque) item.bloque = bloque;
       if (!item.nfac || item.nfac === "") item.nfac = nfac;
       if (coef === 0) {
@@ -65724,7 +65735,20 @@ window.descargarPlanillaExcelOficial = function() {
     const apto = String(u.apto);
     const numCoef = Number(u.coef !== undefined ? u.coef : (u.coefNum !== undefined ? u.coefNum : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0))) || 0;
     const numFac = u.nfac || u.factura || u.fac || "";
-    const valFacturado = Number(u.actual !== undefined && u.actual !== null ? u.actual : (u.admon !== undefined && u.admon !== null ? u.admon : (u.cuota || u.cuotaMes || u.totalNum || 0))) || 0;
+    const valFacturado = Number(
+      (u.totalNum !== undefined && u.totalNum !== null) ? u.totalNum :
+      (u.total !== undefined && u.total !== null) ? u.total :
+      (u.totalFinal !== undefined && u.totalFinal !== null) ? u.totalFinal :
+      (u.totalPagar !== undefined && u.totalPagar !== null && typeof parseValorCOP === "function") ? parseValorCOP(u.totalPagar) :
+      (
+        (Number(u.actual !== undefined ? u.actual : (u.admon !== undefined ? u.admon : (u.cuota || 0))) || 0) +
+        (Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : 0)) || 0) +
+        (Number(u.intp !== undefined ? u.intp : (u.inta !== undefined ? u.inta : (u.interes || 0))) || 0) +
+        (Number(u.otrosa !== undefined ? u.otrosa : (u.otrosp !== undefined ? u.otrosp : (u.otros || 0))) || 0) +
+        (Number(u.extraa !== undefined ? u.extraa : (u.extrap !== undefined ? u.extrap : (u.extra || 0))) || 0) +
+        (Number(u.multaa !== undefined ? u.multaa : (u.multap !== undefined ? u.multap : (u.multa || 0))) || 0)
+      )
+    ) || 0;
     const item = window._novedadesFacturacionCache[apto] || {
       bloque: u.bloque || "01",
       apto: apto,
@@ -65742,9 +65766,7 @@ window.descargarPlanillaExcelOficial = function() {
     };
 
     if (numCoef === 0) item.coef = 0;
-    if (item.valorFacturado === undefined || item.valorFacturado <= 0 || item.valorFacturado === u.pend) {
-      if (valFacturado > 0) item.valorFacturado = valFacturado;
-    }
+    item.valorFacturado = valFacturado;
 
     const rowNum = aoa.length + 1; // 1-indexed para formulas Excel
 
