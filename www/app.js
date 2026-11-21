@@ -20356,7 +20356,7 @@ function detectarNombreAdministrador(val) {
 
   if (!cedulaLimpia) {
     if (display) {
-      display.innerText = "Nombre del Administrador";
+      display.innerText = "Nombre del Administrador (aparece con su cédula)";
       display.className = "text-xs font-medium text-slate-500 truncate";
     }
     if (box) {
@@ -20467,20 +20467,20 @@ function seleccionarRolLogin(rol) {
     if (containerUsuario) containerUsuario.classList.add("hidden");
 
     if (lblPassword) lblPassword.innerText = "2. PASSWORD / CONTRASEÑA DE LA ADMINISTRACIÓN";
-    if (hintDemo) hintDemo.innerText = "Clave demo: Admin123*";
-    if (inputPassword) inputPassword.value = "";
+    if (hintDemo) {
+      hintDemo.innerText = "";
+      hintDemo.classList.add("hidden");
+    }
+    if (inputPassword) {
+      inputPassword.value = "";
+      inputPassword.placeholder = "Ingrese contraseña de la administración";
+    }
     if (btnTexto) btnTexto.innerText = "Ingresar a Ver y Administrar mi Edificio ->";
 
     const inputCedula = document.getElementById("login-admin-cedula");
     if (inputCedula) {
-      const valActual = inputCedula.value.trim();
-      if (valActual) {
-        detectarNombreAdministrador(valActual);
-      } else {
-        const savedCedula = localStorage.getItem("lefacturamos_admin_cedula") || "79845120";
-        inputCedula.value = savedCedula;
-        detectarNombreAdministrador(savedCedula);
-      }
+      inputCedula.value = "";
+      detectarNombreAdministrador("");
     }
 
   } else if (rol === "residente") {
@@ -20491,14 +20491,26 @@ function seleccionarRolLogin(rol) {
     if (containerEdificio) containerEdificio.classList.remove("hidden");
     if (containerUsuario) containerUsuario.classList.remove("hidden");
 
+    const inputEdif = document.getElementById("login-edificio-codigo");
+    if (inputEdif) {
+      inputEdif.value = "";
+      inputEdif.placeholder = "Ej: Ingrese código (ej: 4901)";
+    }
+
     if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. NÚMERO DE APARTAMENTO O LOCAL";
     if (inputCodigoUsuario) {
-      inputCodigoUsuario.placeholder = "Ej: 0301, 101, Local 1";
+      inputCodigoUsuario.placeholder = "Ej: Ingrese apartamento (ej: 101, 302, Local 1)";
       inputCodigoUsuario.value = "";
     }
     if (lblPassword) lblPassword.innerText = "3. PASSWORD / CONTRASEÑA DE SU APARTAMENTO";
-    if (hintDemo) hintDemo.innerText = "Clave demo: Residente123*";
-    if (inputPassword) inputPassword.value = "";
+    if (hintDemo) {
+      hintDemo.innerText = "";
+      hintDemo.classList.add("hidden");
+    }
+    if (inputPassword) {
+      inputPassword.value = "";
+      inputPassword.placeholder = "Ingrese contraseña de su apartamento";
+    }
     if (btnTexto) btnTexto.innerText = "Ingresar a Mi Apartamento / Local ->";
 
   } else if (rol === "porteria") {
@@ -20509,15 +20521,26 @@ function seleccionarRolLogin(rol) {
     if (containerEdificio) containerEdificio.classList.remove("hidden");
     if (containerUsuario) containerUsuario.classList.remove("hidden");
 
+    const inputEdif = document.getElementById("login-edificio-codigo");
+    if (inputEdif) {
+      inputEdif.value = "";
+      inputEdif.placeholder = "Ej: Ingrese código (ej: 4901)";
+    }
+
     if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. PUESTO DE CONTROL / PORTERÍA";
     if (inputCodigoUsuario) {
-      inputCodigoUsuario.placeholder = "Portería Principal (24 Horas)";
-      inputCodigoUsuario.value = "Portería Principal";
+      inputCodigoUsuario.placeholder = "Ej: Portería Principal";
+      inputCodigoUsuario.value = "";
     }
     if (lblPassword) lblPassword.innerText = "3. CONTRASEÑA DE VIGILANCIA (CREADA POR LA ADMINISTRACIÓN)";
-    const clavePorteriaActual = obtenerClavePorteria(codEdificio || "4901");
-    if (hintDemo) hintDemo.innerText = "Clave creada por Administración: " + clavePorteriaActual;
-    if (inputPassword) inputPassword.value = "";
+    if (hintDemo) {
+      hintDemo.innerText = "";
+      hintDemo.classList.add("hidden");
+    }
+    if (inputPassword) {
+      inputPassword.value = "";
+      inputPassword.placeholder = "Ingrese contraseña de portería";
+    }
     if (btnTexto) btnTexto.innerText = "Ingresar al Puesto de Control y Portería ->";
 
   } else if (rol === "superadmin") {
@@ -21739,6 +21762,10 @@ function cerrarSesionEntrada() {
 
 
 
+  const outInpCed = document.getElementById("login-admin-cedula");
+
+  if (outInpCed) outInpCed.value = "";
+
   const outInpEdif = document.getElementById("login-edificio-codigo");
 
   if (outInpEdif) outInpEdif.value = "";
@@ -21964,6 +21991,9 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarVisibilidadPorRol(AppState.rol);
     seleccionarRolLogin("admin");
     actualizarPreviewEdificioLogin("");
+    const initInpCed = document.getElementById("login-admin-cedula");
+    if (initInpCed) initInpCed.value = "";
+    detectarNombreAdministrador("");
     const initInpEdif = document.getElementById("login-edificio-codigo");
     if (initInpEdif) initInpEdif.value = "";
     const initSelEdif = document.getElementById("login-edificio-select");
@@ -26326,6 +26356,17 @@ function abrirModalNuevaCopropiedad() {
 
   if (m) {
 
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    setVal("modal-nc-nombre", "");
+    setVal("modal-nc-codigo", "");
+    setVal("modal-nc-nit", "");
+    setVal("modal-nc-ciudad", "");
+    setVal("modal-nc-direccion", "");
+    setVal("modal-nc-admin-nom", "");
+    setVal("modal-nc-admin-cedula", "");
+    setVal("modal-nc-admin-pass", "");
+    setVal("modal-nc-cuenta", "");
+
     m.classList.remove("hidden");
 
     safeCreateIcons();
@@ -26610,6 +26651,18 @@ function cerrarModalImportarExcelEdificio() {
 
 
 function seleccionarEdificioEnModalCM(codigo) {
+
+  if (!codigo) {
+    const inpCod = document.getElementById("modal-cm-input-codigo");
+    const inpNom = document.getElementById("modal-cm-input-nombre");
+    const destCod = document.getElementById("modal-cm-dest-codigo");
+    const destNom = document.getElementById("modal-cm-dest-nombre");
+    if (inpCod) inpCod.value = "";
+    if (inpNom) inpNom.value = "";
+    if (destCod) destCod.innerText = "Código [----]";
+    if (destNom) destNom.innerText = "Seleccione o cree un edificio";
+    return;
+  }
 
   let cop = listaCopropiedadesSuperadmin.find(c => c.codigo === codigo || c.id === codigo || c.id === `cj_${codigo}`);
 
