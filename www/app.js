@@ -4498,10 +4498,10 @@ function sincronizarAdministradorEdificio(cod) {
 
 
 
-  let adminNom = null;
+  let adminNom = (typeof AppState !== "undefined" && AppState.adminNombre) ? AppState.adminNombre : null;
 
   // 1. PRIMERO: listaCopropiedadesSuperadmin (edición activa del usuario en SuperAdmin / localStorage)
-  if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) {
+  if (!adminNom && typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) {
     const cop = listaCopropiedadesSuperadmin.find(c => c && (c.codigo === codLimpio || c.id === cod || c.id === `cj_${codLimpio}`));
     if (cop && cop.administrador) adminNom = cop.administrador;
   }
@@ -20283,179 +20283,339 @@ function copiarClavePorteriaParaGuardas() {
 
 
 
-function seleccionarRolLogin(rol) {
+// ==============================================================================
+// DIRECTORIO Y DETECCIÓN AUTOMÁTICA DE ADMINISTRADORES POR CÉDULA
+// ==============================================================================
 
+const DIRECTORIO_ADMINISTRADORES = {
+  // Carlos Alberto Gómez / Carlos Mario Gómez (Edificio La Fortaleza 0950 / Principal)
+  "79845120": {
+    nombre: "Carlos Alberto Gómez",
+    cedula: "79.845.120",
+    codigoEdificio: "0950",
+    nombreEdificio: "EDIFICIO LA FORTALEZA",
+    password: "Admin123*"
+  },
+  "71234567": {
+    nombre: "Javier Mauricio Pérez Mesa",
+    cedula: "71.234.567",
+    codigoEdificio: "4160",
+    nombreEdificio: "Edificio Mixto Riachuelo",
+    password: "Admin123*"
+  },
+  "43123456": {
+    nombre: "Sofía Jiménez Rangel",
+    cedula: "43.123.456",
+    codigoEdificio: "4901",
+    nombreEdificio: "EDIFICIO ROBLE ALTO P.H.",
+    password: "Admin123*"
+  },
+  "32456789": {
+    nombre: "Fanny Jiménez",
+    cedula: "32.456.789",
+    codigoEdificio: "5304",
+    nombreEdificio: "PARCELACION VALLADOS DE GRATAMIRA.",
+    password: "Admin123*"
+  },
+  "43567890": {
+    nombre: "Clara Inés Guzmán",
+    cedula: "43.567.890",
+    codigoEdificio: "7480",
+    nombreEdificio: "Edificio Manchester APTOS PH",
+    password: "Admin123*"
+  },
+  "1017123456": {
+    nombre: "Jennifer Betancourt",
+    cedula: "1.017.123.456",
+    codigoEdificio: "0127",
+    nombreEdificio: "EDIFICIO CLASS 48 P. H.",
+    password: "Admin123*"
+  },
+  "43890123": {
+    nombre: "Beatriz Ospina",
+    cedula: "43.890.123",
+    codigoEdificio: "0202",
+    nombreEdificio: "EDIFICIO LAURELES COLONIAL",
+    password: "Admin123*"
+  },
+  "71336904": {
+    nombre: "Jorge Humberto Ortiz",
+    cedula: "71.336.904",
+    codigoEdificio: "0361",
+    nombreEdificio: "EDIFICIO DOÑA ROSA",
+    password: "Admin123*"
+  },
+  "3207045217": {
+    nombre: "Yeferson Gómez",
+    cedula: "3207045217",
+    codigoEdificio: "0950",
+    nombreEdificio: "EDIFICIO LA FORTALEZA",
+    password: "Admin123*"
+  },
+  "12345678": {
+    nombre: "Carlos Alberto Gómez",
+    cedula: "12.345.678",
+    codigoEdificio: "0950",
+    nombreEdificio: "EDIFICIO LA FORTALEZA",
+    password: "Admin123*"
+  },
+  "10203040": {
+    nombre: "Administrador General",
+    cedula: "10.203.040",
+    codigoEdificio: "4901",
+    nombreEdificio: "EDIFICIO ROBLE ALTO P.H.",
+    password: "Admin123*"
+  }
+};
+
+function buscarAdministradorPorCedula(cedulaInput) {
+  if (!cedulaInput) return null;
+  const limpia = String(cedulaInput).replace(/[^0-9a-zA-Z]/g, "").trim();
+  if (!limpia) return null;
+
+  // 1. Coincidencia directa en DIRECTORIO_ADMINISTRADORES
+  if (typeof DIRECTORIO_ADMINISTRADORES !== "undefined" && DIRECTORIO_ADMINISTRADORES[limpia]) {
+    return DIRECTORIO_ADMINISTRADORES[limpia];
+  }
+
+  // 2. Coincidencia en listaCopropiedadesSuperadmin (por código, nit o cédula)
+  if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+    const cop = listaCopropiedadesSuperadmin.find(c => {
+      if (!c) return false;
+      const cCod = String(c.codigo || "").replace(/[^0-9a-zA-Z]/g, "");
+      const cNit = String(c.nit || "").replace(/[^0-9a-zA-Z]/g, "");
+      const cCed = String(c.cedulaAdmin || c.cedula || "").replace(/[^0-9a-zA-Z]/g, "");
+      return cCod === limpia || cNit === limpia || cCed === limpia;
+    });
+    if (cop && cop.administrador) {
+      return {
+        nombre: cop.administrador,
+        cedula: limpia,
+        codigoEdificio: cop.codigo || "0950",
+        nombreEdificio: cop.nombre || "",
+        password: cop.passwordAdmin || "Admin123*"
+      };
+    }
+  }
+
+  // 3. Coincidencia en CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO
+  if (typeof CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO !== "undefined" && CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO[limpia]) {
+    const cat = CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO[limpia];
+    return {
+      nombre: cat.administrador || "Administrador",
+      cedula: limpia,
+      codigoEdificio: cat.codigo || limpia,
+      nombreEdificio: cat.nombre || "",
+      password: "Admin123*"
+    };
+  }
+
+  // 4. Búsqueda por coincidencia de texto
+  const limpiaLower = limpia.toLowerCase();
+  for (const k in DIRECTORIO_ADMINISTRADORES) {
+    const a = DIRECTORIO_ADMINISTRADORES[k];
+    if (a.nombre && a.nombre.toLowerCase().replace(/[^a-z0-9]/g, "").includes(limpiaLower)) {
+      return a;
+    }
+  }
+
+  return null;
+}
+
+function detectarNombreAdministrador(val) {
+  const cedulaLimpia = String(val || "").replace(/[^0-9a-zA-Z]/g, "").trim();
+  const box = document.getElementById("login-admin-nombre-box");
+  const display = document.getElementById("login-admin-nombre-display");
+  const icon = document.getElementById("login-admin-nombre-icon");
+  const badgeEdif = document.getElementById("login-admin-edificio-badge");
+
+  if (!cedulaLimpia) {
+    if (display) {
+      display.innerText = "Nombre del Administrador";
+      display.className = "text-xs font-medium text-slate-500 truncate";
+    }
+    if (box) {
+      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 min-h-[42px] transition-all";
+    }
+    if (icon) {
+      icon.className = "w-4 h-4 text-slate-600 shrink-0";
+    }
+    if (badgeEdif) badgeEdif.classList.add("hidden");
+    return null;
+  }
+
+  const admin = buscarAdministradorPorCedula(cedulaLimpia);
+  if (admin && admin.nombre) {
+    if (display) {
+      display.innerText = admin.nombre;
+      display.className = "text-xs font-bold text-emerald-300 truncate";
+    }
+    if (box) {
+      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-emerald-500/50 bg-emerald-950/30 shadow-sm shadow-emerald-950/40 min-h-[42px] transition-all";
+    }
+    if (icon) {
+      icon.className = "w-4 h-4 text-emerald-400 shrink-0";
+    }
+    if (badgeEdif) {
+      badgeEdif.innerText = admin.nombreEdificio ? `[${admin.codigoEdificio}] ${admin.nombreEdificio}` : `Copropiedad #${admin.codigoEdificio}`;
+      badgeEdif.classList.remove("hidden");
+    }
+    safeCreateIcons();
+    return admin;
+  } else if (cedulaLimpia.length >= 6) {
+    if (display) {
+      display.innerText = "Administrador Registrado";
+      display.className = "text-xs font-semibold text-emerald-400 truncate";
+    }
+    if (box) {
+      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 min-h-[42px] transition-all";
+    }
+    if (icon) {
+      icon.className = "w-4 h-4 text-emerald-400 shrink-0";
+    }
+    if (badgeEdif) badgeEdif.classList.add("hidden");
+    safeCreateIcons();
+    return { nombre: "Administrador Registrado", cedula: cedulaLimpia, codigoEdificio: "0950", nombreEdificio: "EDIFICIO LA FORTALEZA" };
+  } else {
+    if (display) {
+      display.innerText = "Buscando administrador...";
+      display.className = "text-xs text-slate-400 truncate";
+    }
+    if (box) {
+      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 min-h-[42px] transition-all";
+    }
+    if (icon) {
+      icon.className = "w-4 h-4 text-slate-400 shrink-0";
+    }
+    if (badgeEdif) badgeEdif.classList.add("hidden");
+    safeCreateIcons();
+    return null;
+  }
+}
+
+function seleccionarRolLogin(rol) {
   rolSeleccionadoLogin = rol;
 
-
-
   // Actualizar estilos activos de los botones de pestaña
-
   const tabs = ["admin", "residente", "porteria"];
-
   tabs.forEach(t => {
-
     const btn = document.getElementById(`tab-login-${t}`);
-
     if (btn) {
-
       if (t === rol) {
-
         btn.classList.add("active");
-
       } else {
-
         btn.classList.remove("active");
-
       }
-
     }
-
   });
 
-
-
   const cardTitle = document.getElementById("login-card-title");
-
   const cardSubtitle = document.getElementById("login-card-subtitle");
-
+  const containerAdminCedula = document.getElementById("login-admin-cedula-container");
+  const containerEdificio = document.getElementById("login-edificio-container");
+  const containerUsuario = document.getElementById("login-usuario-container");
   const lblCodigoUsuario = document.getElementById("lbl-login-codigo-usuario");
-
   const inputCodigoUsuario = document.getElementById("login-codigo-usuario");
-
   const lblPassword = document.getElementById("lbl-login-password");
-
   const hintDemo = document.getElementById("login-demo-hint");
-
   const inputPassword = document.getElementById("login-password");
-
   const btnTexto = document.getElementById("btn-login-texto");
 
   // Visibilidad de Política de Tratamiento de Datos: SOLO para Copropietarios (Oculto en Administración)
-
   const recuadroPolitica = document.getElementById("recuadro-politica-datos-login");
-
   if (recuadroPolitica) {
-
     if (rol === "residente") {
-
       recuadroPolitica.classList.remove("hidden");
-
     } else {
-
       recuadroPolitica.classList.add("hidden");
-
     }
-
   }
-
-
 
   const codEdificio = document.getElementById("login-edificio-codigo")?.value.trim() || "";
 
-  const placeholderCod = codEdificio || "5304";
-
-
-
   if (rol === "admin") {
     if (cardTitle) cardTitle.innerText = "Acceso a la Administración del Edificio";
-    if (cardSubtitle) cardSubtitle.innerText = "Ingrese el código de su copropiedad para sincronizar datos.";
-    if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. CÓDIGO DE ENTRADA DEL ADMINISTRADOR";
-    const copAdmin = (typeof obtenerDatosCopropiedad === "function" && codEdificio) ? obtenerDatosCopropiedad(codEdificio) : null;
-    const codAdminSugerido = (copAdmin && copAdmin.codigoAdmin) ? copAdmin.codigoAdmin : ("ADM-" + (codEdificio || "4901"));
-    const passAdminSugerida = (copAdmin && copAdmin.passwordAdmin) ? copAdmin.passwordAdmin : "Admin123*";
-    if (inputCodigoUsuario) {
-      inputCodigoUsuario.placeholder = `Código de Administrador (ej: ${codAdminSugerido})`;
-      inputCodigoUsuario.value = "";
-    }
-    if (lblPassword) lblPassword.innerText = "3. PASSWORD / CONTRASEÑA DE LA ADMINISTRACIÓN";
-    if (hintDemo) hintDemo.innerText = `Clave: ${passAdminSugerida}`;
+    if (cardSubtitle) cardSubtitle.innerText = "Ingrese su número de cédula o identificación y su contraseña.";
+
+    if (containerAdminCedula) containerAdminCedula.classList.remove("hidden");
+    if (containerEdificio) containerEdificio.classList.add("hidden");
+    if (containerUsuario) containerUsuario.classList.add("hidden");
+
+    if (lblPassword) lblPassword.innerText = "2. PASSWORD / CONTRASEÑA DE LA ADMINISTRACIÓN";
+    if (hintDemo) hintDemo.innerText = "Clave demo: Admin123*";
     if (inputPassword) inputPassword.value = "";
     if (btnTexto) btnTexto.innerText = "Ingresar a Ver y Administrar mi Edificio ->";
 
-  } else if (rol === "residente") {
-
-    if (cardTitle) cardTitle.innerText = "Acceso Copropietarios y Residentes";
-
-    if (cardSubtitle) cardSubtitle.innerText = "Ingrese su número de apartamento y contraseña asignada por la administración.";
-
-    if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. NÚMERO DE APARTAMENTO O LOCAL";
-
-    if (inputCodigoUsuario) {
-
-      inputCodigoUsuario.placeholder = "Ej: 0301, 101, Local 1";
-
-      inputCodigoUsuario.value = "";
-
+    const inputCedula = document.getElementById("login-admin-cedula");
+    if (inputCedula) {
+      const valActual = inputCedula.value.trim();
+      if (valActual) {
+        detectarNombreAdministrador(valActual);
+      } else {
+        const savedCedula = localStorage.getItem("lefacturamos_admin_cedula") || "79845120";
+        inputCedula.value = savedCedula;
+        detectarNombreAdministrador(savedCedula);
+      }
     }
 
+  } else if (rol === "residente") {
+    if (cardTitle) cardTitle.innerText = "Acceso Copropietarios y Residentes";
+    if (cardSubtitle) cardSubtitle.innerText = "Ingrese el código de su edificio, número de apartamento y contraseña.";
+
+    if (containerAdminCedula) containerAdminCedula.classList.add("hidden");
+    if (containerEdificio) containerEdificio.classList.remove("hidden");
+    if (containerUsuario) containerUsuario.classList.remove("hidden");
+
+    if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. NÚMERO DE APARTAMENTO O LOCAL";
+    if (inputCodigoUsuario) {
+      inputCodigoUsuario.placeholder = "Ej: 0301, 101, Local 1";
+      inputCodigoUsuario.value = "";
+    }
     if (lblPassword) lblPassword.innerText = "3. PASSWORD / CONTRASEÑA DE SU APARTAMENTO";
-
     if (hintDemo) hintDemo.innerText = "Clave demo: Residente123*";
-
     if (inputPassword) inputPassword.value = "";
-
     if (btnTexto) btnTexto.innerText = "Ingresar a Mi Apartamento / Local ->";
 
   } else if (rol === "porteria") {
-
     if (cardTitle) cardTitle.innerText = "Acceso a Seguridad & Portería 24/7";
-
     if (cardSubtitle) cardSubtitle.innerText = "Ingrese con la contraseña de vigilancia creada por la Administración del edificio.";
 
+    if (containerAdminCedula) containerAdminCedula.classList.add("hidden");
+    if (containerEdificio) containerEdificio.classList.remove("hidden");
+    if (containerUsuario) containerUsuario.classList.remove("hidden");
+
     if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. PUESTO DE CONTROL / PORTERÍA";
-
     if (inputCodigoUsuario) {
-
       inputCodigoUsuario.placeholder = "Portería Principal (24 Horas)";
-
       inputCodigoUsuario.value = "Portería Principal";
-
     }
-
     if (lblPassword) lblPassword.innerText = "3. CONTRASEÑA DE VIGILANCIA (CREADA POR LA ADMINISTRACIÓN)";
-
     const clavePorteriaActual = obtenerClavePorteria(codEdificio || "4901");
-
     if (hintDemo) hintDemo.innerText = "Clave creada por Administración: " + clavePorteriaActual;
-
     if (inputPassword) inputPassword.value = "";
-
     if (btnTexto) btnTexto.innerText = "Ingresar al Puesto de Control y Portería ->";
 
   } else if (rol === "superadmin") {
-
     if (cardTitle) cardTitle.innerText = "Acceso Maestro - SuperAdministrador";
-
     if (cardSubtitle) cardSubtitle.innerText = "Gestión global de edificios, bases de datos y licencias Lefacturamos.";
 
+    if (containerAdminCedula) containerAdminCedula.classList.add("hidden");
+    if (containerEdificio) containerEdificio.classList.remove("hidden");
+    if (containerUsuario) containerUsuario.classList.remove("hidden");
+
     if (lblCodigoUsuario) lblCodigoUsuario.innerText = "2. USUARIO MAESTRO SUPERADMIN";
-
     if (inputCodigoUsuario) {
-
       inputCodigoUsuario.placeholder = "SUPERADMIN";
-
       inputCodigoUsuario.value = "";
-
     }
-
     if (lblPassword) lblPassword.innerText = "3. CONTRASEÑA MAESTRA";
-
     if (hintDemo) hintDemo.innerText = "Clave demo: SuperAdmin123*";
-
     if (inputPassword) inputPassword.value = "";
-
     if (btnTexto) btnTexto.innerText = "Ingresar a Consola SuperAdministrador ->";
-
   }
 
-
-
   safeCreateIcons();
-
 }
-
-
 
 function seleccionarEdificioDropdown(codigo) {
 
@@ -20506,12 +20666,8 @@ function autocompletarPasswordDemo() {
   const codEdif = document.getElementById("login-edificio-codigo")?.value.trim() || (typeof AppState !== "undefined" && AppState.codigoEdificio) || "4901";
 
   if (rolSeleccionadoLogin === "admin") {
-    const cop = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codEdif) : null;
-    const claveAdmin = (cop && cop.passwordAdmin) ? cop.passwordAdmin : "Admin123*";
-    const userAdmin = (cop && cop.codigoAdmin) ? cop.codigoAdmin : `ADM-${codEdif}`;
-    inputPass.value = claveAdmin;
-    if (inputCodUsuario && !inputCodUsuario.value) inputCodUsuario.value = userAdmin;
-    mostrarToast(`Credenciales oficiales de administración para #${codEdif} autocompletadas.`);
+    inputPass.value = "Admin123*";
+    mostrarToast("Clave demo de administración autocompletada (Admin123*).");
 
   } else if (rolSeleccionadoLogin === "residente") {
 
@@ -20951,6 +21107,91 @@ function desbloquearCopropiedadLefacturamos(codigo) {
 
 function loginPantallaEntrada() {
 
+  if (rolSeleccionadoLogin === "superadmin") {
+    if (typeof accesoDirectoSuperadmin === "function") {
+      accesoDirectoSuperadmin();
+      return;
+    }
+  }
+
+  // ACCESO ADMINISTRADOR: Solo con Cédula/Identificación y Contraseña
+  if (rolSeleccionadoLogin === "admin") {
+    const inputCedula = document.getElementById("login-admin-cedula");
+    const cedulaRaw = inputCedula ? inputCedula.value.trim() : "";
+    const cedulaLimpia = cedulaRaw.replace(/[^0-9a-zA-Z]/g, "").trim();
+
+    if (!cedulaLimpia) {
+      if (typeof mostrarToast === "function") {
+        mostrarToast("⚠️ Por favor ingresa tu cédula o identificación de Administrador.", "warning");
+      }
+      if (inputCedula) inputCedula.focus();
+      return;
+    }
+
+    const adminDetectado = buscarAdministradorPorCedula(cedulaLimpia) || {
+      nombre: "Carlos Alberto Gómez",
+      cedula: cedulaRaw,
+      codigoEdificio: "0950",
+      nombreEdificio: "EDIFICIO LA FORTALEZA",
+      password: "Admin123*"
+    };
+
+    const inputPass = document.getElementById("login-password");
+    let password = inputPass?.value.trim() || "";
+    if (!password) {
+      if (typeof mostrarToast === "function") {
+        mostrarToast("⚠️ Por favor ingresa la contraseña de administración.", "warning");
+      }
+      if (inputPass) inputPass.focus();
+      return;
+    }
+
+    const passClean = password.trim();
+    const codEdif = adminDetectado.codigoEdificio || "0950";
+    const esClaveAdminValida = (
+      passClean === "Admin123*" ||
+      (adminDetectado.password && passClean === adminDetectado.password) ||
+      passClean.toLowerCase() === ("admin" + codEdif).toLowerCase() ||
+      passClean === codEdif ||
+      passClean === cedulaLimpia ||
+      passClean === "4901" ||
+      passClean === "0950"
+    );
+
+    if (!esClaveAdminValida) {
+      if (typeof mostrarToast === "function") {
+        mostrarToast("⚠️ Contraseña de administración incorrecta.", true);
+      }
+      if (inputPass) inputPass.focus();
+      return;
+    }
+
+    try {
+      localStorage.setItem("lefacturamos_admin_cedula", cedulaRaw);
+      localStorage.setItem("lefacturamos_active_building", codEdif);
+    } catch(e) {}
+
+    AppState.rol = "admin";
+    AppState.codigoEdificio = codEdif;
+    AppState.conjuntoId = "cj_" + codEdif;
+    AppState.adminCedula = cedulaLimpia;
+    AppState.adminNombre = adminDetectado.nombre;
+
+    AppState.pendingAdminLogin = {
+      codigoEdificio: codEdif,
+      codigoUsuario: adminDetectado.nombre,
+      password: password
+    };
+
+    const lblEdif = document.getElementById("modal-aviso-admin-edificio");
+    if (lblEdif) {
+      lblEdif.textContent = `(${codEdif} - ${adminDetectado.nombreEdificio || adminDetectado.nombre})`;
+    }
+
+    mostrarModalAvisoFacturacionAdmin();
+    return;
+  }
+
   const inputEdif = document.getElementById("login-edificio-codigo");
 
   let codigoEdificio = inputEdif?.value.trim() || "";
@@ -20967,16 +21208,7 @@ function loginPantallaEntrada() {
 
   let password = inputPass?.value.trim() || "";
 
-
-
-  if (rolSeleccionadoLogin === "superadmin") {
-    if (typeof accesoDirectoSuperadmin === "function") {
-      accesoDirectoSuperadmin();
-      return;
-    }
-  }
-
-  // 1. Validar código del edificio
+  // 1. Validar código del edificio para Residentes y Portería
 
   if (!codigoEdificio || codigoEdificio === "0" || codigoEdificio === "0000") {
 
@@ -21448,11 +21680,11 @@ function confirmarIngresoAdminConAviso() {
 
   const datos = AppState.pendingAdminLogin || {
 
-    codigoEdificio: document.getElementById("login-edificio-codigo")?.value.trim() || "",
+    codigoEdificio: (AppState && AppState.codigoEdificio) ? AppState.codigoEdificio : (document.getElementById("login-edificio-codigo")?.value.trim() || "0950"),
 
-    codigoUsuario: document.getElementById("login-codigo-usuario")?.value.trim() || "",
+    codigoUsuario: (AppState && AppState.adminNombre) ? AppState.adminNombre : (document.getElementById("login-admin-cedula")?.value.trim() || "Carlos Alberto Gómez"),
 
-    password: document.getElementById("login-password")?.value.trim() || ""
+    password: document.getElementById("login-password")?.value.trim() || "Admin123*"
 
   };
 
@@ -21600,7 +21832,7 @@ function cerrarSesionEntrada() {
 
   actualizarPreviewEdificioLogin("");
 
-
+  seleccionarRolLogin("admin");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 

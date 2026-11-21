@@ -546,11 +546,29 @@
 
         <form id="form-pantalla-entrada" novalidate onsubmit="event.preventDefault(); loginPantallaEntrada();" class="space-y-4">
 
-          
+          <!-- Field 1 (Admin): Cédula o Identificación y Nombre del Administrador al lado -->
+          <div id="login-admin-cedula-container">
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="login-admin-cedula" class="text-xs font-bold text-slate-300">1. CÉDULA O IDENTIFICACIÓN DEL ADMINISTRADOR</label>
+              <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">Requerido</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="relative">
+                <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
+                <input type="text" id="login-admin-cedula" value="" placeholder="Ej: 79845120 ó 71234567" oninput="detectarNombreAdministrador(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-mono font-bold focus:border-emerald-500 focus:outline-none" />
+              </div>
+              <div id="login-admin-nombre-box" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 min-h-[42px] transition-all">
+                <i id="login-admin-nombre-icon" data-lucide="check-circle-2" class="w-4 h-4 text-slate-600 shrink-0"></i>
+                <div class="flex flex-col min-w-0 justify-center">
+                  <span id="login-admin-nombre-display" class="text-xs font-medium text-slate-500 truncate">Nombre del Administrador</span>
+                  <span id="login-admin-edificio-badge" class="text-[10px] text-emerald-400 font-mono font-medium truncate hidden"></span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <!-- Field 1: Código del Edificio -->
-
-          <div>
+          <!-- Field 1 (Residente / Portería): Código del Edificio -->
+          <div id="login-edificio-container" class="hidden">
 
             <div class="flex items-center justify-between mb-1.5">
 
@@ -592,21 +610,17 @@
 
             </div>
 
-
-
-
-
           </div>
 
 
 
-          <!-- Field 2: Código de Entrada del Administrador / Residente / Portería -->
+          <!-- Field 2: Código de Entrada del Residente / Portería -->
 
-          <div>
+          <div id="login-usuario-container" class="hidden">
 
             <div class="flex items-center justify-between mb-1.5">
 
-              <label id="lbl-login-codigo-usuario" for="login-codigo-usuario" class="text-xs font-bold text-slate-300">2. CÓDIGO DE ENTRADA DEL ADMINISTRADOR</label>
+              <label id="lbl-login-codigo-usuario" for="login-codigo-usuario" class="text-xs font-bold text-slate-300">2. NÚMERO DE APARTAMENTO O LOCAL</label>
 
               <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">Requerido</span>
 
@@ -616,7 +630,7 @@
 
               <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
 
-              <input type="text" id="login-codigo-usuario" value="" placeholder="Código de Administrador (ej: ADM-4901)" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-mono font-bold focus:border-emerald-500 focus:outline-none" />
+              <input type="text" id="login-codigo-usuario" value="" placeholder="Ej: 0301, 101, Local 1" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-mono font-bold focus:border-emerald-500 focus:outline-none" />
 
             </div>
 
@@ -624,13 +638,13 @@
 
 
 
-          <!-- Field 3: Password / Contraseña -->
+          <!-- Field: Password / Contraseña -->
 
           <div>
 
             <div class="flex items-center justify-between mb-1.5">
 
-              <label id="lbl-login-password" for="login-password" class="text-xs font-bold text-slate-300">3. PASSWORD / CONTRASEÑA DE LA ADMINISTRACIÓN</label>
+              <label id="lbl-login-password" for="login-password" class="text-xs font-bold text-slate-300">2. PASSWORD / CONTRASEÑA DE LA ADMINISTRACIÓN</label>
 
               <span id="login-demo-hint" class="text-[10px] text-slate-400 font-mono cursor-pointer hover:text-emerald-400" onclick="autocompletarPasswordDemo()">Clave demo: Admin123*</span>
 
