@@ -1,3 +1,21 @@
+
+function obtenerCodigosEdificiosPorPrefijo(prefijo) {
+  const pref = String(prefijo || "").trim().toUpperCase().slice(0, 2);
+  if (!pref) return ["0361", "0362", "0380", "0381", "0382"];
+  const codigos = new Set();
+  if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+    listaCopropiedadesSuperadmin.forEach(c => {
+      if (c && c.codigo && String(c.codigo).toUpperCase().startsWith(pref)) codigos.add(String(c.codigo));
+    });
+  }
+  if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined") {
+    Object.keys(CATALOGO_OFICIAL_DBPLUS).forEach(k => {
+      if (k.toUpperCase().startsWith(pref)) codigos.add(k);
+    });
+  }
+  return codigos.size > 0 ? Array.from(codigos) : ["0361", "0362", "0380", "0381", "0382"];
+}
+
 // ==============================================================================
 // VALIDACIÓN ESTRICTA DE INMUEBLES (CUARTO ÚTIL Y PARQUEADERO 100% REALES DB)
 // ==============================================================================
@@ -1007,17 +1025,21 @@ const CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO = {
   },
 
   "0361": {
-
+    "id": "cj_0361",
     "codigo": "0361",
-
     "nombre": "EDIFICIO DOÑA ROSA",
-
-    "administrador": "Jorge Daniela",
-
+    "nit": "890916414-7",
+    "direccion": "TRANSV 39B No 77-12",
+    "ciudad": "Medellín • Antioquia",
     "telefono": "4165309",
-
-    "email": "vital@vitalsas.co;administrativa@vitalsas.co"
-
+    "email": "vital@vitalsas.co;administrativa@vitalsas.co",
+    "banco": "CAJA SOCIAL AHO",
+    "tipoCuenta": "Ahorros",
+    "cuenta": "24115733105",
+    "administrador": "JORGE - DANIELA",
+    "cedulaAdmin": "1111111",
+    "codigoAdmin": "ADM-0361",
+    "passwordAdmin": "Admin123*"
   },
 
   "0362": {
@@ -13664,6 +13686,44 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
 
 let listaCopropiedadesSuperadmin = [
+  {
+    id: "cj_0361",
+    nombre: "EDIFICIO DOÑA ROSA",
+    codigo: "0361",
+    nit: "890916414-7",
+    direccion: "TRANSV 39B No 77-12",
+    ciudad: "Medellín • Antioquia",
+    tipo: "Propiedad Horizontal",
+    banco: "CAJA SOCIAL AHO",
+    tipoCuenta: "Ahorros",
+    cuenta: "24115733105",
+    breb: "BREB-BAN-0361",
+    pasarela: "Wompi (pub_prod_0361)",
+    codigoAdmin: "ADM-0361",
+    passwordAdmin: "Admin123*",
+    administrador: "JORGE - DANIELA",
+    cedulaAdmin: "1111111",
+    telefono: "4165309",
+    email: "vital@vitalsas.co;administrativa@vitalsas.co",
+    interesMora: "2.16%",
+    inmueblesCount: 15,
+    inmueblesOcupados: 15,
+    censoCount: 15,
+    vehiculosAuditoria: 12,
+    reservasConfirmadas: 1,
+    pqrAtencion: 0,
+    coeficienteTotal: "100.000%",
+    recaudoTotal: "$3.850.000",
+    recaudoPagos: "15 pagos procesados",
+    carteraPendiente: "$0",
+    totalFinalEdificio: "$3.850.000",
+    carteraInmuebles: "0 inmuebles con saldo",
+    carteraVencida: "$0",
+    carteraJuridica: "0 cuentas en mora jurídica",
+    estado: "A Paz y Salvo",
+    bloqueadoMora: false,
+    unidades: []
+  },
 
   {
     id: "cj_4160",
@@ -20186,6 +20246,15 @@ function copiarClavePorteriaParaGuardas() {
 // ==============================================================================
 
 const DIRECTORIO_ADMINISTRADORES = {
+  // Jorge - Daniela (Edificio Doña Rosa y copropiedades 03)
+  "1111111": {
+    nombre: "JORGE - DANIELA",
+    cedula: "1111111",
+    codigoEdificio: "0361",
+    nombreEdificio: "EDIFICIO DOÑA ROSA",
+    edificios: ["0361", "0362", "0380", "0381", "0382"],
+    password: "Admin123*"
+  },
   // Carlos Alberto Gómez / Carlos Mario Gómez (Edificio La Fortaleza 0950 / Principal)
   "79845120": {
     nombre: "Carlos Alberto Gómez",
@@ -20282,44 +20351,77 @@ function buscarAdministradorPorCedula(cedulaInput) {
   const limpia = String(cedulaInput).replace(/[^0-9a-zA-Z]/g, "").trim();
   if (!limpia) return null;
 
-  // 1. Coincidencia directa en DIRECTORIO_ADMINISTRADORES
+  // 1. Coincidencia en localStorage lefacturamos_directorio_admins
+  try {
+    const dirStr = localStorage.getItem("lefacturamos_directorio_admins");
+    if (dirStr) {
+      const dirObj = JSON.parse(dirStr);
+      if (dirObj && dirObj[limpia]) {
+        return dirObj[limpia];
+      }
+    }
+  } catch (e) {}
+
+  // 2. Coincidencia directa en DIRECTORIO_ADMINISTRADORES
   if (typeof DIRECTORIO_ADMINISTRADORES !== "undefined" && DIRECTORIO_ADMINISTRADORES[limpia]) {
     return DIRECTORIO_ADMINISTRADORES[limpia];
   }
 
-  // 2. Coincidencia en listaCopropiedadesSuperadmin (por código, nit o cédula)
+  // 3. Coincidencia en listaCopropiedadesSuperadmin (por cédula, código o nit)
   if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
     const cop = listaCopropiedadesSuperadmin.find(c => {
       if (!c) return false;
       const cCod = String(c.codigo || "").replace(/[^0-9a-zA-Z]/g, "");
       const cNit = String(c.nit || "").replace(/[^0-9a-zA-Z]/g, "");
       const cCed = String(c.cedulaAdmin || c.cedula || "").replace(/[^0-9a-zA-Z]/g, "");
-      return cCod === limpia || cNit === limpia || cCed === limpia;
+      return cCed === limpia || cCod === limpia || cNit === limpia;
     });
     if (cop && cop.administrador) {
+      const pref = cop.codigo ? String(cop.codigo).slice(0, 2) : "";
       return {
         nombre: cop.administrador,
-        cedula: limpia,
-        codigoEdificio: cop.codigo || "0950",
-        nombreEdificio: cop.nombre || "",
-        password: cop.passwordAdmin || "Admin123*"
+        cedula: cop.cedulaAdmin || cop.cedula || limpia,
+        codigoEdificio: cop.codigo || "0361",
+        nombreEdificio: (cop.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
+        password: cop.passwordAdmin || "Admin123*",
+        edificios: typeof obtenerCodigosEdificiosPorPrefijo === "function" ? obtenerCodigosEdificiosPorPrefijo(pref) : [cop.codigo]
       };
     }
   }
 
-  // 3. Coincidencia en CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO
+  // 4. Coincidencia en CATALOGO_OFICIAL_DBPLUS
+  if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined") {
+    for (const [codKey, cat] of Object.entries(CATALOGO_OFICIAL_DBPLUS)) {
+      if (!cat) continue;
+      const catCed = String(cat.cedulaAdmin || "").replace(/[^0-9a-zA-Z]/g, "");
+      const catCod = String(cat.codigo || codKey).replace(/[^0-9a-zA-Z]/g, "");
+      if (catCed === limpia || catCod === limpia) {
+        const pref = catCod.slice(0, 2);
+        return {
+          nombre: cat.administrador || "Administrador",
+          cedula: cat.cedulaAdmin || limpia,
+          codigoEdificio: cat.codigo || codKey,
+          nombreEdificio: (cat.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
+          password: cat.passwordAdmin || "Admin123*",
+          edificios: typeof obtenerCodigosEdificiosPorPrefijo === "function" ? obtenerCodigosEdificiosPorPrefijo(pref) : [cat.codigo || codKey]
+        };
+      }
+    }
+  }
+
+  // 5. Coincidencia en CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO
   if (typeof CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO !== "undefined" && CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO[limpia]) {
     const cat = CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO[limpia];
     return {
       nombre: cat.administrador || "Administrador",
       cedula: limpia,
       codigoEdificio: cat.codigo || limpia,
-      nombreEdificio: cat.nombre || "",
+      nombreEdificio: (cat.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
       password: "Admin123*"
     };
   }
 
-  // 4. Búsqueda por coincidencia de texto
+  // 6. Búsqueda por coincidencia de texto
   const limpiaLower = limpia.toLowerCase();
   for (const k in DIRECTORIO_ADMINISTRADORES) {
     const a = DIRECTORIO_ADMINISTRADORES[k];
@@ -20340,11 +20442,11 @@ function detectarNombreAdministrador(val) {
 
   if (!cedulaLimpia) {
     if (display) {
-      display.innerText = "Nombre del Administrador (aparece con su cédula)";
-      display.className = "text-xs font-medium text-slate-500 truncate";
+      display.innerText = "Nombre del Administrador";
+      display.className = "text-xs text-slate-500 truncate";
     }
     if (box) {
-      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 min-h-[42px] transition-all";
+      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-700/60 bg-slate-900/60 min-h-[42px] transition-all";
     }
     if (icon) {
       icon.className = "w-4 h-4 text-slate-600 shrink-0";
@@ -20376,21 +20478,21 @@ function detectarNombreAdministrador(val) {
     return admin;
   } else if (cedulaLimpia.length >= 6) {
     if (display) {
-      display.innerText = "Administrador Registrado";
-      display.className = "text-xs font-semibold text-emerald-400 truncate";
+      display.innerText = "Cédula no registrada";
+      display.className = "text-xs font-semibold text-amber-400 truncate";
     }
     if (box) {
-      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 min-h-[42px] transition-all";
+      box.className = "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-950/20 min-h-[42px] transition-all";
     }
     if (icon) {
-      icon.className = "w-4 h-4 text-emerald-400 shrink-0";
+      icon.className = "w-4 h-4 text-amber-400 shrink-0";
     }
     if (badgeEdif) {
       badgeEdif.innerText = "";
       badgeEdif.classList.add("hidden");
     }
     safeCreateIcons();
-    return { nombre: "Administrador Registrado", cedula: cedulaLimpia, codigoEdificio: "0950", nombreEdificio: "EDIFICIO LA FORTALEZA" };
+    return null;
   } else {
     if (display) {
       display.innerText = "Buscando administrador...";
@@ -21169,13 +21271,14 @@ function loginPantallaEntrada() {
       return;
     }
 
-    const adminDetectado = buscarAdministradorPorCedula(cedulaLimpia) || {
-      nombre: "Carlos Alberto Gómez",
-      cedula: cedulaRaw,
-      codigoEdificio: "0950",
-      nombreEdificio: "EDIFICIO LA FORTALEZA",
-      password: "Admin123*"
-    };
+    const adminDetectado = buscarAdministradorPorCedula(cedulaLimpia);
+    if (!adminDetectado) {
+      if (typeof mostrarToast === "function") {
+        mostrarToast("⚠️ Cédula no registrada como Administrador. Verifique el número ingresado.", "error");
+      }
+      if (inputCedula) inputCedula.focus();
+      return;
+    }
 
     const inputPass = document.getElementById("login-password");
     let password = inputPass?.value.trim() || "";
@@ -42545,10 +42648,16 @@ async function guardarEdicionEdificio() {
       : null;
 
     if (!cop) {
-      if (typeof mostrarToast === "function") {
-        mostrarToast("⚠️ Copropiedad no encontrada para editar.", "error");
+      const copData = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
+      if (copData) {
+        cop = { ...copData };
+        listaCopropiedadesSuperadmin.unshift(cop);
+      } else {
+        if (typeof mostrarToast === "function") {
+          mostrarToast("⚠️ Copropiedad no encontrada para editar.", "error");
+        }
+        return;
       }
-      return;
     }
 
     const getVal = (elemId) => {
@@ -42597,13 +42706,19 @@ async function guardarEdicionEdificio() {
 
     const cedLimpia = String(cop.cedulaAdmin || "").replace(/[^0-9a-zA-Z]/g, "");
     if (cedLimpia && typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+      const prefix = cop.codigo ? String(cop.codigo).slice(0, 2) : "";
+      const edifs = (typeof obtenerCodigosEdificiosPorPrefijo === "function") ? obtenerCodigosEdificiosPorPrefijo(prefix) : [cop.codigo];
       DIRECTORIO_ADMINISTRADORES[cedLimpia] = {
         nombre: cop.administrador,
         cedula: cop.cedulaAdmin,
         codigoEdificio: cop.codigo,
-        nombreEdificio: cop.nombre,
-        password: cop.passwordAdmin || "Admin123*"
+        nombreEdificio: (cop.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
+        password: cop.passwordAdmin || "Admin123*",
+        edificios: edifs
       };
+      try {
+        localStorage.setItem("lefacturamos_directorio_admins", JSON.stringify(DIRECTORIO_ADMINISTRADORES));
+      } catch (e) {}
     }
 
     // 3. Guardar en el Backend Local o Nube (POST /api/conjuntos) con timeout
