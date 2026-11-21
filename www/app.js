@@ -18729,105 +18729,53 @@ function actualizarTodosLosSelectsDeCopropiedad(codigoSeleccionado = null) {
 
 
 
-  // 2. Selector de Barra Superior #sel-conjunto
-
+  // 2. Selector de Barra Superior #sel-conjunto (Dropdown interactivo con chevron para seleccionar edificio a administrar)
   const selConjunto = document.getElementById("sel-conjunto");
-
   if (selConjunto) {
-
-    const activeCod = String(codigoSeleccionado || (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || selConjunto.value || "").replace(/^cj_/, "").trim();
-
+    const activeCod = String(codigoSeleccionado || (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || selConjunto.value || "4901").replace(/^cj_/, "").trim();
     const activeId = activeCod ? ("cj_" + activeCod) : (typeof AppState !== "undefined" && AppState.conjuntoId ? AppState.conjuntoId : selConjunto.value);
 
+    // Obtener los edificios asociados a este administrador
+    let edificiosParaMostrar = [];
+    if (typeof AppState !== "undefined" && AppState.rol === "admin") {
+      edificiosParaMostrar = obtenerEdificiosDeAdministrador(AppState.adminNombre, AppState.adminCedula, activeCod);
+    } else {
+      edificiosParaMostrar = typeof listaCopropiedadesSuperadmin !== "undefined" ? [...listaCopropiedadesSuperadmin] : [];
+    }
 
+    if (!edificiosParaMostrar || edificiosParaMostrar.length === 0) {
+      edificiosParaMostrar = typeof listaCopropiedadesSuperadmin !== "undefined" ? [...listaCopropiedadesSuperadmin] : [];
+    }
 
     const codigosVistos = new Set();
-
-    const listaCompleta = [];
-
-
-
-    // Prioridad: Si hay un edificio activo especificado, garantizar que aparezca de primero
-
-    if (activeCod) {
-
-      const copActiva = typeof obtenerDatosCopropiedad === "function" ? obtenerDatosCopropiedad(activeCod) : null;
-
-      if (copActiva) {
-
-        codigosVistos.add(copActiva.codigo);
-
-        listaCompleta.push({
-
-          id: copActiva.id || ('cj_' + copActiva.codigo),
-
-          codigo: copActiva.codigo,
-
-          nombre: copActiva.nombre
-
-        });
-
-      }
-
-    }
-
-
-
-    if (typeof listaCopropiedadesSuperadmin !== "undefined") {
-
-      listaCopropiedadesSuperadmin.forEach(c => {
-
-        if (c.codigo && !codigosVistos.has(c.codigo)) {
-
-          codigosVistos.add(c.codigo);
-
-          listaCompleta.push({ id: c.id || ('cj_' + c.codigo), codigo: c.codigo, nombre: c.nombre });
-
-        }
-
-      });
-
-    }
-
-    if (typeof EDIFICIOS_CATALOGO_DRIVE !== "undefined") {
-
-      Object.values(EDIFICIOS_CATALOGO_DRIVE).forEach(e => {
-
-        if (e.codigo && !codigosVistos.has(e.codigo)) {
-
-          codigosVistos.add(e.codigo);
-
-          listaCompleta.push({ id: 'cj_' + e.codigo, codigo: e.codigo, nombre: e.nombre });
-
-        }
-
-      });
-
-    }
-
-
-
     let htmlCj = "";
+    edificiosParaMostrar.forEach(c => {
+      if (!c || !c.codigo) return;
+      const codLimpio = String(c.codigo).trim();
+      if (codigosVistos.has(codLimpio)) return;
+      codigosVistos.add(codLimpio);
 
-    listaCompleta.forEach(c => {
-
-      const isSel = (activeCod && c.codigo === activeCod) || (activeId && (c.id === activeId || c.codigo === activeId));
-
-      htmlCj += `<option value="${c.id}" ${isSel ? "selected" : ""}>${c.codigo} ${c.nombre}</option>`;
-
+      const cId = c.id || ("cj_" + codLimpio);
+      const isSel = (codLimpio === activeCod || cId === activeId);
+      htmlCj += `<option value="${cId}" ${isSel ? "selected" : ""} class="bg-slate-900 text-white font-semibold">${c.codigo} ${c.nombre.toUpperCase()}</option>`;
     });
 
     selConjunto.innerHTML = htmlCj;
-
     if (activeId) {
-
       selConjunto.value = activeId;
-
     }
 
+    // Mantener sincronizado el span oculto para compatibilidad
+    const topNombre = document.getElementById("top-header-edificio-nombre");
+    if (topNombre) {
+      const copActual = typeof obtenerDatosCopropiedad === "function" ? obtenerDatosCopropiedad(activeCod) : null;
+      if (copActual) {
+        topNombre.innerText = `${copActual.codigo} ${copActual.nombre.toUpperCase()}`;
+      }
+    }
+
+    safeCreateIcons();
   }
-
-
 
   // 3. Selector de Carga Masiva Superadmin #sa-cargamasiva-select
 
@@ -20294,6 +20242,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "79.845.120",
     codigoEdificio: "0950",
     nombreEdificio: "EDIFICIO LA FORTALEZA",
+    edificios: ["0950", "4160", "4901", "5304", "7480", "0127", "0202"],
     password: "Admin123*"
   },
   "71234567": {
@@ -20301,6 +20250,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "71.234.567",
     codigoEdificio: "4160",
     nombreEdificio: "Edificio Mixto Riachuelo",
+    edificios: ["4160", "0127", "0202"],
     password: "Admin123*"
   },
   "43123456": {
@@ -20308,6 +20258,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "43.123.456",
     codigoEdificio: "4901",
     nombreEdificio: "EDIFICIO ROBLE ALTO P.H.",
+    edificios: ["4901", "0950", "7480", "5304"],
     password: "Admin123*"
   },
   "32456789": {
@@ -20315,6 +20266,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "32.456.789",
     codigoEdificio: "5304",
     nombreEdificio: "PARCELACION VALLADOS DE GRATAMIRA.",
+    edificios: ["5304", "0202", "4901"],
     password: "Admin123*"
   },
   "43567890": {
@@ -20322,6 +20274,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "43.567.890",
     codigoEdificio: "7480",
     nombreEdificio: "Edificio Manchester APTOS PH",
+    edificios: ["7480", "4901", "0950"],
     password: "Admin123*"
   },
   "1017123456": {
@@ -20329,6 +20282,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "1.017.123.456",
     codigoEdificio: "0127",
     nombreEdificio: "EDIFICIO CLASS 48 P. H.",
+    edificios: ["0127", "4160", "0950"],
     password: "Admin123*"
   },
   "43890123": {
@@ -20336,6 +20290,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "43.890.123",
     codigoEdificio: "0202",
     nombreEdificio: "EDIFICIO LAURELES COLONIAL",
+    edificios: ["0202", "5304", "0127"],
     password: "Admin123*"
   },
   "71336904": {
@@ -20343,6 +20298,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "71.336.904",
     codigoEdificio: "0361",
     nombreEdificio: "EDIFICIO DOÑA ROSA",
+    edificios: ["0361", "0362", "0380", "0381", "0382"],
     password: "Admin123*"
   },
   "3207045217": {
@@ -20350,6 +20306,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "3207045217",
     codigoEdificio: "0950",
     nombreEdificio: "EDIFICIO LA FORTALEZA",
+    edificios: ["0950", "4901", "4160"],
     password: "Admin123*"
   },
   "12345678": {
@@ -20357,6 +20314,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "12.345.678",
     codigoEdificio: "0950",
     nombreEdificio: "EDIFICIO LA FORTALEZA",
+    edificios: ["0950", "4160", "4901", "5304", "7480", "0127", "0202"],
     password: "Admin123*"
   },
   "10203040": {
@@ -20364,6 +20322,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     cedula: "10.203.040",
     codigoEdificio: "4901",
     nombreEdificio: "EDIFICIO ROBLE ALTO P.H.",
+    edificios: ["4901", "0950", "4160", "5304", "7480", "0127", "0202"],
     password: "Admin123*"
   }
 };
@@ -20440,7 +20399,10 @@ function detectarNombreAdministrador(val) {
     if (icon) {
       icon.className = "w-4 h-4 text-slate-600 shrink-0";
     }
-    if (badgeEdif) badgeEdif.classList.add("hidden");
+    if (badgeEdif) {
+      badgeEdif.innerText = "";
+      badgeEdif.classList.add("hidden");
+    }
     return null;
   }
 
@@ -20457,8 +20419,8 @@ function detectarNombreAdministrador(val) {
       icon.className = "w-4 h-4 text-emerald-400 shrink-0";
     }
     if (badgeEdif) {
-      badgeEdif.innerText = admin.nombreEdificio ? `[${admin.codigoEdificio}] ${admin.nombreEdificio}` : `Copropiedad #${admin.codigoEdificio}`;
-      badgeEdif.classList.remove("hidden");
+      badgeEdif.innerText = "";
+      badgeEdif.classList.add("hidden");
     }
     safeCreateIcons();
     return admin;
@@ -20473,7 +20435,10 @@ function detectarNombreAdministrador(val) {
     if (icon) {
       icon.className = "w-4 h-4 text-emerald-400 shrink-0";
     }
-    if (badgeEdif) badgeEdif.classList.add("hidden");
+    if (badgeEdif) {
+      badgeEdif.innerText = "";
+      badgeEdif.classList.add("hidden");
+    }
     safeCreateIcons();
     return { nombre: "Administrador Registrado", cedula: cedulaLimpia, codigoEdificio: "0950", nombreEdificio: "EDIFICIO LA FORTALEZA" };
   } else {
@@ -20487,10 +20452,113 @@ function detectarNombreAdministrador(val) {
     if (icon) {
       icon.className = "w-4 h-4 text-slate-400 shrink-0";
     }
-    if (badgeEdif) badgeEdif.classList.add("hidden");
+    if (badgeEdif) {
+      badgeEdif.innerText = "";
+      badgeEdif.classList.add("hidden");
+    }
     safeCreateIcons();
     return null;
   }
+}
+
+// Función auxiliar para obtener los edificios asociados a un administrador
+function obtenerEdificiosDeAdministrador(adminNombre, adminCedula, codEdificioActivo = null) {
+  const normNom = String(adminNombre || "").toLowerCase().trim();
+  const normCed = String(adminCedula || "").replace(/[^0-9a-zA-Z]/g, "").trim();
+
+  const codigosVistos = new Set();
+  const todos = [];
+
+  if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+    listaCopropiedadesSuperadmin.forEach(c => {
+      if (!c || !c.codigo) return;
+      const codStr = String(c.codigo).trim();
+      if (codigosVistos.has(codStr)) return;
+      codigosVistos.add(codStr);
+      todos.push(c);
+    });
+  }
+
+  try {
+    const raw = localStorage.getItem("lefacturamos_copropiedades_custom");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(c => {
+          if (!c || !c.codigo) return;
+          const codStr = String(c.codigo).trim();
+          if (!codigosVistos.has(codStr)) {
+            codigosVistos.add(codStr);
+            todos.push(c);
+          }
+        });
+      }
+    }
+  } catch(e) {}
+
+  // Si es superadmin o Carlos Alberto Gómez (Administrador Maestro con acceso a todos)
+  const esMaestro = (
+    !normNom ||
+    normNom.includes("carlos alberto") ||
+    normNom.includes("carlos mario") ||
+    normNom.includes("superadmin") ||
+    normNom.includes("administrador general") ||
+    normCed === "79845120" ||
+    normCed === "12345678" ||
+    normCed === "10203040"
+  );
+
+  if (esMaestro) {
+    return todos;
+  }
+
+  // Buscar en DIRECTORIO_ADMINISTRADORES
+  let dirAdmin = (typeof DIRECTORIO_ADMINISTRADORES !== "undefined" && normCed) ? DIRECTORIO_ADMINISTRADORES[normCed] : null;
+  if (!dirAdmin && typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+    for (const k in DIRECTORIO_ADMINISTRADORES) {
+      const a = DIRECTORIO_ADMINISTRADORES[k];
+      if (a && a.nombre && (a.nombre.toLowerCase().includes(normNom) || normNom.includes(a.nombre.toLowerCase()))) {
+        dirAdmin = a;
+        break;
+      }
+    }
+  }
+
+  const codigosAsignados = new Set();
+  if (dirAdmin) {
+    if (Array.isArray(dirAdmin.edificios)) {
+      dirAdmin.edificios.forEach(cd => codigosAsignados.add(String(cd).trim()));
+    }
+    if (dirAdmin.codigoEdificio) {
+      codigosAsignados.add(String(dirAdmin.codigoEdificio).trim());
+    }
+  }
+  if (codEdificioActivo) {
+    codigosAsignados.add(String(codEdificioActivo).trim());
+  }
+
+  const filtrados = todos.filter(c => {
+    const cod = String(c.codigo || "").trim();
+    if (codigosAsignados.has(cod)) return true;
+
+    const cCed = String(c.cedulaAdmin || c.cedula || "").replace(/[^0-9a-zA-Z]/g, "").trim();
+    if (normCed && cCed && cCed === normCed) return true;
+
+    const cNom = String(c.administrador || "").toLowerCase();
+    if (normNom && (cNom.includes(normNom) || normNom.includes(cNom))) return true;
+
+    return false;
+  });
+
+  return filtrados.length > 0 ? filtrados : todos;
+}
+
+function poblarEdificiosAdministrador(adminNom = null, adminCed = null) {
+  if (typeof AppState !== "undefined") {
+    if (adminNom) AppState.adminNombre = adminNom;
+    if (adminCed) AppState.adminCedula = adminCed;
+  }
+  actualizarTodosLosSelectsDeCopropiedad();
 }
 
 function seleccionarRolLogin(rol) {
@@ -21728,7 +21796,12 @@ function ejecutarIngresoFinalAdmin(codigoEdificio, codigoUsuario, password) {
   AppState.codigoEdificio = codigoEdificio;
   AppState.conjuntoId = conjuntoId;
 
+  if (!AppState.adminNombre && copropiedad && copropiedad.administrador) {
+    AppState.adminNombre = copropiedad.administrador;
+  }
+
   try {
+    actualizarTodosLosSelectsDeCopropiedad(codigoEdificio);
     cambiarRolActivo("admin");
     sincronizarAdministradorEdificio(codigoEdificio);
   } catch (e) {
