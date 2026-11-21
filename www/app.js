@@ -19173,7 +19173,7 @@ const MENUS_POR_ROL = {
     ],
     items: [
       { id: "superadmin", label: "Superadministrador Global", icono: "globe" },
-      { id: "cargamasiva", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
+      { id: "cargamasiva", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud" },
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
       { id: "apartamentos", label: "Apartamentos", icono: "home" },
       { id: "residentes", label: "Residentes", icono: "users" },
@@ -19291,28 +19291,7 @@ const MENUS_POR_ROL = {
 
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
 
-      // UN SOLO ICONO PARA CREAR EDIFICIO (Carga uno a uno de archivos Excel, CSV, TXT o PDF)
-      { id: "crear-edificio", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
-      { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" },
-      { id: "config-edificio", label: "Configurar Edificio", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
-
-      // SUBMENÚ 2: FACTURACIÓN (Orden Cronológico de Facturación Condominal)
-      {
-        id: "facturacion-menu",
-        label: "Facturación",
-        icono: "receipt",
-        badge: "Ley 675",
-        subitems: [
-          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
-          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
-          { id: "facturacion", label: "3. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
-          { id: "documentos", label: "4. Listados y Facturas Oficiales", icono: "folder" },
-          { id: "devolver-saldos", label: "5. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
-        ]
-      },
-
-      // PAGOS ADMINISTRACIÓN (Egresos y Proveedores - Directo ENCIMA de Residentes)
-      { id: "pagosadmin", label: "Pagos Administración", icono: "credit-card" },
+      { id: "apartamentos", label: "Apartamentos", icono: "home" },
 
       { id: "residentes", label: "Residentes", icono: "users" },
 
@@ -19321,6 +19300,12 @@ const MENUS_POR_ROL = {
       { id: "visitantes", label: "Visitas", icono: "car" },
 
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
+
+      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
+
+      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
+
+      { id: "documentos", label: "Documentos", icono: "folder" },
 
       { id: "pqr", label: "PQR", icono: "message-square", badge: "2" },
 
