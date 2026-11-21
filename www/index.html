@@ -11562,36 +11562,37 @@
 
 
 
-      <!-- 4 SUBPESTAÑAS DEL MODAL -->
+      <!-- SUBPESTAÑAS DEL MODAL: 1. CREAR EDIFICIO / 2. FUSIÓN 3 EN 1 / 3. MAPEAR -->
 
-      <div class="flex items-center gap-2 border-b border-slate-800/80 pb-2 overflow-x-auto no-scrollbar">
+      <div class="flex items-center justify-center gap-2 sm:gap-3 border-b border-slate-800/80 pb-2 overflow-x-auto no-scrollbar">
 
-        <button type="button" onclick="cambiarSubtabModalConversor('carga')" id="subtab-modal-cm-carga" class="subtab-modal-cm-btn active px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 flex items-center gap-2 shadow-sm">
+        <button type="button" onclick="cambiarSubtabModalConversor('carga')" id="subtab-modal-cm-carga" class="subtab-modal-cm-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-emerald-950/40 text-emerald-300 border border-emerald-500/50 flex items-center gap-2 shadow-sm">
 
           <i data-lucide="upload-cloud" class="w-4 h-4 text-emerald-400"></i>
 
-          <span>1. Crear Edificio / Carga de Archivos Uno a Uno (Excel, CSV, TXT, PDF)</span>
+          <span>1. Crear Edificio</span>
 
         </button>
 
-        <button type="button" onclick="cambiarSubtabModalConversor('fusion3en1')" id="subtab-modal-cm-fusion3en1" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-amber-300 hover:text-white flex items-center gap-2 border border-transparent hover:border-amber-500/40">
+        <button type="button" onclick="cambiarSubtabModalConversor('fusion3en1')" id="subtab-modal-cm-fusion3en1" class="subtab-modal-cm-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-amber-300 hover:text-white flex items-center gap-2 border border-transparent hover:border-amber-500/40">
           <i data-lucide="layers" class="w-4 h-4 text-amber-400"></i>
-          <span>2. Fusión 3-en-1: Crear Edificio</span>
+          <span>2. Fusión 3 en 1</span>
           <span class="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black border border-amber-500/40">NUEVO</span>
         </button>
 
-        <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" id="subtab-modal-cm-mapeador" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-teal-300 hover:text-white flex items-center gap-2 border border-transparent hover:border-teal-500/40">
+        <button type="button" onclick="cambiarSubtabModalConversor('mapeador')" id="subtab-modal-cm-mapeador" class="subtab-modal-cm-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-teal-300 hover:text-white flex items-center gap-2 border border-transparent hover:border-teal-500/40">
           <i data-lucide="git-pull-request" class="w-4 h-4 text-teal-400"></i>
-          <span>3. Mapeador Visual Interactivo</span>
+          <span>3. Mapear</span>
           <span class="px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-black border border-teal-500/40">OPCIÓN PRO</span>
         </button>
 
-        <button type="button" onclick="cambiarSubtabModalConversor('plantillas')" id="subtab-modal-cm-plantillas" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2">
+        <!-- Pestañas secundarias en caso de acceso programático -->
+        <button type="button" onclick="cambiarSubtabModalConversor('plantillas')" id="subtab-modal-cm-plantillas" class="hidden">
           <i data-lucide="download" class="w-4 h-4 text-slate-400"></i>
           <span>4. Descargar Plantillas Oficiales (.xlsx)</span>
         </button>
 
-        <button type="button" onclick="cambiarSubtabModalConversor('python')" id="subtab-modal-cm-python" class="subtab-modal-cm-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap text-slate-400 hover:text-white flex items-center gap-2">
+        <button type="button" onclick="cambiarSubtabModalConversor('python')" id="subtab-modal-cm-python" class="hidden">
           <i data-lucide="terminal" class="w-4 h-4 text-amber-400"></i>
           <span>5. Scripts Python (Windows / Android / iOS)</span>
         </button>
