@@ -561,7 +561,6 @@
                 <i id="login-admin-nombre-icon" data-lucide="user" class="w-4 h-4 text-slate-600 shrink-0"></i>
                 <div class="flex flex-col min-w-0 justify-center">
                   <span id="login-admin-nombre-display" class="text-xs font-medium text-slate-500 truncate">Nombre del Administrador (aparece con su cédula)</span>
-                  <span id="login-admin-edificio-badge" class="text-[10px] text-emerald-400 font-mono font-medium truncate hidden"></span>
                 </div>
               </div>
             </div>
@@ -1283,21 +1282,19 @@
         </div>
 
         <div>
-
-          <div class="flex items-center gap-1">
-            <span id="top-header-edificio-nombre" class="text-white text-xs sm:text-sm font-black tracking-tight leading-tight select-none">0950 EDIFICIO LA FORTALEZA</span>
-            <select id="sel-conjunto" onchange="cambiarConjuntoActivo(this.value)" class="hidden" aria-hidden="true">
-              <option value="cj_0950" selected>0950 EDIFICIO LA FORTALEZA</option>
-              <option value="cj_4901">4901 EDIFICIO ROBLE ALTO P.H.</option>
-              <option value="cj_5304">5304 PARCELACION VALLADOS DE GRATAMIRA.</option>
-              <option value="cj_7480">7480 EDIFICIO MANCHESTER APTOS PH</option>
-              <option value="cj_0127">0127 EDIFICIO CLASS 48 P. H.</option>
-              <option value="cj_0202">0202 EDIFICIO LAURELES COLONIAL</option>
+          <div class="relative flex items-center">
+            <span id="top-header-edificio-nombre" class="hidden">0950 EDIFICIO LA FORTALEZA</span>
+            <select id="sel-conjunto" onchange="cambiarConjuntoActivo(this.value)" title="Seleccionar edificio para administrar" class="appearance-none bg-slate-900/90 border border-slate-700 hover:border-emerald-500 rounded-xl pl-2.5 pr-8 py-1 text-white font-black text-xs sm:text-sm cursor-pointer outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all max-w-[260px] sm:max-w-[340px] truncate shadow-sm">
+              <option value="cj_4901" selected class="bg-slate-900 text-white font-semibold">4901 EDIFICIO ROBLE ALTO P.H.</option>
+              <option value="cj_0950" class="bg-slate-900 text-white font-semibold">0950 EDIFICIO LA FORTALEZA</option>
+              <option value="cj_5304" class="bg-slate-900 text-white font-semibold">5304 PARCELACION VALLADOS DE GRATAMIRA.</option>
+              <option value="cj_7480" class="bg-slate-900 text-white font-semibold">7480 EDIFICIO MANCHESTER APTOS PH</option>
+              <option value="cj_0127" class="bg-slate-900 text-white font-semibold">0127 EDIFICIO CLASS 48 P. H.</option>
+              <option value="cj_0202" class="bg-slate-900 text-white font-semibold">0202 EDIFICIO LAURELES COLONIAL</option>
             </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2"></i>
           </div>
-
-          <p id="top-header-ciudad" class="text-[10px] text-slate-400 font-medium">Medellín • Antioquia</p>
-
+          <p id="top-header-ciudad" class="text-[10px] text-slate-400 font-medium pl-1 mt-0.5">Medellín • Antioquia</p>
         </div>
 
       </div>
@@ -19500,7 +19497,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="/app.js?v=20261121_clean_v2"></script>
+  <script src="/app.js?v=20261121_admin_buildings_v3"></script>
   <script>
     // Enrutamiento directo instantáneo a Superadministrador
     (function() {
