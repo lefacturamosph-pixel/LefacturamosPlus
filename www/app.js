@@ -18456,17 +18456,16 @@ function cargarCopropiedadesGuardadasPersistentes() {
     const FAKE_NAMES = ["Torres del Parque", "Los Sauces", "Balcones de Baviera", "Torres de San Carlos"];
 
     const isFake = (c) => {
-
       if (!c) return true;
-
       const cod = String(c.codigo || c.id || "").replace(/^cj_/, "").trim();
-
       if (FAKE_CODES.has(cod)) return true;
-
       if (c.nombre && FAKE_NAMES.some(fn => c.nombre.toLowerCase().includes(fn.toLowerCase()))) return true;
-
+      // Purga automatica de edificios ficticios generados por fallbacks previos
+      if (c.nombre && /^EDIFICIO COPROPIEDAD #/i.test(c.nombre)) return true;
+      if (c.nombre && /^EDIFICIO #\d+$/i.test(c.nombre)) return true;
+      if (c.nombre && /^EDIFICIO \d+$/i.test(c.nombre)) return true;
+      if (c.nombre && /^Copropiedad #\d+$/i.test(c.nombre) && (!c.unidades || c.unidades.length === 0)) return true;
       return false;
-
     };
 
 
@@ -18479,7 +18478,7 @@ function cargarCopropiedadesGuardadasPersistentes() {
 
     const activeCod = localStorage.getItem("lefacturamos_active_building") || "";
 
-    if (FAKE_CODES.has(activeCod)) {
+    if (FAKE_CODES.has(activeCod) || activeCod === "0955" || isFake({ codigo: activeCod, nombre: activeCod })) {
 
       localStorage.setItem("lefacturamos_active_building", "4901");
 
@@ -19653,84 +19652,8 @@ function obtenerDatosCopropiedad(codigoOId) {
 
 
 
-  // 3. Fallback dinámico para cualquier código alfanumérico nuevo (ej: xxxx)
-
-  if (limpioSinCj.length >= 2) {
-
-    return {
-
-      id: "cj_" + limpioSinCj,
-
-      nombre: `EDIFICIO COPROPIEDAD #${limpioSinCj}`,
-
-      codigo: limpioSinCj,
-
-      nit: `900.${limpioSinCj}.001-1`,
-
-      direccion: `Sede Copropiedad #${limpioSinCj}`,
-
-      ciudad: "Medellín • Antioquia",
-
-      tipo: "Propiedad Horizontal",
-
-      banco: "BANCOLOMBIA AHO",
-
-      tipoCuenta: "Ahorros",
-
-      cuenta: `100${limpioSinCj}01`,
-
-      breb: `BREB-BAN-${limpioSinCj}`,
-
-      pasarela: `Wompi (pub_prod_${limpioSinCj})`,
-
-      codigoAdmin: `ADM-${limpioSinCj}`,
-
-      passwordAdmin: "Admin123*",
-
-      administrador: "Administración PH",
-
-      inmueblesCount: 30,
-
-      inmueblesOcupados: 30,
-
-      censoCount: 30,
-
-      vehiculosAuditoria: 3,
-
-      reservasConfirmadas: 1,
-
-      pqrAtencion: 0,
-
-      coeficienteTotal: "100.000%",
-
-      recaudoTotal: "$8.500.000",
-
-      recaudoPagos: "30 pagos procesados",
-
-      carteraPendiente: "$3.200.000",
-
-      totalFinalEdificio: "$11.700.000",
-
-      carteraInmuebles: "3 inmuebles con saldo",
-
-      carteraVencida: "$1.200.000",
-
-      carteraJuridica: "0 cuentas en mora jurídica",
-
-      estado: "A Paz y Salvo",
-
-      bloqueadoMora: false,
-
-      unidades: []
-
-    };
-
-  }
-
-
-
+  // Si no existe en las bases de datos registradas, retornar null (NUNCA crear edificio ficticio)
   return null;
-
 }
 
 
@@ -19956,81 +19879,25 @@ function actualizarPreviewEdificioLogin(codigo) {
     }
 
   } else {
-
-    // Código nuevo
-
+    // Codigo no existe en el sistema: CODIGO INCORRECTO (nunca crear edificio ficticio)
     if (previewBadge) {
-
       previewBadge.innerText = codLimpio;
-
-      previewBadge.className = "px-1.5 py-0.5 rounded bg-amber-950 border border-amber-500/50 text-[10px] font-mono font-bold text-amber-400 shadow-sm";
-
+      previewBadge.className = "px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/50 text-[10px] font-mono font-bold text-rose-400 shadow-sm";
     }
-
     if (previewNombre) {
-
-      previewNombre.innerText = `COPROPIEDAD #${codLimpio}`;
-
-      previewNombre.className = "font-bold text-amber-200 truncate text-xs sm:text-sm";
-
+      previewNombre.innerText = "Código Incorrecto";
+      previewNombre.className = "font-bold text-rose-400 truncate text-xs sm:text-sm";
     }
-
     if (previewDetalles) {
-
-      previewDetalles.innerText = `Código alfanumérico habilitado para administración y sincronización.`;
-
+      previewDetalles.innerText = "El código ingresado no corresponde a ningún edificio registrado en la plataforma.";
     }
-
     if (previewStatus) {
-
-      previewStatus.innerText = "Edificio Activo";
-
-      previewStatus.className = "shrink-0 text-[10px] font-bold text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-1 rounded-lg";
-
+      previewStatus.innerText = "⚠️ Código Incorrecto";
+      previewStatus.className = "shrink-0 text-[10px] font-bold text-rose-400 bg-rose-950/80 border border-rose-500/40 px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm";
     }
-
     if (previewIconWrapper) {
-
-      previewIconWrapper.className = "w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shrink-0";
-
+      previewIconWrapper.className = "w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0";
     }
-
-
-
-    if (codLimpio.length >= 4) {
-
-      AppState.codigoEdificio = codLimpio;
-
-      AppState.conjuntoId = "cj_" + codLimpio;
-
-      const selConjunto = document.getElementById("sel-conjunto");
-
-      if (selConjunto) {
-
-        let optCoincidente = Array.from(selConjunto.options).find(o => o.value === `cj_${codLimpio}` || o.value === codLimpio);
-
-        if (!optCoincidente) {
-
-          const nuevaOpt = document.createElement("option");
-
-          nuevaOpt.value = `cj_${codLimpio}`;
-
-          nuevaOpt.text = `${codLimpio} Copropiedad #${codLimpio}`;
-
-          selConjunto.appendChild(nuevaOpt);
-
-          selConjunto.value = nuevaOpt.value;
-
-        } else {
-
-          selConjunto.value = optCoincidente.value;
-
-        }
-
-      }
-
-    }
-
   }
 
 }
@@ -42595,17 +42462,10 @@ async function guardarEdicionEdificio() {
       : null;
 
     if (!cop) {
-      cop = {
-        id: id || `cj_${codLimpio}`,
-        codigo: codLimpio,
-        nombre: `Copropiedad #${codLimpio}`,
-        tipo: "Propiedad Horizontal",
-        estado: "A Paz y Salvo",
-        bloqueadoMora: false
-      };
-      if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
-        listaCopropiedadesSuperadmin.unshift(cop);
+      if (typeof mostrarToast === "function") {
+        mostrarToast("⚠️ Copropiedad no encontrada para editar.", "error");
       }
+      return;
     }
 
     const getVal = (elemId) => {
@@ -63546,161 +63406,67 @@ function onInputCodigoEdificioSidebar(valor) {
 
 
 async function ejecutarCambioEdificioPorCodigo(codigoInput) {
-
   const limpio = String(codigoInput || "").trim().replace(/^cj_/, "");
-
   if (!limpio) {
-
     if (typeof mostrarToast === "function") {
-
       mostrarToast("⚠️ Por favor escribe el código del edificio (ej: 4901 o 7480)", "warning");
-
     }
-
     const inp = document.getElementById("sidebar-input-codigo-edificio") || document.getElementById("main-input-buscar-edificio");
-
     if (inp) inp.focus();
-
     return;
-
   }
 
-
-
-  // 1. Activar filtro exclusivo para mostrar SOLO el cuadro de este edificio
-
-  edificioFiltroCodigoSuperadmin = limpio;
-
-
-
-  // 2. Si la app principal está oculta (pantalla de entrada), abrir la app principal de inmediato
-
-  try {
-
-    const pantallaEntrada = document.getElementById("pantalla-entrada");
-
-    const appPrincipal = document.getElementById("app-principal");
-
-    if (pantallaEntrada && !pantallaEntrada.classList.contains("hidden")) {
-
-      pantallaEntrada.classList.add("hidden");
-
-      pantallaEntrada.style.display = "none";
-
-    }
-
-    if (appPrincipal) {
-
-      appPrincipal.classList.remove("hidden");
-
-      appPrincipal.style.display = "flex";
-
-    }
-
-  } catch (e) {}
-
-
-
-  // 3. Cambiar a rol Superadministrador y sub-pestaña de Conjuntos para ver el cuadro
-
-  try {
-
-    if (typeof cambiarRolActivo === "function") cambiarRolActivo("superadmin");
-
-    if (typeof cambiarPestana === "function") cambiarPestana("superadmin");
-
-    if (typeof cambiarSubtabSuperadmin === "function") cambiarSubtabSuperadmin("conjuntos");
-
-  } catch (e) {}
-
-
-
-  // 4. Buscar o preparar de inmediato la copropiedad para renderizado INSTANTÁNEO sin demoras
-
+  // 1. Buscar si la copropiedad existe REALMENTE en la plataforma
   let copropiedadEncontrada = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(limpio) : null;
-
-  if (!copropiedadEncontrada) {
-
+  if (!copropiedadEncontrada && typeof listaCopropiedadesSuperadmin !== "undefined") {
     copropiedadEncontrada = listaCopropiedadesSuperadmin.find(c => 
-
-      String(c.codigo).trim() === limpio || 
-
-      c.id === `cj_${limpio}`
-
+      c && (String(c.codigo).trim().toLowerCase() === limpio.toLowerCase() || String(c.id).toLowerCase() === `cj_${limpio.toLowerCase()}`)
     );
-
   }
 
+  // SI NO EXISTE: CÓDIGO INCORRECTO. NUNCA CREAR UN EDIFICIO FICTICIO.
   if (!copropiedadEncontrada) {
-
-    const unidadesReales = (typeof obtenerUnidadesRealesParaFusion === "function") 
-
-      ? obtenerUnidadesRealesParaFusion(limpio, `Edificio ${limpio}`) 
-
-      : [];
-
-    copropiedadEncontrada = {
-
-      id: `cj_${limpio}`,
-
-      codigo: limpio,
-
-      nombre: `EDIFICIO ${limpio}`,
-
-      nit: "900.000.000-0",
-
-      direccion: `Calle Principal #${limpio}`,
-
-      ciudad: "Medellín • Antioquia",
-
-      tipo: "Propiedad Horizontal",
-
-      banco: "BANCOLOMBIA AHO",
-
-      tipoCuenta: "Ahorros",
-
-      cuenta: "",
-
-      breb: `BREB-${limpio}`,
-
-      pasarela: `Wompi (pub_${limpio})`,
-
-      codigoAdmin: `ADM-${limpio}`,
-
-      passwordAdmin: "Admin123*",
-
-      administrador: "Administración PH",
-
-      telefono: "",
-
-      email: `admon${limpio}@lefacturamos.com`,
-
-      inmueblesCount: unidadesReales.length,
-
-      inmueblesOcupados: unidadesReales.length,
-
-      censoCount: unidadesReales.length,
-
-      estado: "A Paz y Salvo",
-
-      bloqueadoMora: false,
-
-      unidades: unidadesReales
-
-    };
-
-    listaCopropiedadesSuperadmin.unshift(copropiedadEncontrada);
-
+    if (typeof mostrarToast === "function") {
+      mostrarToast(`⚠️ Código incorrecto (#${limpio}). El edificio no existe en la plataforma.`, "error");
+    }
+    const inp = document.getElementById("sidebar-input-codigo-edificio") || document.getElementById("main-input-buscar-edificio");
+    if (inp) {
+      inp.focus();
+      inp.classList.add("border-rose-500", "text-rose-400");
+      setTimeout(() => {
+        inp.classList.remove("border-rose-500", "text-rose-400");
+      }, 3000);
+    }
+    return;
   }
 
+  // 2. Si existe: Activar filtro exclusivo para mostrar SOLO el cuadro de este edificio real
+  edificioFiltroCodigoSuperadmin = copropiedadEncontrada.codigo;
 
+  // 3. Si la app principal está oculta, abrirla
+  try {
+    const pantallaEntrada = document.getElementById("pantalla-entrada");
+    const appPrincipal = document.getElementById("app-principal");
+    if (pantallaEntrada && !pantallaEntrada.classList.contains("hidden")) {
+      pantallaEntrada.classList.add("hidden");
+      pantallaEntrada.style.display = "none";
+    }
+    if (appPrincipal) {
+      appPrincipal.classList.remove("hidden");
+      appPrincipal.style.display = "flex";
+    }
+  } catch (e) {}
 
-  // 5. Renderizar INMEDIATAMENTE el cuadro del edificio para que aparezca al instante en pantalla
+  // 4. Cambiar a rol Superadministrador y sub-pestaña de Conjuntos
+  try {
+    if (typeof cambiarRolActivo === "function") cambiarRolActivo("superadmin");
+    if (typeof cambiarPestana === "function") cambiarPestana("superadmin");
+    if (typeof cambiarSubtabSuperadmin === "function") cambiarSubtabSuperadmin("conjuntos");
+  } catch (e) {}
 
+  // 5. Renderizar el cuadro del edificio real
   if (typeof renderizarCopropiedadesSuperadmin === "function") {
-
     renderizarCopropiedadesSuperadmin();
-
   }
 
 
