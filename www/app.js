@@ -4809,7 +4809,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "0361",
 
-    "nombre": "EDIFICIO DO¥A ROSA",
+    "nombre": "EDIFICIO DOÑA ROSA",
 
     "nit": "890916414-7",
 
@@ -5821,7 +5821,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "811016743-6",
 
-    "direccion": "TRANSVERSAL 38 N§ 71-109",
+    "direccion": "TRANSVERSAL 38 No. 71-109",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -6145,7 +6145,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901191786-7",
 
-    "direccion": "CALLE 42 N§ 118A-11  APTO 211 NELSON HIGUITA",
+    "direccion": "CALLE 42 No. 118A-11  APTO 211 NELSON HIGUITA",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -6685,7 +6685,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901323283-2",
 
-    "direccion": "Carrera 55 A N§ 132 Sur - 30",
+    "direccion": "Carrera 55 A No. 132 Sur - 30",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -6721,7 +6721,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901420059-4",
 
-    "direccion": "CARRERA 50 N§ 132S-26",
+    "direccion": "CARRERA 50 No. 132S-26",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -6757,7 +6757,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901445315-3",
 
-    "direccion": "CALLE 131A SUR N§ 46-35",
+    "direccion": "CALLE 131A SUR No. 46-35",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -7045,7 +7045,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "800184032-7",
 
-    "direccion": "CARRERA 75 # 48B-5  Medell¡n",
+    "direccion": "CARRERA 75 # 48B-5  Medellín",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -7117,7 +7117,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "900251831-5",
 
-    "direccion": "CALLE 38 N§ 76-17",
+    "direccion": "CALLE 38 No. 76-17",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -7981,7 +7981,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "900176201-4",
 
-    "direccion": "CARRERA 66 N§ 35-4",
+    "direccion": "CARRERA 66 No. 35-4",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -8197,7 +8197,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901443101",
 
-    "direccion": "CALLE 37 N§ 77-47 LAURELES",
+    "direccion": "CALLE 37 No. 77-47 LAURELES",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -8535,7 +8535,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "cuenta": "510 118 433",
 
-    "administrador": "M¢nica Delgado 3007877804",
+    "administrador": "Mónica Delgado 3007877804",
 
     "interesMora": "2.16",
 
@@ -8571,7 +8571,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "cuenta": "58025294970",
 
-    "administrador": "M¢nica Delgado 3007877804",
+    "administrador": "Mónica Delgado 3007877804",
 
     "interesMora": "2.16",
 
@@ -8607,7 +8607,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "cuenta": "58025294970",
 
-    "administrador": "M¢nica Delgado 3007877804",
+    "administrador": "Mónica Delgado 3007877804",
 
     "interesMora": "2.16",
 
@@ -8643,7 +8643,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "cuenta": "58025294970",
 
-    "administrador": "M¢nica Delgado 3007877804",
+    "administrador": "Mónica Delgado 3007877804",
 
     "interesMora": "2.16",
 
@@ -8845,7 +8845,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901147149-9",
 
-    "direccion": "CARRERA 74 N§ 42 - 29",
+    "direccion": "CARRERA 74 No. 42 - 29",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -8881,7 +8881,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "811012609-9",
 
-    "direccion": "CARRERA 84 N§ 45C-62",
+    "direccion": "CARRERA 84 No. 45C-62",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -8917,7 +8917,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "900247152-7",
 
-    "direccion": "CARRERA 81 N§ 36-56",
+    "direccion": "CARRERA 81 No. 36-56",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -8953,7 +8953,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "800094322-1",
 
-    "direccion": "Calle 35 N§ 77-33",
+    "direccion": "Calle 35 No. 77-33",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -8989,7 +8989,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "900687010-7",
 
-    "direccion": "CALLE 35A N§ 86-71",
+    "direccion": "CALLE 35A No. 86-71",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -9061,7 +9061,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901060594-8",
 
-    "direccion": "CARRERA 79 N§35-91",
+    "direccion": "CARRERA 79 No.35-91",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -9097,7 +9097,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "800222223-0",
 
-    "direccion": "CIRCULAR 8 N§ 72-60",
+    "direccion": "CIRCULAR 8 No. 72-60",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -9133,7 +9133,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "890933145-2",
 
-    "direccion": "CARRERA 84 N§ 43-54",
+    "direccion": "CARRERA 84 No. 43-54",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -9457,7 +9457,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "900162590-3",
 
-    "direccion": "Carrera 30 No 8B 25 Medell¡n",
+    "direccion": "Carrera 30 No 8B 25 Medellín",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -9673,7 +9673,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "900821511-1",
 
-    "direccion": "Carrera 41AA No 18 Sur 3  Medell¡n",
+    "direccion": "Carrera 41AA No 18 Sur 3  Medellín",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -9957,7 +9957,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "4864",
 
-    "nombre": "CAMINO DE LAS CABA¥AS",
+    "nombre": "CAMINO DE LAS CABAÑAS",
 
     "nit": "900392801-9",
 
@@ -9997,7 +9997,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "811009567-7",
 
-    "direccion": "Carrera 91D N§ 71-13",
+    "direccion": "Carrera 91D No. 71-13",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -10137,7 +10137,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "5303",
 
-    "nombre": "URBANIZACION SAN JUAN DE LA PE¥A",
+    "nombre": "URBANIZACION SAN JUAN DE LA PEÑA",
 
     "nit": "800020930-2",
 
@@ -11113,7 +11113,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "890921317-0",
 
-    "direccion": "Calle 61 No 45D-34 Medell¡n",
+    "direccion": "Calle 61 No 45D-34 Medellín",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -11469,7 +11469,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "7641",
 
-    "nombre": "Parcelaci¢n Pinet P.H.",
+    "nombre": "Parcelación Pinet P.H.",
 
     "nit": "900280283-2",
 
@@ -11653,7 +11653,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "800033954-5",
 
-    "direccion": "CALLE 2 N§ 25-269",
+    "direccion": "CALLE 2 No. 25-269",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -11721,7 +11721,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "8103",
 
-    "nombre": "Edificio El P¢rtico",
+    "nombre": "Edificio El Pórtico",
 
     "nit": "900531724-7",
 
@@ -11869,7 +11869,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901136534-4",
 
-    "direccion": "CALLE 27 SUR N§ 27D-06",
+    "direccion": "CALLE 27 SUR No. 27D-06",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -12409,7 +12409,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "901552461-9",
 
-    "direccion": "Calle 53 N§ 79-90  Medell¡n",
+    "direccion": "Calle 53 No. 79-90  Medellín",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -12657,7 +12657,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "9009",
 
-    "nombre": "Centro Comercial Paseo de Berr¡o",
+    "nombre": "Centro Comercial Paseo de Berrío",
 
     "nit": "800115299-1",
 
@@ -12693,7 +12693,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "9116",
 
-    "nombre": "U.R. PORTON DE CATALU¥A",
+    "nombre": "U.R. PORTON DE CATALUÑA",
 
     "nit": "800094168-3",
 
@@ -12769,7 +12769,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "811021788-7",
 
-    "direccion": "CARRERA 24B N§ 17-4",
+    "direccion": "CARRERA 24B No. 17-4",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -13057,7 +13057,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "811021564-4",
 
-    "direccion": "Carrera 45D N§ 58-29",
+    "direccion": "Carrera 45D No. 58-29",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -13179,7 +13179,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "cuenta": "10322264678",
 
-    "administrador": "Santiago Vlez Casta¤eda 304 682 3578",
+    "administrador": "Santiago Vlez Castañeda 304 682 3578",
 
     "interesMora": "2.16",
 
@@ -13233,7 +13233,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "codigo": "A909",
 
-    "nombre": "EDIFICIO VILLA DE LOGRO¥O",
+    "nombre": "EDIFICIO VILLA DE LOGROÑO",
 
     "nit": "890942883-8",
 
@@ -13489,7 +13489,7 @@ const CATALOGO_OFICIAL_DBPLUS = {
 
     "nit": "890936920-8",
 
-    "direccion": "TRANSVERSAL 36 N§ 78-135",
+    "direccion": "TRANSVERSAL 36 No. 78-135",
 
     "ciudad": "Medellín • Antioquia",
 
@@ -18614,6 +18614,85 @@ function cargarCopropiedadesGuardadasPersistentes() {
 
 
 
+// Función para obtener todos los edificios asociados al prefijo de 2 dígitos del administrador
+function obtenerEdificiosPorPrefijoAdministrador(prefijo, codEdificioActivo = null) {
+  const pref = String(prefijo || "").trim().toUpperCase().slice(0, 2);
+  if (!pref) return typeof listaCopropiedadesSuperadmin !== "undefined" ? [...listaCopropiedadesSuperadmin] : [];
+
+  const codigosVistos = new Set();
+  const resultado = [];
+
+  // 1. Buscar en listaCopropiedadesSuperadmin
+  if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+    listaCopropiedadesSuperadmin.forEach(c => {
+      if (!c || !c.codigo) return;
+      const cod = String(c.codigo).trim().toUpperCase();
+      if (cod.startsWith(pref) && !codigosVistos.has(cod)) {
+        codigosVistos.add(cod);
+        resultado.push(c);
+      }
+    });
+  }
+
+  // 2. Buscar en CATALOGO_OFICIAL_DBPLUS (248 Edificios oficiales)
+  if (typeof CATALOGO_OFICIAL_DBPLUS !== "undefined") {
+    Object.keys(CATALOGO_OFICIAL_DBPLUS).forEach(codKey => {
+      const cod = String(codKey).trim().toUpperCase();
+      if (cod.startsWith(pref) && !codigosVistos.has(cod)) {
+        codigosVistos.add(cod);
+        const item = CATALOGO_OFICIAL_DBPLUS[codKey];
+        resultado.push({
+          id: "cj_" + cod,
+          codigo: cod,
+          nombre: item.nombre || `Edificio #${cod}`,
+          nit: item.nit || "900.000.000-0",
+          direccion: item.direccion || "",
+          ciudad: item.ciudad || "Medellín • Antioquia",
+          administrador: item.administrador || "",
+          telefono: item.telefono || "",
+          email: item.email || "",
+          banco: item.banco || "BANCOLOMBIA AHO",
+          cuenta: item.cuenta || ""
+        });
+      }
+    });
+  }
+
+  // 3. Buscar en EDIFICIOS_CATALOGO_DRIVE
+  if (typeof EDIFICIOS_CATALOGO_DRIVE !== "undefined") {
+    Object.values(EDIFICIOS_CATALOGO_DRIVE).forEach(item => {
+      if (!item || !item.codigo) return;
+      const cod = String(item.codigo).trim().toUpperCase();
+      if (cod.startsWith(pref) && !codigosVistos.has(cod)) {
+        codigosVistos.add(cod);
+        resultado.push({
+          id: "cj_" + cod,
+          codigo: cod,
+          nombre: item.nombre || `Edificio #${cod}`,
+          nit: item.nit || "900.000.000-0",
+          ciudad: item.ciudad || "Medellín • Antioquia"
+        });
+      }
+    });
+  }
+
+  // 4. Si el edificio activo no está por alguna razón, garantizar su inclusión
+  if (codEdificioActivo) {
+    const codAct = String(codEdificioActivo).replace(/^cj_/, "").trim().toUpperCase();
+    if (!codigosVistos.has(codAct)) {
+      const copAct = typeof obtenerDatosCopropiedad === "function" ? obtenerDatosCopropiedad(codAct) : null;
+      if (copAct) {
+        resultado.unshift(copAct);
+      }
+    }
+  }
+
+  // Ordenar alfanuméricamente por código
+  resultado.sort((a, b) => String(a.codigo).localeCompare(String(b.codigo)));
+
+  return resultado;
+}
+
 function actualizarTodosLosSelectsDeCopropiedad(codigoSeleccionado = null) {
 
   // 1. Selector de Pantalla de Entrada #login-edificio-select
@@ -18731,19 +18810,23 @@ function actualizarTodosLosSelectsDeCopropiedad(codigoSeleccionado = null) {
   // 2. Selector de Barra Superior #sel-conjunto (Dropdown interactivo con chevron para seleccionar edificio a administrar)
   const selConjunto = document.getElementById("sel-conjunto");
   if (selConjunto) {
-    const activeCod = String(codigoSeleccionado || (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || selConjunto.value || "4901").replace(/^cj_/, "").trim();
+    const activeCod = String(codigoSeleccionado || (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || selConjunto.value || "0361").replace(/^cj_/, "").trim();
     const activeId = activeCod ? ("cj_" + activeCod) : (typeof AppState !== "undefined" && AppState.conjuntoId ? AppState.conjuntoId : selConjunto.value);
 
-    // Obtener los edificios asociados a este administrador
-    let edificiosParaMostrar = [];
-    if (typeof AppState !== "undefined" && AppState.rol === "admin") {
-      edificiosParaMostrar = obtenerEdificiosDeAdministrador(AppState.adminNombre, AppState.adminCedula, activeCod);
-    } else {
-      edificiosParaMostrar = typeof listaCopropiedadesSuperadmin !== "undefined" ? [...listaCopropiedadesSuperadmin] : [];
-    }
+    // Regla de plataforma: Los 2 primeros dígitos del código del edificio corresponden a los que tiene
+    // cada administrador con sus edificios, y esos son los únicos que se deben mostrar arriba.
+    const prefijoAdmin = activeCod.length >= 2 ? activeCod.slice(0, 2).toUpperCase() : "";
 
+    let edificiosParaMostrar = [];
+    if (prefijoAdmin) {
+      edificiosParaMostrar = obtenerEdificiosPorPrefijoAdministrador(prefijoAdmin, activeCod);
+    }
     if (!edificiosParaMostrar || edificiosParaMostrar.length === 0) {
-      edificiosParaMostrar = typeof listaCopropiedadesSuperadmin !== "undefined" ? [...listaCopropiedadesSuperadmin] : [];
+      if (typeof AppState !== "undefined" && AppState.rol === "admin") {
+        edificiosParaMostrar = obtenerEdificiosDeAdministrador(AppState.adminNombre, AppState.adminCedula, activeCod);
+      } else {
+        edificiosParaMostrar = typeof listaCopropiedadesSuperadmin !== "undefined" ? [...listaCopropiedadesSuperadmin] : [];
+      }
     }
 
     const codigosVistos = new Set();
@@ -18755,7 +18838,7 @@ function actualizarTodosLosSelectsDeCopropiedad(codigoSeleccionado = null) {
       codigosVistos.add(codLimpio);
 
       const cId = c.id || ("cj_" + codLimpio);
-      const isSel = (codLimpio === activeCod || cId === activeId);
+      const isSel = (codLimpio.toLowerCase() === activeCod.toLowerCase() || cId.toLowerCase() === activeId.toLowerCase());
       htmlCj += `<option value="${cId}" ${isSel ? "selected" : ""} class="bg-slate-900 text-white font-semibold">${c.codigo} ${c.nombre.toUpperCase()}</option>`;
     });
 
