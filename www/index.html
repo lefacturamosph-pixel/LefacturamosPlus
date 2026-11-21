@@ -11392,29 +11392,49 @@
 
 
 
-        <!-- Fila 4: Administrador y Password Administración -->
+        <!-- Fila 4: Datos de Entrada para el Administrador (Pantalla de Inicio) -->
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-[#050b14] border border-slate-800/90 rounded-2xl p-3.5 space-y-2.5">
 
-          <div>
+          <div class="flex items-center justify-between text-xs">
 
-            <label class="block text-slate-300 font-medium text-xs mb-1.5">Administrador(a):</label>
+            <div class="flex items-center gap-1.5 text-white font-bold">
 
-            <input type="text" id="modal-nc-admin-nom" placeholder="Nombre del representante" class="w-full bg-[#050b14] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors" required>
+              <i data-lucide="key" class="w-4 h-4 text-emerald-400"></i>
 
-          </div>
-
-          <div>
-
-            <div class="flex items-center justify-between mb-1.5">
-
-              <label class="text-slate-300 font-medium text-xs">Password Administración:</label>
-
-              <span class="text-emerald-400 font-bold text-[10px]">Por defecto</span>
+              <span>Datos de Entrada para el Administrador (Pantalla de Inicio)</span>
 
             </div>
 
-            <input type="text" id="modal-nc-admin-pass" value="Admin123*" class="w-full bg-[#050b14] border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500 transition-colors" required>
+            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono font-bold">Credenciales</span>
+
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+
+            <div>
+
+              <label class="block text-[11px] text-slate-300 font-medium mb-1">Nombre Completo:</label>
+
+              <input type="text" id="modal-nc-admin-nom" placeholder="Ej: Carlos Alberto Gómez" class="w-full bg-[#0b1220] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors" required>
+
+            </div>
+
+            <div>
+
+              <label class="block text-[11px] text-slate-300 font-medium mb-1">Cédula o Identificación:</label>
+
+              <input type="text" id="modal-nc-admin-cedula" placeholder="Ej: 79845120" value="79.845.120" class="w-full bg-[#0b1220] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500 transition-colors" required>
+
+            </div>
+
+            <div>
+
+              <label class="block text-[11px] text-slate-300 font-medium mb-1">Contraseña o Password:</label>
+
+              <input type="text" id="modal-nc-admin-pass" value="Admin123*" class="w-full bg-[#0b1220] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-teal-300 font-mono font-bold focus:outline-none focus:border-emerald-500 transition-colors" required>
+
+            </div>
 
           </div>
 
@@ -14319,33 +14339,49 @@
 
 
 
-        <!-- Bloque 4: Credenciales del Administrador para Login -->
+        <!-- Bloque 4: Datos de Entrada del Administrador (Pantalla de Inicio) -->
 
         <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3.5 space-y-3">
 
-          <div class="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div class="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
 
-            <i data-lucide="key" class="w-3.5 h-3.5"></i>
+            <div class="flex items-center gap-1.5">
 
-            <span>4. Credenciales de Acceso para la Pantalla de Entrada</span>
+              <i data-lucide="key" class="w-3.5 h-3.5 text-emerald-400"></i>
+
+              <span>4. Datos de Entrada del Administrador (Pantalla de Inicio)</span>
+
+            </div>
+
+            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono font-bold">Login Administrador</span>
 
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input type="hidden" id="edit-cop-admin-cod">
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
             <div>
 
-              <label class="font-bold text-slate-300 block mb-1">Código Entrada Administrador</label>
+              <label class="font-bold text-slate-300 block mb-1">Nombre Completo Administrador</label>
 
-              <input type="text" id="edit-cop-admin-cod" class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-amber-300 font-mono font-bold text-xs focus:outline-none">
+              <input type="text" id="edit-cop-admin-nom-login" placeholder="Nombre completo" oninput="if(document.getElementById('edit-cop-admin-nom')) document.getElementById('edit-cop-admin-nom').value = this.value" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-3 py-2 text-white font-bold text-xs focus:outline-none">
 
             </div>
 
             <div>
 
-              <label class="font-bold text-slate-300 block mb-1">Contraseña de Acceso</label>
+              <label class="font-bold text-slate-300 block mb-1">Cédula o Identificación</label>
 
-              <input type="text" id="edit-cop-admin-pass" class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-amber-300 font-mono font-bold text-xs focus:outline-none">
+              <input type="text" id="edit-cop-admin-cedula" placeholder="Ej: 79845120" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-3 py-2 text-emerald-400 font-mono font-bold text-xs focus:outline-none">
+
+            </div>
+
+            <div>
+
+              <label class="font-bold text-slate-300 block mb-1">Contraseña o Password</label>
+
+              <input type="text" id="edit-cop-admin-pass" placeholder="Admin123*" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-xl px-3 py-2 text-teal-300 font-mono font-bold text-xs focus:outline-none">
 
             </div>
 

@@ -25908,39 +25908,47 @@ function renderizarCopropiedadesSuperadmin(filtro = filtroSuperadminActivo) {
 
 
 
-        <!-- Credenciales Administrador Box (Para Pantalla de Inicio) -->
+        <!-- Datos de Entrada para el Administrador (Pantalla de Inicio) -->
 
-        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-1.5">
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">
 
           <div class="flex items-center justify-between text-xs">
 
-            <div class="flex items-center gap-1.5 font-bold text-slate-300">
+            <div class="flex items-center gap-1.5 font-bold text-slate-200">
 
-              <i data-lucide="key" class="w-3.5 h-3.5 text-purple-400"></i>
+              <i data-lucide="key" class="w-3.5 h-3.5 text-emerald-400"></i>
 
-              <span>Credenciales de Acceso Administrador</span>
+              <span>Datos de Entrada para el Administrador</span>
 
             </div>
 
-            <span class="text-[10px] text-slate-500 font-medium">Pantalla de inicio</span>
+            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono font-bold">Pantalla de Entrada</span>
 
           </div>
 
-          <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-900">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1.5 border-t border-slate-900 text-xs">
 
             <div>
 
-              <span class="text-[10px] text-slate-400 block font-medium">Código Entrada</span>
+              <span class="text-[10px] text-slate-400 block font-medium">Nombre Completo:</span>
 
-              <span class="text-xs font-bold text-teal-300 font-mono tracking-wider">${c.codigoAdmin || ('ADM-' + c.codigo)}</span>
+              <span class="text-xs font-bold text-white truncate block" title="${c.administrador || 'Carlos Alberto Gómez'}">${c.administrador || 'Carlos Alberto Gómez'}</span>
 
             </div>
 
             <div>
 
-              <span class="text-[10px] text-slate-400 block font-medium">Contraseña</span>
+              <span class="text-[10px] text-slate-400 block font-medium">Cédula o Identificación:</span>
 
-              <span class="text-xs font-bold text-teal-300 font-mono tracking-wider">${c.passwordAdmin || 'Admin123*'}</span>
+              <span class="text-xs font-bold text-emerald-400 font-mono tracking-wider block">${c.cedulaAdmin || c.cedula || (c.codigo === '4901' ? '43.123.456' : (c.codigo === '0950' ? '79.845.120' : (c.codigo === '5304' ? '32.456.789' : (c.codigo === '7480' ? '43.567.890' : (c.codigo === '4160' ? '71.234.567' : (c.codigo === '0127' ? '1.017.123.456' : (c.codigo === '0202' ? '43.890.123' : '79.845.120')))))))}</span>
+
+            </div>
+
+            <div>
+
+              <span class="text-[10px] text-slate-400 block font-medium">Contraseña o Password:</span>
+
+              <span class="text-xs font-bold text-teal-300 font-mono tracking-wider block">${c.passwordAdmin || 'Admin123*'}</span>
 
             </div>
 
@@ -26431,7 +26439,9 @@ async function guardarNuevaCopropiedadSuperadmin() {
 
   const dir = document.getElementById("modal-nc-direccion")?.value.trim() || "Calle 100 # 15 - 20";
 
-  const adminNom = document.getElementById("modal-nc-admin-nom")?.value.trim() || "Administrador Designado";
+  const adminNom = document.getElementById("modal-nc-admin-nom")?.value.trim() || "Carlos Alberto Gómez";
+
+  const adminCed = document.getElementById("modal-nc-admin-cedula")?.value.trim() || "79.845.120";
 
   const adminPass = document.getElementById("modal-nc-admin-pass")?.value.trim() || "Admin123*";
 
@@ -26493,6 +26503,8 @@ async function guardarNuevaCopropiedadSuperadmin() {
 
     administrador: adminNom,
 
+    cedulaAdmin: adminCed,
+
     passwordAdmin: adminPass,
 
     inmueblesCount: unidadesReales.length,
@@ -26528,6 +26540,17 @@ async function guardarNuevaCopropiedadSuperadmin() {
 
 
   await guardarCopropiedadGlobal(nueva, nueva.unidades);
+
+  const limpiaCed = adminCed.replace(/[^0-9a-zA-Z]/g, "");
+  if (limpiaCed && typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+    DIRECTORIO_ADMINISTRADORES[limpiaCed] = {
+      nombre: adminNom,
+      cedula: adminCed,
+      codigoEdificio: cod,
+      nombreEdificio: nom,
+      password: adminPass
+    };
+  }
 
 
 
@@ -42361,6 +42384,19 @@ function abrirModalEditarEdificio(id) {
 
   setVal("edit-cop-admin-nom", cop.administrador || "");
 
+  setVal("edit-cop-admin-nom-login", cop.administrador || "");
+
+  const cedSugerida = cop.cedulaAdmin || cop.cedula || (
+    cop.codigo === '4901' ? '43.123.456' :
+    cop.codigo === '0950' ? '79.845.120' :
+    cop.codigo === '5304' ? '32.456.789' :
+    cop.codigo === '7480' ? '43.567.890' :
+    cop.codigo === '4160' ? '71.234.567' :
+    cop.codigo === '0127' ? '1.017.123.456' :
+    cop.codigo === '0202' ? '43.890.123' : '79.845.120'
+  );
+  setVal("edit-cop-admin-cedula", cedSugerida);
+
   setVal("edit-cop-telefono", cop.telefono || "");
 
   setVal("edit-cop-email", cop.email || "");
@@ -42455,7 +42491,8 @@ async function guardarEdicionEdificio() {
     cop.nit = getVal("edit-cop-nit") || cop.nit;
     cop.direccion = getVal("edit-cop-direccion") || cop.direccion;
     cop.ciudad = getVal("edit-cop-ciudad") || cop.ciudad || "Medellín • Antioquia";
-    cop.administrador = getVal("edit-cop-admin-nom") || cop.administrador;
+    cop.administrador = getVal("edit-cop-admin-nom-login") || getVal("edit-cop-admin-nom") || cop.administrador;
+    cop.cedulaAdmin = getVal("edit-cop-admin-cedula") || cop.cedulaAdmin || "79.845.120";
     cop.telefono = getVal("edit-cop-telefono") || cop.telefono;
     cop.email = getVal("edit-cop-email") || cop.email;
     cop.banco = getVal("edit-cop-banco") || cop.banco;
@@ -42488,6 +42525,17 @@ async function guardarEdicionEdificio() {
     try {
       localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
     } catch (e) {}
+
+    const cedLimpia = String(cop.cedulaAdmin || "").replace(/[^0-9a-zA-Z]/g, "");
+    if (cedLimpia && typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+      DIRECTORIO_ADMINISTRADORES[cedLimpia] = {
+        nombre: cop.administrador,
+        cedula: cop.cedulaAdmin,
+        codigoEdificio: cop.codigo,
+        nombreEdificio: cop.nombre,
+        password: cop.passwordAdmin || "Admin123*"
+      };
+    }
 
     // 3. Guardar en el Backend Local o Nube (POST /api/conjuntos) con timeout
     try {
