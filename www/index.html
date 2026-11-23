@@ -16486,11 +16486,23 @@
 
         <div class="flex flex-wrap items-center gap-2">
 
+          <!-- Selector de Modo / Destinatario: Abogado vs Copropietario -->
+          <div class="flex items-center gap-1.5 border-r border-slate-700/80 pr-2.5 mr-1">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="file-badge" class="w-3.5 h-3.5 text-sky-400"></i>
+              Formato:
+            </span>
+            <select id="estudio-hist-filtro-destinatario" onchange="cambiarFiltroEstudioHistorico()" class="bg-slate-900 border border-sky-500/70 text-sky-300 font-bold text-xs rounded-xl px-2.5 py-1.5 focus:border-sky-400 focus:outline-none cursor-pointer">
+              <option value="abogado" selected>⚖️ Para Abogado (Cobro Jurídico / Art. 48)</option>
+              <option value="copropietario">👤 Para Copropietario (Estado de Cuenta)</option>
+            </select>
+          </div>
+
           <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
 
             <i data-lucide="filter" class="w-3.5 h-3.5 text-sky-400"></i>
 
-            Periodo de Análisis:
+            Periodo:
 
           </span>
 
@@ -16608,21 +16620,29 @@
 
       <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800 shrink-0">
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
 
-          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors">
+          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Descargar certificación en Excel">
 
             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
 
-            <span>Descargar en Excel (.xlsx)</span>
+            <span id="estudio-hist-btn-excel-label">Descargar Excel (.xlsx)</span>
 
           </button>
 
-          <button type="button" onclick="imprimirEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors">
+          <button type="button" onclick="imprimirEstudioHistorico('abogado')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir certificación con Mérito Ejecutivo Art. 48 para Abogado">
 
-            <i data-lucide="printer" class="w-4 h-4"></i>
+            <i data-lucide="scale" class="w-4 h-4 text-amber-400"></i>
 
-            <span>Imprimir / PDF</span>
+            <span>PDF Abogado</span>
+
+          </button>
+
+          <button type="button" onclick="imprimirEstudioHistorico('copropietario')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir estado de cuenta informativo para Copropietario">
+
+            <i data-lucide="user" class="w-4 h-4 text-sky-400"></i>
+
+            <span>PDF Copropietario</span>
 
           </button>
 

@@ -58518,18 +58518,35 @@ function aplicarFiltroEstudioHistorico() {
     `;
   }
 
-  // Configurar enlace de WhatsApp
+  // Configurar enlace de WhatsApp y etiqueta de Excel según destinatario
+  const selDest = document.getElementById("estudio-hist-filtro-destinatario");
+  const esAbogado = (selDest ? selDest.value : "abogado") === "abogado";
+  const btnLblExcel = document.getElementById("estudio-hist-btn-excel-label");
+  if (btnLblExcel) {
+    btnLblExcel.innerText = esAbogado ? "Descargar Excel (Cobro Judicial)" : "Descargar Excel (Copropietario)";
+  }
+
   if (btnWa) {
     const nombreEdif = data.edificio?.nombre || "la Administración";
-    const msg = encodeURIComponent(
-      `Estimado(a) ${data.propietario}, le compartimos el *Estado de Cuenta y Liquidación de Deuda (Ley 675 de 2001)* para la unidad ${data.apto} en ${nombreEdif}:\n\n` +
-      `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
-      `• Total Capital Causado (Cuotas): ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
-      `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
-      `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
-      `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `Puede consultar el detalle cronológico mes a mes en el sistema.`
-    );
+    const msg = esAbogado
+      ? encodeURIComponent(
+          `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${data.apto} en ${nombreEdif}:\n\n` +
+          `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
+          `• Total Capital Causado (Cuotas): ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
+          `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
+          `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
+          `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
+          `La presente certificación presta mérito ejecutivo en los términos de ley.`
+        )
+      : encodeURIComponent(
+          `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${data.apto} en ${nombreEdif}:\n\n` +
+          `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
+          `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
+          `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
+          `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
+          `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
+          `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`
+        );
     btnWa.href = `https://api.whatsapp.com/send?phone=57${data.tel || '3147593118'}&text=${msg}`;
   }
 
@@ -58541,7 +58558,7 @@ function cerrarModalEstudioCuentaHistorico() {
   if (modal) modal.classList.add("hidden");
 }
 
-function descargarExcelEstudioHistorico() {
+function descargarExcelEstudioHistorico(tipoParam) {
   const d = currentEstudioHistoricoData;
   const meses = window.currentEstudioHistoricoMesesFiltrados || (d && d.meses);
   if (!d || !meses || meses.length === 0) {
@@ -58553,6 +58570,9 @@ function descargarExcelEstudioHistorico() {
     if (typeof mostrarToast === "function") mostrarToast("⚠️ Librería de Excel cargando... intente de nuevo en un segundo.", "warning");
     return;
   }
+
+  const tipo = tipoParam || document.getElementById("estudio-hist-filtro-destinatario")?.value || "abogado";
+  const esAbogado = tipo === "abogado";
 
   const primerMes = meses[0] || {};
   const ultMes = meses[meses.length - 1] || {};
@@ -58568,26 +58588,35 @@ function descargarExcelEstudioHistorico() {
 
   const totalCapital = saldoInicialCap + sumCuotaAdmon;
   const totalIntereses = intMoraInicial + sumInteresMes;
+  const fechaHoy = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // Formato Oficial de Cobro Jurídico (Art. 48 Ley 675 de 2001)
+  // Encabezados institucionales adaptados según destinatario (Abogado vs Copropietario)
+  const tituloPrincipal = esAbogado
+    ? "CERTIFICACIÓN DE DEUDA Y LIQUIDACIÓN DISCRIMINADA DE CRÉDITO PARA COBRO JUDICIAL"
+    : "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA";
+
+  const subtituloPrincipal = esAbogado
+    ? "(EXPEDIDO DE CONFORMIDAD CON EL ARTÍCULO 48 DE LA LEY 675 DE 2001 - PRESTA MÉRITO EJECUTIVO - ART. 422 C.G.P.)"
+    : "(INFORMACIÓN CONTABLE HISTÓRICA DETALLADA MES A MES PARA EL COPROPIETARIO)";
+
   const filasExcel = [
-    ["CERTIFICACIÓN DE DEUDA Y LIQUIDACIÓN DISCRIMINADA DE CRÉDITO PARA COBRO JUDICIAL"],
-    ["(EXPEDIDO DE CONFORMIDAD CON EL ARTÍCULO 48 DE LA LEY 675 DE 2001 - PRESTA MÉRITO EJECUTIVO)"],
+    [tituloPrincipal],
+    [subtituloPrincipal],
     [],
     ["COPROPIEDAD (ACREEDORA):", d.edificio?.nombre || "", "NIT:", d.edificio?.nit || "", "CÓDIGO:", d.codigo || ""],
     ["DIRECCIÓN:", d.edificio?.direccion || "", "CIUDAD:", d.edificio?.ciudad || "Colombia", "ADMINISTRADOR:", d.edificio?.administrador || ""],
-    ["DEMANDADO / PROPIETARIO:", d.propietario || "", "IDENTIFICACIÓN C.C./NIT:", d.cc || "", "INMUEBLE / PREDIO:", d.apto || ""],
+    [esAbogado ? "DEMANDADO / PROPIETARIO:" : "PROPIETARIO(A):", d.propietario || "", "IDENTIFICACIÓN C.C./NIT:", d.cc || "", "INMUEBLE / PREDIO:", d.apto || ""],
     ["COEFICIENTE:", d.coeficiente || "", "TASA MORA:", d.edificio?.interesMora || "2.10% M.V.", "PERIODO LIQUIDADO:", `${meses.length} MESES (${primerMes.periodo || ''} HASTA ${ultMes.periodo || ''})`],
     [],
     [
-      "PERIODO (AÑO-MES)",
-      "FACTURA / CUENTA COBRO NO.",
-      "SALDO ANTERIOR CAPITAL (COP)",
-      "INTERÉS MORA ANTERIOR (COP)",
-      "CUOTA ADMÓN MES (CAPITAL) (COP)",
-      "INTERÉS MORATORIO MES (COP)",
-      "PAGOS / ABONOS REGISTRADOS (COP)",
-      "SALDO TOTAL EXIGIBLE (COP)"
+      "PERIODO",
+      "FACTURA / CUENTA",
+      "SALDO ANT. CAPITAL",
+      "INT. MORA ANT.",
+      "CUOTA MENSUAL",
+      "INT. MORA MES",
+      "PAGOS / ABONOS",
+      esAbogado ? "SALDO TOTAL EXIGIBLE" : "SALDO FINAL"
     ]
   ];
 
@@ -58604,10 +58633,10 @@ function descargarExcelEstudioHistorico() {
     ]);
   });
 
-  // Fila de TOTALES CONSOLIDADOS PARA COBRO JURÍDICO
+  // Fila de TOTALES CONSOLIDADOS
   filasExcel.push([]);
   filasExcel.push([
-    "TOTALES CONSOLIDADOS PARA COBRO JURÍDICO",
+    esAbogado ? "TOTALES CONSOLIDADOS PARA COBRO JUDICIAL" : "TOTALES CONSOLIDADOS - ESTADO DE CUENTA",
     `${meses.length} MESES`,
     sumSaldoAntCap,
     sumIntMoraAnt,
@@ -58619,45 +58648,87 @@ function descargarExcelEstudioHistorico() {
 
   // Resumen Ejecutivo de Liquidación
   filasExcel.push([]);
-  filasExcel.push(["DISCRIMINACIÓN DE LIQUIDACIÓN DE CRÉDITO (ART. 48 LEY 675 DE 2001)"]);
-  filasExcel.push(["1. TOTAL CAPITAL CAUSADO (EXPENSAS COMUNES):", totalCapital]);
-  filasExcel.push(["2. TOTAL INTERESES MORATORIOS LIQUIDADOS:", totalIntereses]);
-  filasExcel.push(["3. TOTAL ABONOS Y PAGOS APLICADOS:", sumPagos]);
-  filasExcel.push(["4. SALDO NETO LÍQUIDO Y EXIGIBLE:", saldoFinalPeriodo]);
+  filasExcel.push([esAbogado ? "DISCRIMINACIÓN DE LIQUIDACIÓN DE CRÉDITO (ART. 48 LEY 675 DE 2001)" : "RESUMEN DE LIQUIDACIÓN Y ESTADO DE CUENTA"]);
+  filasExcel.push(["1. TOTAL CAPITAL CAUSADO (EXPENSAS COMUNES ORDINARIAS):", totalCapital]);
+  filasExcel.push(["2. TOTAL INTERESES MORATORIOS LIQUIDADOS (TASA M.V.):", totalIntereses]);
+  filasExcel.push(["3. MENOS: TOTAL ABONOS Y PAGOS APLICADOS:", sumPagos]);
+  filasExcel.push([esAbogado ? "4. SALDO NETO LÍQUIDO Y EXIGIBLE:" : "4. SALDO PENDIENTE A LA FECHA:", saldoFinalPeriodo]);
   filasExcel.push([]);
-  filasExcel.push(["La presente certificación presta mérito ejecutivo en los términos del Artículo 48 de la Ley 675 de 2001."]);
+
+  if (esAbogado) {
+    filasExcel.push(["CONSTANCIA DE MÉRITO EJECUTIVO (ARTÍCULO 48 DE LA LEY 675 DE 2001 Y ART. 422 DEL C.G.P.):"]);
+    filasExcel.push(["El(la) suscrito(a) Administrador(a) y Representante Legal certifica que la liquidación contable precedente corresponde estrictamente"]);
+    filasExcel.push(["a las expensas comunes ordinarias e intereses moratorios adeudados por la unidad privada indicada. La presente certificación"]);
+    filasExcel.push(["presta mérito ejecutivo en los términos del Art. 48 de la Ley 675 de 2001 y reúne los requisitos de los Artículos 422 y 431 del C.G.P."]);
+    filasExcel.push(["como obligación clara, expresa y exigible a cargo del deudor demandado."]);
+    filasExcel.push([]);
+    filasExcel.push(["____________________________________________________"]);
+    filasExcel.push(["ADMINISTRADOR(A) Y REPRESENTANTE LEGAL"]);
+    filasExcel.push([`C.C. ________________ de ___________________________`]);
+    filasExcel.push([`${d.edificio?.nombre || ''} - NIT ${d.edificio?.nit || ''}`]);
+  } else {
+    filasExcel.push(["ESTADO DE CUENTA INFORMATIVO PARA EL COPROPIETARIO:"]);
+    filasExcel.push(["El presente documento refleja la trazabilidad contable mes a mes y los movimientos registrados de expensas comunes, intereses y pagos."]);
+    filasExcel.push(["Si requiere aclaración o conciliar sus recibos de pago, por favor contactar a la Administración."]);
+    filasExcel.push([]);
+    filasExcel.push(["ADMINISTRACIÓN Y CONCILIACIÓN DE CARTERA"]);
+    filasExcel.push([`${d.edificio?.nombre || ''} - Expedido en ${d.edificio?.ciudad || 'Colombia'} a fecha: ${fechaHoy}`]);
+  }
 
   const ws = XLSX.utils.aoa_to_sheet(filasExcel);
 
+  // Formatear todas las celdas numéricas con formato moneda Excel ($ #,##0)
+  if (ws['!ref']) {
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[cellAddress];
+        if (cell && typeof cell.v === 'number') {
+          cell.t = 'n';
+          cell.z = '"$"#,##0;("$"#,##0);"-"';
+        }
+      }
+    }
+  }
+
+  // Anchos profesionales de columna adaptados a juzgados y empresas
   ws["!cols"] = [
-    { wch: 22 },
-    { wch: 18 },
-    { wch: 24 },
-    { wch: 24 },
-    { wch: 26 },
-    { wch: 24 },
-    { wch: 24 },
-    { wch: 24 }
+    { wch: 22 }, // Col A: Periodo
+    { wch: 20 }, // Col B: Factura / Cuenta
+    { wch: 24 }, // Col C: Saldo Ant. Capital
+    { wch: 22 }, // Col D: Int. Mora Ant.
+    { wch: 22 }, // Col E: Cuota Mensual
+    { wch: 20 }, // Col F: Int. Mora Mes
+    { wch: 24 }, // Col G: Pagos / Abonos
+    { wch: 26 }  // Col H: Saldo Total Exigible
   ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Cobro_Juridico");
+  const nombreHoja = esAbogado ? "Cobro_Juridico" : "Estado_Cuenta";
+  XLSX.utils.book_append_sheet(wb, ws, nombreHoja);
 
-  const nombreArchivo = `Cobro_Juridico_Art48_${d.codigo}_Apto_${d.apto}_${meses.length}_Meses.xlsx`;
+  const nombreArchivo = esAbogado
+    ? `Cobro_Juridico_Art48_${d.codigo}_Apto_${d.apto}_${meses.length}_Meses.xlsx`
+    : `Estado_Cuenta_${d.codigo}_Apto_${d.apto}_${meses.length}_Meses.xlsx`;
+
   XLSX.writeFile(wb, nombreArchivo);
 
   if (typeof mostrarToast === "function") {
-    mostrarToast(`✓ Excel de Cobro Jurídico descargado: ${nombreArchivo}`);
+    mostrarToast(`✓ Excel descargado (${esAbogado ? 'Cobro Judicial' : 'Copropietario'}): ${nombreArchivo}`);
   }
 }
 
-function imprimirEstudioHistorico() {
+function imprimirEstudioHistorico(tipoParam) {
   const d = currentEstudioHistoricoData;
   const meses = window.currentEstudioHistoricoMesesFiltrados || (d && d.meses);
   if (!d || !meses || meses.length === 0) {
     if (typeof mostrarToast === "function") mostrarToast("⚠️ No hay datos cargados para imprimir.", "warning");
     return;
   }
+
+  const tipo = tipoParam || document.getElementById("estudio-hist-filtro-destinatario")?.value || "abogado";
+  const esAbogado = tipo === "abogado";
 
   const primerMes = meses[0] || {};
   const ultMes = meses[meses.length - 1] || {};
@@ -58698,12 +58769,78 @@ function imprimirEstudioHistorico() {
     `;
   }).join("");
 
+  const tituloDoc = esAbogado
+    ? "CERTIFICACIÓN DE DEUDA Y ESTADO DE CUENTA CRONOLÓGICO DISCRIMINADO"
+    : "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA";
+
+  const subtituloDoc = esAbogado
+    ? "(TÍTULO EJECUTIVO - ARTÍCULO 48 DE LA LEY 675 DE 2001 Y ART. 422 DEL C.G.P.)"
+    : "(INFORME CONTABLE DETALLADO MES A MES PARA EL COPROPIETARIO)";
+
+  const estadoCreditoTexto = esAbogado
+    ? "OBLIGACIÓN EXIGIBLE EN MORA"
+    : (saldoFinalPeriodo > 0 ? "SALDO PENDIENTE DE PAGO" : "AL DÍA / A PAZ Y SALVO");
+
+  const labelSaldoCard = esAbogado
+    ? "Saldo Total Líquido y Exigible"
+    : "Saldo Final a la Fecha";
+
+  const labelColSaldo = esAbogado
+    ? "Saldo Total Exigible"
+    : "Saldo Final Mes";
+
+  const bloqueNotaLegal = esAbogado
+    ? `
+      <div class="legal-note">
+        <b>CONSTANCIA DE MÉRITO EJECUTIVO (ARTÍCULO 48 LEY 675 DE 2001):</b><br/>
+        El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad <b>${d.edificio?.nombre || ('EDIFICIO ' + d.codigo)}</b>, 
+        legalmente constituida bajo el régimen de Propiedad Horizontal de la Ley 675 de 2001, certifica que la relación contable anterior 
+        corresponde fielmente a los saldos adeudados por concepto de expensas comunes ordinarias e intereses moratorios para la unidad privada <b>${d.apto}</b>. 
+        Se expide la presente liquidación con destino al apoderado judicial y al Despacho Judicial competente para que sirva de <b>PLENA PRUEBA Y TÍTULO EJECUTIVO</b> 
+        para iniciar o continuar el proceso ejecutivo respectivo, constituyendo una obligación clara, expresa y actualmente exigible a cargo del demandado.
+      </div>
+      <div class="firmas">
+        <div class="firma-col">
+          <p><b>${d.edificio?.administrador || 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL'}</b></p>
+          <p>Administrador(a) y Representante Legal</p>
+          <p>C.C. __________________________________</p>
+          <p>${d.edificio?.nombre || ''}</p>
+        </div>
+        <div class="firma-col">
+          <p><b>CERTIFICACIÓN Y FECHA</b></p>
+          <p>Expedido en ${d.edificio?.ciudad || 'Medellín, Colombia'}</p>
+          <p>Fecha de emisión: ${fechaHoy}</p>
+          <p>Firma y Sello de la Administración</p>
+        </div>
+      </div>
+    `
+    : `
+      <div class="legal-note">
+        <b>ESTADO DE CUENTA INFORMATIVO PARA EL COPROPIETARIO:</b><br/>
+        La relación contable anterior refleja fielmente la trazabilidad de los cobros mensuales de expensas comunes, intereses causados y pagos imputados 
+        a la unidad privada <b>${d.apto}</b>. Si requiere conciliar sus pagos o realizar cualquier aclaración contable sobre este estado de cuenta, 
+        por favor comuníquese con la Administración de la copropiedad.
+      </div>
+      <div class="firmas">
+        <div class="firma-col">
+          <p><b>${d.edificio?.administrador || 'ADMINISTRACIÓN DE LA COPROPIEDAD'}</b></p>
+          <p>Administración y Conciliación de Cartera</p>
+          <p>${d.edificio?.nombre || ''}</p>
+        </div>
+        <div class="firma-col">
+          <p><b>CONSTANCIA DE EMISIÓN</b></p>
+          <p>Expedido en ${d.edificio?.ciudad || 'Medellín, Colombia'}</p>
+          <p>Fecha de emisión: ${fechaHoy}</p>
+        </div>
+      </div>
+    `;
+
   const htmlContenido = `
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="utf-8" />
-      <title>Certificacion_Deuda_Ley675_${d.codigo}_Apto_${d.apto}</title>
+      <title>${esAbogado ? 'Certificacion_Deuda_Ley675' : 'Estado_Cuenta_Historico'}_${d.codigo}_Apto_${d.apto}</title>
       <style>
         @page {
           size: portrait;
@@ -58767,24 +58904,24 @@ function imprimirEstudioHistorico() {
       <div class="header">
         <h1>${d.edificio?.nombre || ('EDIFICIO ' + d.codigo)}</h1>
         <p class="subtitulo">NIT: ${d.edificio?.nit || 'Oficial'} • Dirección: ${d.edificio?.direccion || ''} • ${d.edificio?.ciudad || 'Medellín • Colombia'}</p>
-        <p class="norma">CERTIFICACIÓN DE DEUDA Y ESTADO DE CUENTA CRONOLÓGICO DISCRIMINADO</p>
-        <p style="margin: 0; font-size: 8px; color: #000000;">(TÍTULO EJECUTIVO - ARTÍCULO 48 DE LA LEY 675 DE 2001 Y ART. 422 DEL C.G.P.)</p>
+        <p class="norma">${tituloDoc}</p>
+        <p style="margin: 0; font-size: 8px; color: #000000;">${subtituloDoc}</p>
       </div>
 
       <div class="partes-grid">
         <div class="parte-box">
-          <h4>1. Datos del Inmueble y Deudor Demandado</h4>
+          <h4>${esAbogado ? '1. Datos del Inmueble y Deudor Demandado' : '1. Datos del Inmueble y Copropietario'}</h4>
           <p><b>UNIDAD PRIVADA:</b> Inmueble / Apto ${d.apto}</p>
           <p><b>PROPIETARIO(A):</b> ${d.propietario}</p>
           <p><b>C.C. / NIT:</b> ${d.cc || 'N/A'}</p>
           <p><b>COEFICIENTE P.H.:</b> ${d.coeficiente || '1.139%'}</p>
         </div>
         <div class="parte-box">
-          <h4>2. Condiciones de Liquidación de Cartera</h4>
-          <p><b>PERIODO LIQUIDADO:</b> ${meses.length} Meses (${primerMes.periodo || ''} hasta ${ultMes.periodo || ''})</p>
+          <h4>${esAbogado ? '2. Condiciones de Liquidación de Cartera' : '2. Resumen del Estado de Cuenta'}</h4>
+          <p><b>PERIODO ANALIZADO:</b> ${meses.length} Meses (${primerMes.periodo || ''} hasta ${ultMes.periodo || ''})</p>
           <p><b>TASA MORA APLICADA:</b> ${d.edificio?.interesMora || '2.10% M.V.'} (Límite Superfinanciera)</p>
           <p><b>FECHA DE EXPEDICIÓN:</b> ${fechaHoy}</p>
-          <p><b>ESTADO DEL CRÉDITO:</b> OBLIGACIÓN EXIGIBLE EN MORA</p>
+          <p><b>ESTADO DE CARTERA:</b> ${estadoCreditoTexto}</p>
         </div>
       </div>
 
@@ -58802,7 +58939,7 @@ function imprimirEstudioHistorico() {
           <div class="value">${formatoMonedaSaldos(sumPagos)}</div>
         </div>
         <div class="card" style="border-left: 3px solid #000000; background: #f8fafc;">
-          <div class="title">Saldo Total Líquido y Exigible</div>
+          <div class="title">${labelSaldoCard}</div>
           <div class="value">${formatoMonedaSaldos(saldoFinalPeriodo)}</div>
         </div>
       </div>
@@ -58817,7 +58954,7 @@ function imprimirEstudioHistorico() {
             <th class="right">Cuota Admón (Mes)</th>
             <th class="right">Int. Moratorio Mes</th>
             <th class="right">Pagos / Abonos</th>
-            <th class="right">Saldo Total Exigible</th>
+            <th class="right">${labelColSaldo}</th>
           </tr>
         </thead>
         <tbody>
@@ -58835,29 +58972,7 @@ function imprimirEstudioHistorico() {
         </tbody>
       </table>
 
-      <div class="legal-note">
-        <b>CONSTANCIA DE MÉRITO EJECUTIVO (ARTÍCULO 48 LEY 675 DE 2001):</b><br/>
-        El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad <b>${d.edificio?.nombre || ('EDIFICIO ' + d.codigo)}</b>, 
-        legalmente constituida bajo el régimen de Propiedad Horizontal de la Ley 675 de 2001, certifica que la relación contable anterior 
-        corresponde fielmente a los saldos adeudados por concepto de expensas comunes ordinarias e intereses moratorios para la unidad privada <b>${d.apto}</b>. 
-        Se expide la presente liquidación con destino al apoderado judicial y al Despacho Judicial competente para que sirva de <b>PLENA PRUEBA Y TÍTULO EJECUTIVO</b> 
-        para iniciar o continuar el proceso ejecutivo respectivo, constituyendo una obligación clara, expresa y actualmente exigible a cargo del demandado.
-      </div>
-
-      <div class="firmas">
-        <div class="firma-col">
-          <p><b>${d.edificio?.administrador || 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL'}</b></p>
-          <p>Administrador(a) y Representante Legal</p>
-          <p>C.C. __________________________________</p>
-          <p>${d.edificio?.nombre || ''}</p>
-        </div>
-        <div class="firma-col">
-          <p><b>CERTIFICACIÓN Y FECHA</b></p>
-          <p>Expedido en ${d.edificio?.ciudad || 'Medellín, Colombia'}</p>
-          <p>Fecha de emisión: ${fechaHoy}</p>
-          <p>Firma y Sello de la Administración</p>
-        </div>
-      </div>
+      ${bloqueNotaLegal}
     </body>
     </html>
   `;
