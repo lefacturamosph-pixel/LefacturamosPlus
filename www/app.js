@@ -19267,24 +19267,10 @@ const MENUS_POR_ROL = {
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
       { id: "apartamentos", label: "Apartamentos", icono: "home" },
       { id: "residentes", label: "Residentes", icono: "users" },
-
-      // SUBMENÚ FACTURACIÓN (Orden Cronológico de Facturación Condominal)
-      {
-        id: "facturacion-menu",
-        label: "Facturación",
-        icono: "receipt",
-        badge: "Ley 675",
-        subitems: [
-          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
-          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
-          { id: "historico-copropietarios", label: "3. Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
-          { id: "facturacion", label: "4. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
-          { id: "documentos", label: "5. Listados y Facturas Oficiales", icono: "folder" },
-          { id: "devolver-saldos", label: "6. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
-        ]
-      },
-
+      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
+      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
       { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
+      { id: "documentos", label: "Documentos", icono: "folder" },
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
       { id: "reservas", label: "Reservas", icono: "calendar" },
       { id: "visitantes", label: "Visitas", icono: "qr-code" },
@@ -19400,29 +19386,17 @@ const MENUS_POR_ROL = {
 
       { id: "residentes", label: "Residentes", icono: "users" },
 
-      // SUBMENÚ FACTURACIÓN (Orden Cronológico de Facturación Condominal)
-      {
-        id: "facturacion-menu",
-        label: "Facturación",
-        icono: "receipt",
-        badge: "Ley 675",
-        subitems: [
-          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
-          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
-          { id: "historico-copropietarios", label: "3. Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
-          { id: "facturacion", label: "4. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
-          { id: "documentos", label: "5. Listados y Facturas Oficiales", icono: "folder" },
-          { id: "devolver-saldos", label: "6. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
-        ]
-      },
-
-      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
-
       { id: "reservas", label: "Reservas", icono: "calendar" },
 
       { id: "visitantes", label: "Visitas", icono: "car" },
 
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
+
+      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
+
+      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
+
+      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
 
       { id: "documentos", label: "Documentos", icono: "folder" },
 
