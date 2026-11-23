@@ -13801,13 +13801,13 @@ let listaCopropiedadesSuperadmin = [
 
     recaudoPagos: "83 cuotas facturadas",
 
-    carteraPendiente: "$11.203.580",
+    carteraPendiente: "$11.498.390",
 
     totalFinalEdificio: "$50.409.390",
 
     carteraInmuebles: "18 inmuebles con saldo en mora",
 
-    carteraVencida: "$11.203.580",
+    carteraVencida: "$11.498.390",
 
     carteraJuridica: "1 cuenta en cobro jurídico",
 
@@ -23288,12 +23288,12 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
         inmueblesConPendiente++;
       }
       totalMesSum += totUni;
-      carteraPendienteTotal += (pend + intp);
+      carteraPendienteTotal += (pend + intp + inta);
     });
 
-    // Cartera Pendiente del Mes: coincidencia exacta con Listado de Facturacion y Listado de Pendientes
-    if (carteraPendienteTotal === 0 && totalMesSum > cuotaMesTotal) {
-      carteraPendienteTotal = totalMesSum - cuotaMesTotal;
+    // Cartera Pendiente del Mes: Coherencia contable exacta: Total del Mes = Cuota del Mes + Cartera Pendiente
+    if (totalMesSum > 0 && cuotaMesTotal > 0) {
+      carteraPendienteTotal = Math.max(0, totalMesSum - cuotaMesTotal);
     }
 
     const kpiAptoTotal = document.getElementById("dashboard-kpi-apto-total");
@@ -66238,7 +66238,7 @@ window.renderizarTabFacturacion = function() {
 
   const metricaCartera = document.getElementById("facturacion-metrica-cartera");
   if (metricaCartera) {
-    metricaCartera.innerText = totalCartera > 0 ? ("$" + Math.round(totalCartera).toLocaleString("es-CO")) : (cop?.carteraPendiente || "$11.203.580");
+    metricaCartera.innerText = totalCartera > 0 ? ("$" + Math.round(totalCartera).toLocaleString("es-CO")) : (cop?.carteraPendiente || "$11.498.390");
   }
 
   const metricaTasa = document.getElementById("facturacion-metrica-tasa");

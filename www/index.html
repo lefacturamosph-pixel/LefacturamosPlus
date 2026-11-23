@@ -3091,107 +3091,52 @@
             <!-- SVG Bar Chart -->
 
             <div id="chart-recaudo-gastos-container" class="w-full overflow-x-auto no-scrollbar py-2">
-
               <svg viewBox="0 0 560 220" class="w-full h-48 sm:h-56 select-none" xmlns="http://www.w3.org/2000/svg">
-
                 <!-- Líneas horizontales de guía y etiquetas Y -->
-
-                <text x="35" y="25" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">25.6M</text>
-
+                <text x="38" y="24" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">50.0M</text>
                 <line x1="45" y1="20" x2="550" y2="20" stroke="#334155" stroke-dasharray="3 3" stroke-width="0.7" />
-
-
-
-                <text x="35" y="65" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">19.2M</text>
-
+                <text x="38" y="64" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">37.5M</text>
                 <line x1="45" y1="60" x2="550" y2="60" stroke="#334155" stroke-dasharray="3 3" stroke-width="0.7" />
-
-
-
-                <text x="35" y="105" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">12.8M</text>
-
+                <text x="38" y="104" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">25.0M</text>
                 <line x1="45" y1="100" x2="550" y2="100" stroke="#334155" stroke-dasharray="3 3" stroke-width="0.7" />
-
-
-
-                <text x="35" y="145" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">6.4M</text>
-
+                <text x="38" y="144" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">12.5M</text>
                 <line x1="45" y1="140" x2="550" y2="140" stroke="#334155" stroke-dasharray="3 3" stroke-width="0.7" />
-
-
-
-                <text x="35" y="185" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">0.0M</text>
-
+                <text x="38" y="184" text-anchor="end" class="text-[10px] fill-slate-500 font-mono">0.0M</text>
                 <line x1="45" y1="180" x2="550" y2="180" stroke="#475569" stroke-width="1" />
-
-
-
-                <!-- Barras de 8 Meses: Ene, Feb, Mar, Abr, May, Jun, Jul, Ago -->
-
-                <rect x="74" y="168" width="10" height="12" rx="2" fill="#10b981" />
-
-                <rect x="88" y="55" width="10" height="125" rx="2" fill="#f97316" />
-
-                <text x="86" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Ene</text>
-
-
-
-                <rect x="136" y="164" width="10" height="16" rx="2" fill="#10b981" />
-
-                <rect x="150" y="48" width="10" height="132" rx="2" fill="#f97316" />
-
-                <text x="148" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Feb</text>
-
-
-
-                <rect x="198" y="166" width="10" height="14" rx="2" fill="#10b981" />
-
-                <rect x="212" y="54" width="10" height="126" rx="2" fill="#f97316" />
-
-                <text x="210" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Mar</text>
-
-
-
-                <rect x="260" y="162" width="10" height="18" rx="2" fill="#10b981" />
-
-                <rect x="274" y="42" width="10" height="138" rx="2" fill="#f97316" />
-
-                <text x="272" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Abr</text>
-
-
-
-                <rect x="322" y="165" width="10" height="15" rx="2" fill="#10b981" />
-
-                <rect x="336" y="50" width="10" height="130" rx="2" fill="#f97316" />
-
-                <text x="334" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">May</text>
-
-
-
-                <rect x="384" y="158" width="10" height="22" rx="2" fill="#10b981" />
-
-                <rect x="398" y="52" width="10" height="128" rx="2" fill="#f97316" />
-
-                <text x="396" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Jun</text>
-
-
-
-                <rect x="446" y="166" width="10" height="14" rx="2" fill="#10b981" />
-
-                <rect x="460" y="46" width="10" height="134" rx="2" fill="#f97316" />
-
-                <text x="458" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Jul</text>
-
-
-
-                <rect x="508" y="164" width="10" height="16" rx="2" fill="#10b981" />
-
-                <rect x="522" y="44" width="10" height="136" rx="2" fill="#f97316" />
-
-                <text x="520" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Ago</text>
-
+                <!-- Barras mensuales de Recaudo vs Gastos Operativos -->
+                <!-- Ene -->
+                <rect x="71" y="88" width="12" height="92" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="87" y="111" width="12" height="69" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="85" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Ene</text>
+                <!-- Feb -->
+                <rect x="133" y="69" width="12" height="111" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="149" y="109" width="12" height="71" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="147" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Feb</text>
+                <!-- Mar -->
+                <rect x="195" y="38" width="12" height="142" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="211" y="110" width="12" height="70" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="209" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Mar</text>
+                <!-- Abr -->
+                <rect x="257" y="67" width="12" height="113" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="273" y="105" width="12" height="75" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="271" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Abr</text>
+                <!-- May -->
+                <rect x="319" y="50" width="12" height="130" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="335" y="108" width="12" height="72" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="333" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">May</text>
+                <!-- Jun -->
+                <rect x="381" y="66" width="12" height="114" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="397" y="103" width="12" height="77" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="395" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Jun</text>
+                <!-- Jul -->
+                <rect x="443" y="68" width="12" height="112" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="459" y="109" width="12" height="71" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="457" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Jul</text>
+                <!-- Ago -->
+                <rect x="505" y="47" width="12" height="133" rx="2.5" fill="#10b981" class="transition-all hover:brightness-125 cursor-pointer" />
+                <rect x="521" y="109" width="12" height="71" rx="2.5" fill="#f97316" class="transition-all hover:brightness-125 cursor-pointer" />
+                <text x="519" y="200" text-anchor="middle" class="text-[11px] fill-slate-400 font-medium">Ago</text>
               </svg>
-
             </div>
 
 
@@ -3694,7 +3639,7 @@
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
               <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Cartera Pendiente / Mora</span>
               <div class="flex items-baseline justify-between">
-                <h3 id="facturacion-metrica-cartera" class="text-xl sm:text-2xl font-black text-rose-400 font-mono">$11.203.580</h3>
+                <h3 id="facturacion-metrica-cartera" class="text-xl sm:text-2xl font-black text-rose-400 font-mono">$11.498.390</h3>
                 <span class="text-[11px] font-bold text-rose-400/80">Saldos en Mora</span>
               </div>
             </div>
