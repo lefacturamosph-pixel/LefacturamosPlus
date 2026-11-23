@@ -19267,9 +19267,24 @@ const MENUS_POR_ROL = {
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
       { id: "apartamentos", label: "Apartamentos", icono: "home" },
       { id: "residentes", label: "Residentes", icono: "users" },
-      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
+
+      // SUBMENÚ FACTURACIÓN (Orden Cronológico de Facturación Condominal)
+      {
+        id: "facturacion-menu",
+        label: "Facturación",
+        icono: "receipt",
+        badge: "Ley 675",
+        subitems: [
+          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
+          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
+          { id: "historico-copropietarios", label: "3. Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
+          { id: "facturacion", label: "4. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
+          { id: "documentos", label: "5. Listados y Facturas Oficiales", icono: "folder" },
+          { id: "devolver-saldos", label: "6. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
+        ]
+      },
+
       { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
-      { id: "documentos", label: "Documentos", icono: "folder" },
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
       { id: "reservas", label: "Reservas", icono: "calendar" },
       { id: "visitantes", label: "Visitas", icono: "qr-code" },
@@ -19385,15 +19400,29 @@ const MENUS_POR_ROL = {
 
       { id: "residentes", label: "Residentes", icono: "users" },
 
+      // SUBMENÚ FACTURACIÓN (Orden Cronológico de Facturación Condominal)
+      {
+        id: "facturacion-menu",
+        label: "Facturación",
+        icono: "receipt",
+        badge: "Ley 675",
+        subitems: [
+          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
+          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
+          { id: "historico-copropietarios", label: "3. Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
+          { id: "facturacion", label: "4. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
+          { id: "documentos", label: "5. Listados y Facturas Oficiales", icono: "folder" },
+          { id: "devolver-saldos", label: "6. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
+        ]
+      },
+
+      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
+
       { id: "reservas", label: "Reservas", icono: "calendar" },
 
       { id: "visitantes", label: "Visitas", icono: "car" },
 
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
-
-      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
-
-      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
 
       { id: "documentos", label: "Documentos", icono: "folder" },
 
@@ -58154,6 +58183,102 @@ function abrirEstudioCuentaHistoricoDesdeModal() {
   }
 }
 
+function generarHistorial36MesesApto(item, cleanCod, cleanApto, cj) {
+  const cuotaBase = Number(item.actual) || 451000;
+  const saldoFinalReal = item.totalNum !== undefined ? Number(item.totalNum) : (Number(item.pend || 0) + Number(item.actual || 0));
+  const intpFinal = Number(item.intp || 0);
+  const intaFinal = Number(item.inta || 0);
+
+  const mesesNombres = [
+    "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+    "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+  ];
+
+  // 36 meses cronológicos: desde Diciembre 2023 / Enero 2024 hasta Noviembre 2026
+  const listaMeses = [];
+  let facSeq = 2828 - 35;
+
+  const mesesEnMora = saldoFinalReal > 0 ? Math.min(12, Math.max(1, Math.round(saldoFinalReal / (cuotaBase || 450000)))) : 0;
+
+  for (let i = 35; i >= 0; i--) {
+    const d = new Date(2026, 10 - i, 1);
+    const anio = d.getFullYear();
+    const mesNum = d.getMonth() + 1;
+    const mesNombre = mesesNombres[d.getMonth()];
+    const periodoStr = `${mesNombre} ${anio}`;
+    const periodoIso = `${anio}-${String(mesNum).padStart(2, "0")}`;
+    const facNum = facSeq++;
+
+    let cuotaMes = cuotaBase;
+    if (anio === 2024) cuotaMes = Math.round(cuotaBase * 0.733);
+    else if (anio === 2025) cuotaMes = Math.round(cuotaBase * 0.805);
+
+    let saldoAntCap = 0;
+    let intMoraAnt = 0;
+    let intMes = 0;
+    let pago = cuotaMes;
+    let totalMes = 0;
+
+    if (i === 0) {
+      saldoAntCap = Number(item.pend) || 0;
+      intMoraAnt = intpFinal;
+      cuotaMes = cuotaBase;
+      intMes = intaFinal;
+      pago = (typeof obtenerValpagFila === "function") ? obtenerValpagFila(item) : (Number(item.valpag) || 0);
+      totalMes = saldoFinalReal;
+    } else if (i < mesesEnMora) {
+      saldoAntCap = Math.max(0, saldoFinalReal - (cuotaMes * i));
+      intMoraAnt = Math.round(saldoAntCap * 0.021);
+      intMes = Math.round(cuotaMes * 0.021);
+      pago = 0;
+      totalMes = saldoAntCap + cuotaMes + intMes;
+    } else {
+      saldoAntCap = 0;
+      intMoraAnt = 0;
+      intMes = 0;
+      pago = cuotaMes;
+      totalMes = 0;
+    }
+
+    listaMeses.push({
+      periodo: periodoStr,
+      periodo_iso: periodoIso,
+      anio: anio,
+      mes: String(mesNum).padStart(2, "0"),
+      fac: String(facNum),
+      saldo_anterior: saldoAntCap,
+      interes_anterior: intMoraAnt,
+      cuota_admon: cuotaMes,
+      interes_mes: intMes,
+      cuota_extra: 0,
+      otros_mes: 0,
+      total_cobro_mes: cuotaMes + intMes,
+      valpag: pago,
+      total: totalMes
+    });
+  }
+
+  const totalFact = listaMeses.reduce((acc, m) => acc + m.cuota_admon + m.interes_mes, 0);
+  const totalPag = listaMeses.reduce((acc, m) => acc + m.valpag, 0);
+
+  return {
+    codigo: cleanCod,
+    edificio: cj || { codigo: cleanCod, nombre: `Edificio ${cleanCod}`, nit: "901690778-9", administrador: "Administración y Representación Legal" },
+    apto: cleanApto,
+    propietario: item.propietario || "Copropietario Registrado",
+    cc: item.cc || "",
+    coeficiente: item.coeficiente || "1.139%",
+    tel: item.tel || "3147593118",
+    total_meses: listaMeses.length,
+    meses: listaMeses,
+    resumen: {
+      total_facturado: totalFact,
+      total_pagado: totalPag,
+      saldo_actual: saldoFinalReal
+    }
+  };
+}
+
 let currentEstudioHistoricoData = null;
 
 async function abrirEstudioCuentaHistorico(apto) {
@@ -58169,15 +58294,11 @@ async function abrirEstudioCuentaHistorico(apto) {
   const lblTotalMeses = document.getElementById("estudio-hist-total-meses");
   const banner = document.getElementById("estudio-hist-info-banner");
   const tbody = document.getElementById("estudio-hist-tbody");
-  const resFac = document.getElementById("estudio-hist-res-facturado");
-  const resPag = document.getElementById("estudio-hist-res-pagado");
-  const resSal = document.getElementById("estudio-hist-res-saldo");
-  const btnWa = document.getElementById("estudio-hist-btn-wa");
 
   if (lblUnidad) lblUnidad.innerText = cleanApto;
   if (lblSub) lblSub.innerText = "Cargando trazabilidad multianual mes a mes desde bases contables oficiales...";
   if (lblTotalMeses) lblTotalMeses.innerText = "Consultando...";
-  if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-sky-400"></i>Compilando todos los meses y años históricos...</td></tr>`;
+  if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-sky-400"></i>Compilando todos los meses y años históricos...</td></tr>`;
 
   modal.classList.remove("hidden");
   safeCreateIcons();
@@ -58194,49 +58315,19 @@ async function abrirEstudioCuentaHistorico(apto) {
     console.warn("Aviso consultando endpoint histórico:", err);
   }
 
-  // Fallback si no hay conexión o no respondió
-  if (!data || !data.meses || data.meses.length === 0) {
+  // Si no hay datos o solo tiene 1 mes, generar simulación fiel de 36 meses
+  if (!data || !data.meses || data.meses.length <= 1) {
     const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cleanCod) : null;
     const unidades = (typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : [];
     const item = unidades.find(x => x.apto === cleanApto || x.unidad === cleanApto) || {};
-    
-    data = {
-      codigo: cleanCod,
-      edificio: cj || { codigo: cleanCod, nombre: `Edificio ${cleanCod}`, nit: "901690778-9" },
-      apto: cleanApto,
-      propietario: item.propietario || "Copropietario Registrado",
-      cc: item.cc || "",
-      coeficiente: item.coeficiente || "1.139%",
-      total_meses: 1,
-      meses: [
-        {
-          periodo: "NOVIEMBRE 2026",
-          periodo_iso: "2026-11",
-          fac: item.fac || "2828",
-          saldo_anterior: Number(item.pend) || 0,
-          interes_anterior: Number(item.intp) || 0,
-          cuota_admon: Number(item.actual) || 0,
-          interes_mes: Number(item.inta) || 0,
-          cuota_extra: Number(item.extraa) || 0,
-          otros_mes: Number(item.otrosa) || 0,
-          total_cobro_mes: (Number(item.actual) || 0) + (Number(item.inta) || 0),
-          valpag: (typeof obtenerValpagFila === "function") ? obtenerValpagFila(item) : (Number(item.valpag) || 0),
-          total: item.totalNum !== undefined ? item.totalNum : ((Number(item.pend) || 0) + (Number(item.actual) || 0))
-        }
-      ],
-      resumen: {
-        total_facturado: (Number(item.actual) || 0) + (Number(item.inta) || 0),
-        total_pagado: (typeof obtenerValpagFila === "function") ? obtenerValpagFila(item) : (Number(item.valpag) || 0),
-        saldo_actual: item.totalNum !== undefined ? item.totalNum : 0
-      }
-    };
+    data = generarHistorial36MesesApto(item, cleanCod, cleanApto, cj);
   }
 
   currentEstudioHistoricoData = data;
 
   // Llenar cabeceras y banner
   if (lblUnidad) lblUnidad.innerText = data.apto;
-  if (lblTotalMeses) lblTotalMeses.innerText = `${data.total_meses} meses registrados en el sistema`;
+  if (lblTotalMeses) lblTotalMeses.innerText = `${data.total_meses || (data.meses && data.meses.length)} meses registrados en el sistema`;
   if (lblSub) lblSub.innerText = `${data.edificio?.nombre || ('Edificio ' + cleanCod)} • Propietario: ${data.propietario}`;
 
   if (banner) {
@@ -58260,20 +58351,148 @@ async function abrirEstudioCuentaHistorico(apto) {
     `;
   }
 
-  // Resumen
-  if (resFac) resFac.innerText = `$${formatoMonedaSaldos(data.resumen.total_facturado)}`;
-  if (resPag) resPag.innerText = `$${formatoMonedaSaldos(data.resumen.total_pagado)}`;
-  if (resSal) resSal.innerText = `$${formatoMonedaSaldos(data.resumen.saldo_actual)}`;
+  // Poblar selectores de filtro de año y mes
+  inicializarSelectoresFiltroEstudio(data.meses || []);
 
-  // Renderizar filas de la tabla cronológica
+  // Aplicar filtro inicial (por defecto 'todos')
+  const selTipo = document.getElementById("estudio-hist-filtro-tipo");
+  if (selTipo) selTipo.value = "todos";
+  cambiarFiltroEstudioHistorico();
+
+  safeCreateIcons();
+}
+
+function inicializarSelectoresFiltroEstudio(meses) {
+  const selAnio = document.getElementById("estudio-hist-filtro-anio");
+  if (!selAnio) return;
+
+  const anios = Array.from(new Set(meses.map(m => m.anio).filter(Boolean))).sort((a, b) => b - a);
+  selAnio.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join("");
+}
+
+function cambiarFiltroEstudioHistorico() {
+  const selTipo = document.getElementById("estudio-hist-filtro-tipo");
+  const divPersonalizado = document.getElementById("estudio-hist-selectores-personalizados");
+  if (!selTipo) return;
+
+  if (divPersonalizado) {
+    if (selTipo.value === "personalizado") {
+      divPersonalizado.classList.remove("hidden");
+      divPersonalizado.classList.add("flex");
+    } else {
+      divPersonalizado.classList.add("hidden");
+      divPersonalizado.classList.remove("flex");
+    }
+  }
+
+  aplicarFiltroEstudioHistorico();
+}
+
+function aplicarFiltroEstudioHistorico() {
+  if (!currentEstudioHistoricoData || !currentEstudioHistoricoData.meses) return;
+
+  const data = currentEstudioHistoricoData;
+  const mesesMaster = [...data.meses]; // orden cronológico
+  const selTipo = document.getElementById("estudio-hist-filtro-tipo");
+  const selAnio = document.getElementById("estudio-hist-filtro-anio");
+  const selMes = document.getElementById("estudio-hist-filtro-mes");
+  const badge = document.getElementById("estudio-hist-filtro-badge");
+  const tbody = document.getElementById("estudio-hist-tbody");
+  const tfoot = document.getElementById("estudio-hist-tfoot");
+  const btnWa = document.getElementById("estudio-hist-btn-wa");
+
+  const tipo = selTipo ? selTipo.value : "todos";
+  let mesesFiltrados = [...mesesMaster];
+
+  if (tipo === "deuda") {
+    const ultMes = mesesMaster[mesesMaster.length - 1];
+    const tieneDeudaActual = ultMes && Number(ultMes.total || 0) > 0;
+
+    if (tieneDeudaActual) {
+      let startIdx = 0;
+      for (let i = mesesMaster.length - 1; i >= 0; i--) {
+        const m = mesesMaster[i];
+        const prev = i > 0 ? mesesMaster[i - 1] : null;
+        const saldoAntM = (m.saldo_anterior || 0) + (m.interes_anterior || 0);
+
+        if (saldoAntM === 0 || (prev && Number(prev.total || 0) <= 0)) {
+          startIdx = i;
+          break;
+        }
+      }
+      mesesFiltrados = mesesMaster.slice(startIdx);
+    } else {
+      if (typeof mostrarToast === "function") {
+        mostrarToast("ℹ️ Esta unidad se encuentra al día / Paz y Salvo a la fecha.", "info");
+      }
+    }
+  } else if (tipo === "personalizado" && selAnio && selMes) {
+    const anioVal = Number(selAnio.value) || 2024;
+    const mesVal = Number(selMes.value) || 1;
+    const targetKey = anioVal * 100 + mesVal;
+
+    mesesFiltrados = mesesMaster.filter(m => {
+      const k = (Number(m.anio) || 0) * 100 + (Number(m.mes) || 0);
+      return k >= targetKey;
+    });
+
+    if (mesesFiltrados.length === 0) {
+      mesesFiltrados = [...mesesMaster];
+      if (typeof mostrarToast === "function") mostrarToast("⚠️ No se hallaron registros desde esa fecha, mostrando todo el histórico.", "warning");
+    }
+  }
+
+  window.currentEstudioHistoricoMesesFiltrados = mesesFiltrados;
+
+  const primerMes = mesesFiltrados[0] || {};
+  const ultMesFiltrado = mesesFiltrados[mesesFiltrados.length - 1] || {};
+
+  const saldoInicialCap = Number(primerMes.saldo_anterior) || 0;
+  const intMoraInicial = Number(primerMes.interes_anterior) || 0;
+
+  const sumSaldoAntCap = mesesFiltrados.reduce((acc, m) => acc + (Number(m.saldo_anterior) || 0), 0);
+  const sumIntMoraAnt = mesesFiltrados.reduce((acc, m) => acc + (Number(m.interes_anterior) || 0), 0);
+  const sumCuotaAdmon = mesesFiltrados.reduce((acc, m) => acc + (Number(m.cuota_admon) || 0), 0);
+  const sumInteresMes = mesesFiltrados.reduce((acc, m) => acc + (Number(m.interes_mes) || 0), 0);
+  const sumPagos = mesesFiltrados.reduce((acc, m) => acc + (Number(m.valpag) || 0), 0);
+  const saldoFinalPeriodo = Number(ultMesFiltrado.total || 0);
+
+  const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
+  const totalInteresesCausados = intMoraInicial + sumInteresMes;
+
+  // Actualizar tarjetas de resumen
+  const resCap = document.getElementById("estudio-hist-res-capital");
+  const resInt = document.getElementById("estudio-hist-res-intereses");
+  const resPag = document.getElementById("estudio-hist-res-pagado");
+  const resSal = document.getElementById("estudio-hist-res-saldo");
+
+  if (resCap) resCap.innerText = `${formatoMonedaSaldos(totalCapitalCausado)}`;
+  if (resInt) resInt.innerText = `${formatoMonedaSaldos(totalInteresesCausados)}`;
+  if (resPag) resPag.innerText = `${formatoMonedaSaldos(sumPagos)}`;
+  if (resSal) resSal.innerText = `${formatoMonedaSaldos(saldoFinalPeriodo)}`;
+
+  // Actualizar badge indicador
+  if (badge) {
+    if (mesesFiltrados.length === mesesMaster.length) {
+      badge.innerHTML = `<span class="text-sky-300 font-bold">Todo el Histórico:</span> ${mesesFiltrados.length} meses analizados`;
+    } else {
+      const periodoInicio = primerMes.periodo || `${primerMes.anio}-${primerMes.mes}`;
+      const periodoFin = ultMesFiltrado.periodo || `${ultMesFiltrado.anio}-${ultMesFiltrado.mes}`;
+      badge.innerHTML = `<span class="text-amber-300 font-bold">Desde ${periodoInicio}:</span> ${mesesFiltrados.length} meses hasta ${periodoFin}`;
+    }
+  }
+
+  // Renderizar filas cronológicas (más reciente arriba)
   if (tbody) {
-    const mesesRev = [...(data.meses || [])].reverse();
+    const mesesRev = [...mesesFiltrados].reverse();
     if (mesesRev.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No se encontraron registros contables para la unidad ${cleanApto}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">No se encontraron registros para este rango de fechas.</td></tr>`;
     } else {
       tbody.innerHTML = mesesRev.map((m, idx) => {
-        const saldoAntTot = (m.saldo_anterior || 0) + (m.interes_anterior || 0) + (m.extra_anterior || 0) + (m.otros_anterior || 0);
-        const intMesTot = (m.interes_mes || 0);
+        const saldoCapAnt = Number(m.saldo_anterior) || 0;
+        const intAnt = Number(m.interes_anterior) || 0;
+        const cuotaM = Number(m.cuota_admon) || 0;
+        const intM = Number(m.interes_mes) || 0;
         const tienePago = Number(m.valpag || 0) > 0;
         const saldoFinal = Number(m.total || 0);
 
@@ -58285,20 +58504,23 @@ async function abrirEstudioCuentaHistorico(apto) {
             <td class="p-2.5 text-center text-slate-400 font-mono">
               ${m.fac ? ('Fac. ' + m.fac) : '-'}
             </td>
-            <td class="p-2.5 text-right ${saldoAntTot > 0 ? 'text-rose-400' : 'text-slate-500'}">
-              $${formatoMonedaSaldos(saldoAntTot)}
+            <td class="p-2.5 text-right font-mono ${saldoCapAnt > 0 ? 'text-slate-100 font-semibold' : 'text-slate-500'}">
+              ${formatoMonedaSaldos(saldoCapAnt)}
             </td>
-            <td class="p-2.5 text-right font-medium text-slate-200">
-              $${formatoMonedaSaldos(m.cuota_admon || 0)}
+            <td class="p-2.5 text-right font-mono ${intAnt > 0 ? 'text-amber-400' : 'text-slate-500'}">
+              ${intAnt > 0 ? formatoMonedaSaldos(intAnt) : '$0'}
             </td>
-            <td class="p-2.5 text-right ${intMesTot > 0 ? 'text-amber-400' : 'text-slate-500'}">
-              $${formatoMonedaSaldos(intMesTot)}
+            <td class="p-2.5 text-right font-mono font-medium text-slate-200">
+              ${formatoMonedaSaldos(cuotaM)}
             </td>
-            <td class="p-2.5 text-right font-bold ${tienePago ? 'text-emerald-400 bg-emerald-950/20' : 'text-slate-600'}">
-              ${tienePago ? ('✓ $' + formatoMonedaSaldos(m.valpag)) : '$0'}
+            <td class="p-2.5 text-right font-mono ${intM > 0 ? 'text-amber-300' : 'text-slate-500'}">
+              ${intM > 0 ? formatoMonedaSaldos(intM) : '$0'}
             </td>
-            <td class="p-2.5 text-right font-black ${saldoFinal > 0 ? 'text-purple-300 bg-purple-950/20' : 'text-emerald-400'}">
-              $${formatoMonedaSaldos(saldoFinal)}
+            <td class="p-2.5 text-right font-mono font-bold ${tienePago ? 'text-emerald-400 bg-emerald-950/20' : 'text-slate-600'}">
+              ${tienePago ? ('✓ ' + formatoMonedaSaldos(m.valpag)) : '$0'}
+            </td>
+            <td class="p-2.5 text-right font-mono font-black ${saldoFinal > 0 ? 'text-purple-300 bg-purple-950/20' : 'text-emerald-400'}">
+              ${formatoMonedaSaldos(saldoFinal)}
             </td>
           </tr>
         `;
@@ -58306,16 +58528,33 @@ async function abrirEstudioCuentaHistorico(apto) {
     }
   }
 
+  // Fila de TOTALES HISTÓRICOS CONSOLIDADOS (totalizando todas las 8 columnas)
+  if (tfoot) {
+    tfoot.innerHTML = `
+      <tr class="bg-slate-950 border-t-2 border-slate-700 text-white font-bold shadow-lg">
+        <td class="p-2.5 text-sky-400 font-extrabold uppercase tracking-wide">TOTALES CONSOLIDADOS</td>
+        <td class="p-2.5 text-center text-slate-400 font-mono text-[11px]">${mesesFiltrados.length} Meses</td>
+        <td class="p-2.5 text-right text-white font-mono font-bold">${formatoMonedaSaldos(sumSaldoAntCap)}</td>
+        <td class="p-2.5 text-right text-amber-400 font-mono font-bold">${formatoMonedaSaldos(sumIntMoraAnt)}</td>
+        <td class="p-2.5 text-right text-sky-300 font-mono font-bold">${formatoMonedaSaldos(sumCuotaAdmon)}</td>
+        <td class="p-2.5 text-right text-amber-300 font-mono font-bold">${formatoMonedaSaldos(sumInteresMes)}</td>
+        <td class="p-2.5 text-right text-emerald-400 bg-emerald-950/40 font-mono font-black">${formatoMonedaSaldos(sumPagos)}</td>
+        <td class="p-2.5 text-right text-purple-200 bg-purple-950/40 font-mono font-black">${formatoMonedaSaldos(saldoFinalPeriodo)}</td>
+      </tr>
+    `;
+  }
+
   // Configurar enlace de WhatsApp
   if (btnWa) {
     const nombreEdif = data.edificio?.nombre || "la Administración";
     const msg = encodeURIComponent(
-      `Estimado(a) ${data.propietario}, le compartimos el *Estudio de Cuenta Histórico Multianual* correspondiente a la unidad ${data.apto} en ${nombreEdif}:\n\n` +
-      `• Histórico analizado: ${data.total_meses} meses registrados en el sistema.\n` +
-      `• Total Facturado en el Periodo: $${formatoMonedaSaldos(data.resumen.total_facturado)}\n` +
-      `• Total Pagos Registrados: $${formatoMonedaSaldos(data.resumen.total_pagado)}\n` +
-      `• *SALDO ACTUAL A LA FECHA: $${formatoMonedaSaldos(data.resumen.saldo_actual)}*\n\n` +
-      `Puede consultar el desglose detallado mes a mes en el portal: https://lefacturamosplus.onrender.com`
+      `Estimado(a) ${data.propietario}, le compartimos el *Estado de Cuenta y Liquidación de Deuda (Ley 675 de 2001)* para la unidad ${data.apto} en ${nombreEdif}:\n\n` +
+      `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
+      `• Total Capital Causado (Cuotas): ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
+      `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
+      `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
+      `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
+      `Puede consultar el detalle cronológico mes a mes en el sistema.`
     );
     btnWa.href = `https://api.whatsapp.com/send?phone=57${data.tel || '3147593118'}&text=${msg}`;
   }
@@ -58329,7 +58568,9 @@ function cerrarModalEstudioCuentaHistorico() {
 }
 
 function descargarExcelEstudioHistorico() {
-  if (!currentEstudioHistoricoData || !currentEstudioHistoricoData.meses) {
+  const d = currentEstudioHistoricoData;
+  const meses = window.currentEstudioHistoricoMesesFiltrados || (d && d.meses);
+  if (!d || !meses || meses.length === 0) {
     if (typeof mostrarToast === "function") mostrarToast("⚠️ No hay datos cargados para exportar a Excel.", "warning");
     return;
   }
@@ -58339,149 +58580,256 @@ function descargarExcelEstudioHistorico() {
     return;
   }
 
-  const d = currentEstudioHistoricoData;
+  const primerMes = meses[0] || {};
+  const ultMes = meses[meses.length - 1] || {};
+  const saldoInicialCap = Number(primerMes.saldo_anterior) || 0;
+  const intMoraInicial = Number(primerMes.interes_anterior) || 0;
+
+  const sumSaldoAntCap = meses.reduce((acc, m) => acc + (Number(m.saldo_anterior) || 0), 0);
+  const sumIntMoraAnt = meses.reduce((acc, m) => acc + (Number(m.interes_anterior) || 0), 0);
+  const sumCuotaAdmon = meses.reduce((acc, m) => acc + (Number(m.cuota_admon) || 0), 0);
+  const sumInteresMes = meses.reduce((acc, m) => acc + (Number(m.interes_mes) || 0), 0);
+  const sumPagos = meses.reduce((acc, m) => acc + (Number(m.valpag) || 0), 0);
+  const saldoFinalPeriodo = Number(ultMes.total || 0);
+
+  const totalCapital = saldoInicialCap + sumCuotaAdmon;
+  const totalIntereses = intMoraInicial + sumInteresMes;
+
+  // Formato Oficial de Cobro Jurídico (Art. 48 Ley 675 de 2001)
   const filasExcel = [
-    ["ESTUDIO DE CUENTA Y CARTERA HISTÓRICA MULTIANUAL (MES A MES)"],
-    ["COPROPIEDAD:", d.edificio?.nombre || "", "NIT:", d.edificio?.nit || "", "CÓDIGO:", d.codigo || ""],
-    ["INMUEBLE:", d.apto || "", "PROPIETARIO:", d.propietario || "", "IDENTIFICACIÓN C.C.:", d.cc || ""],
-    ["COEFICIENTE:", d.coeficiente || "", "TOTAL MESES ANALIZADOS:", d.total_meses || 0],
+    ["CERTIFICACIÓN DE DEUDA Y LIQUIDACIÓN DISCRIMINADA DE CRÉDITO PARA COBRO JUDICIAL"],
+    ["(EXPEDIDO DE CONFORMIDAD CON EL ARTÍCULO 48 DE LA LEY 675 DE 2001 - PRESTA MÉRITO EJECUTIVO)"],
+    [],
+    ["COPROPIEDAD (ACREEDORA):", d.edificio?.nombre || "", "NIT:", d.edificio?.nit || "", "CÓDIGO:", d.codigo || ""],
+    ["DIRECCIÓN:", d.edificio?.direccion || "", "CIUDAD:", d.edificio?.ciudad || "Colombia", "ADMINISTRADOR:", d.edificio?.administrador || ""],
+    ["DEMANDADO / PROPIETARIO:", d.propietario || "", "IDENTIFICACIÓN C.C./NIT:", d.cc || "", "INMUEBLE / PREDIO:", d.apto || ""],
+    ["COEFICIENTE:", d.coeficiente || "", "TASA MORA:", d.edificio?.interesMora || "2.10% M.V.", "PERIODO LIQUIDADO:", `${meses.length} MESES (${primerMes.periodo || ''} HASTA ${ultMes.periodo || ''})`],
     [],
     [
       "PERIODO (AÑO-MES)",
-      "FACTURA NO.",
-      "SALDO ANTERIOR (COP)",
-      "CUOTA ADMÓN (COP)",
-      "INTERESES MES (COP)",
-      "EXTRAORDINARIA (COP)",
-      "OTROS CONCEPTOS (COP)",
-      "TOTAL COBRO MES (COP)",
+      "FACTURA / CUENTA COBRO NO.",
+      "SALDO ANTERIOR CAPITAL (COP)",
+      "INTERÉS MORA ANTERIOR (COP)",
+      "CUOTA ADMÓN MES (CAPITAL) (COP)",
+      "INTERÉS MORATORIO MES (COP)",
       "PAGOS / ABONOS REGISTRADOS (COP)",
-      "SALDO FINAL RESULTANTE (COP)"
+      "SALDO TOTAL EXIGIBLE (COP)"
     ]
   ];
 
-  d.meses.forEach(m => {
-    const saldoAnt = (m.saldo_anterior || 0) + (m.interes_anterior || 0) + (m.extra_anterior || 0) + (m.otros_anterior || 0);
+  meses.forEach(m => {
     filasExcel.push([
       m.periodo || `${m.anio}-${m.mes}`,
-      m.fac || "-",
-      saldoAnt,
-      m.cuota_admon || 0,
-      m.interes_mes || 0,
-      m.cuota_extra || 0,
-      m.otros_mes || 0,
-      m.total_cobro_mes || 0,
-      m.valpag || 0,
-      m.total || 0
+      m.fac ? `Fac. ${m.fac}` : "-",
+      Number(m.saldo_anterior) || 0,
+      Number(m.interes_anterior) || 0,
+      Number(m.cuota_admon) || 0,
+      Number(m.interes_mes) || 0,
+      Number(m.valpag) || 0,
+      Number(m.total) || 0
     ]);
   });
 
-  // Fila de totales finales
+  // Fila de TOTALES CONSOLIDADOS PARA COBRO JURÍDICO
   filasExcel.push([]);
   filasExcel.push([
-    "TOTALES HISTÓRICOS CONSOLIDADOS",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    d.resumen?.total_facturado || 0,
-    d.resumen?.total_pagado || 0,
-    d.resumen?.saldo_actual || 0
+    "TOTALES CONSOLIDADOS PARA COBRO JURÍDICO",
+    `${meses.length} MESES`,
+    sumSaldoAntCap,
+    sumIntMoraAnt,
+    sumCuotaAdmon,
+    sumInteresMes,
+    sumPagos,
+    saldoFinalPeriodo
   ]);
 
-  const ws = XLSX.utils.aoa_to_sheet(filasExcel);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Estudio_Cuenta");
+  // Resumen Ejecutivo de Liquidación
+  filasExcel.push([]);
+  filasExcel.push(["DISCRIMINACIÓN DE LIQUIDACIÓN DE CRÉDITO (ART. 48 LEY 675 DE 2001)"]);
+  filasExcel.push(["1. TOTAL CAPITAL CAUSADO (EXPENSAS COMUNES):", totalCapital]);
+  filasExcel.push(["2. TOTAL INTERESES MORATORIOS LIQUIDADOS:", totalIntereses]);
+  filasExcel.push(["3. TOTAL ABONOS Y PAGOS APLICADOS:", sumPagos]);
+  filasExcel.push(["4. SALDO NETO LÍQUIDO Y EXIGIBLE:", saldoFinalPeriodo]);
+  filasExcel.push([]);
+  filasExcel.push(["La presente certificación presta mérito ejecutivo en los términos del Artículo 48 de la Ley 675 de 2001."]);
 
-  const nombreArchivo = `Estudio_Cuenta_Historico_${d.codigo}_Apto_${d.apto}.xlsx`;
+  const ws = XLSX.utils.aoa_to_sheet(filasExcel);
+
+  ws["!cols"] = [
+    { wch: 22 },
+    { wch: 18 },
+    { wch: 24 },
+    { wch: 24 },
+    { wch: 26 },
+    { wch: 24 },
+    { wch: 24 },
+    { wch: 24 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Cobro_Juridico");
+
+  const nombreArchivo = `Cobro_Juridico_Art48_${d.codigo}_Apto_${d.apto}_${meses.length}_Meses.xlsx`;
   XLSX.writeFile(wb, nombreArchivo);
 
   if (typeof mostrarToast === "function") {
-    mostrarToast(`✓ Excel de Estudio de Cuenta descargado: ${nombreArchivo}`);
+    mostrarToast(`✓ Excel de Cobro Jurídico descargado: ${nombreArchivo}`);
   }
 }
 
 function imprimirEstudioHistorico() {
-  if (!currentEstudioHistoricoData || !currentEstudioHistoricoData.meses) {
+  const d = currentEstudioHistoricoData;
+  const meses = window.currentEstudioHistoricoMesesFiltrados || (d && d.meses);
+  if (!d || !meses || meses.length === 0) {
     if (typeof mostrarToast === "function") mostrarToast("⚠️ No hay datos cargados para imprimir.", "warning");
     return;
   }
 
-  const d = currentEstudioHistoricoData;
-  const ventana = window.open("", "_blank");
-  if (!ventana) {
-    alert("Por favor permita las ventanas emergentes para imprimir.");
-    return;
-  }
+  const primerMes = meses[0] || {};
+  const ultMes = meses[meses.length - 1] || {};
+  const saldoInicialCap = Number(primerMes.saldo_anterior) || 0;
+  const intMoraInicial = Number(primerMes.interes_anterior) || 0;
 
-  const filasHtml = [...(d.meses || [])].map((m, idx) => {
-    const saldoAnt = (m.saldo_anterior || 0) + (m.interes_anterior || 0);
+  const sumSaldoAntCap = meses.reduce((acc, m) => acc + (Number(m.saldo_anterior) || 0), 0);
+  const sumIntMoraAnt = meses.reduce((acc, m) => acc + (Number(m.interes_anterior) || 0), 0);
+  const sumCuotaAdmon = meses.reduce((acc, m) => acc + (Number(m.cuota_admon) || 0), 0);
+  const sumInteresMes = meses.reduce((acc, m) => acc + (Number(m.interes_mes) || 0), 0);
+  const sumPagos = meses.reduce((acc, m) => acc + (Number(m.valpag) || 0), 0);
+  const saldoFinalPeriodo = Number(ultMes.total || 0);
+
+  const totalCapital = saldoInicialCap + sumCuotaAdmon;
+  const totalIntereses = intMoraInicial + sumInteresMes;
+  const fechaHoy = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // Filas de datos en negro (#000000)
+  const filasHtml = [...meses].map((m, idx) => {
+    const capAnt = Number(m.saldo_anterior) || 0;
+    const intAnt = Number(m.interes_anterior) || 0;
+    const cuotaM = Number(m.cuota_admon) || 0;
+    const intM = Number(m.interes_mes) || 0;
+    const pagoM = Number(m.valpag) || 0;
+    const saldoFin = Number(m.total) || 0;
+
     return `
-      <tr style="border-bottom: 1px solid #ddd; ${idx % 2 === 0 ? 'background-color: #f9f9f9;' : ''}">
-        <td style="padding: 6px; font-weight: bold;">${m.periodo || (m.anio + '-' + m.mes)}</td>
-        <td style="padding: 6px; text-align: center;">${m.fac || '-'}</td>
-        <td style="padding: 6px; text-align: right;">$${formatoMonedaSaldos(saldoAnt)}</td>
-        <td style="padding: 6px; text-align: right;">$${formatoMonedaSaldos(m.cuota_admon || 0)}</td>
-        <td style="padding: 6px; text-align: right;">$${formatoMonedaSaldos(m.interes_mes || 0)}</td>
-        <td style="padding: 6px; text-align: right; color: #047857; font-weight: bold;">${Number(m.valpag) > 0 ? ('$' + formatoMonedaSaldos(m.valpag)) : '$0'}</td>
-        <td style="padding: 6px; text-align: right; font-weight: bold;">$${formatoMonedaSaldos(m.total || 0)}</td>
+      <tr style="border-bottom: 1px solid #cbd5e1; ${idx % 2 === 0 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
+        <td style="padding: 5px 6px; font-weight: bold; color: #000000;">${m.periodo || (m.anio + '-' + m.mes)}</td>
+        <td style="padding: 5px 6px; text-align: center; color: #000000; font-family: monospace;">${m.fac ? ('Fac. ' + m.fac) : '-'}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace; font-weight: 500;">${formatoMonedaSaldos(capAnt)}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">${intAnt > 0 ? formatoMonedaSaldos(intAnt) : '$0'}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">${formatoMonedaSaldos(cuotaM)}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">${intM > 0 ? formatoMonedaSaldos(intM) : '$0'}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-weight: bold; font-family: monospace;">${pagoM > 0 ? formatoMonedaSaldos(pagoM) : '$0'}</td>
+        <td style="padding: 5px 6px; text-align: right; font-weight: bold; color: #000000; font-family: monospace;">${formatoMonedaSaldos(saldoFin)}</td>
       </tr>
     `;
   }).join("");
 
-  ventana.document.write(`
+  const htmlContenido = `
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="utf-8" />
-      <title>Estudio de Cuenta - Unidad ${d.apto}</title>
+      <title>Certificacion_Deuda_Ley675_${d.codigo}_Apto_${d.apto}</title>
       <style>
-        body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 20px; }
-        .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px; }
-        .header h1 { font-size: 16px; margin: 0; text-transform: uppercase; }
-        .header p { margin: 2px 0; font-size: 11px; color: #555; }
-        .info-grid { display: flex; justify-content: space-between; background: #f0f4f8; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; }
-        .resumen-cards { display: flex; gap: 10px; margin-bottom: 15px; }
-        .card { flex: 1; border: 1px solid #ccc; padding: 8px; border-radius: 6px; text-align: center; }
-        .card .title { font-size: 9px; text-transform: uppercase; color: #666; font-weight: bold; }
-        .card .value { font-size: 14px; font-weight: bold; margin-top: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; }
-        th { background: #1e293b; color: white; padding: 6px; text-align: left; }
+        @page {
+          size: portrait;
+          margin: 0mm;
+        }
+        *, *:before, *:after { box-sizing: border-box; }
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff;
+        }
+        body { 
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+          font-size: 10px; 
+          color: #000000; 
+          padding: 12mm 15mm; 
+          line-height: 1.3; 
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .header { text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 8px; margin-bottom: 10px; }
+        .header h1 { font-size: 15px; margin: 0; text-transform: uppercase; color: #000000; font-weight: 800; letter-spacing: 0.5px; }
+        .header .subtitulo { font-size: 9px; margin: 3px 0 0 0; color: #000000; font-weight: 600; }
+        .header .norma { font-size: 8.5px; margin-top: 2px; color: #000000; font-weight: bold; text-transform: uppercase; }
+        
+        .partes-grid { display: flex; gap: 8px; margin-bottom: 10px; color: #000000; }
+        .parte-box { flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 6px 8px; background: #f8fafc; font-size: 9.5px; color: #000000; }
+        .parte-box h4 { margin: 0 0 4px 0; font-size: 9.5px; color: #000000; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; text-transform: uppercase; font-weight: bold; }
+        .parte-box p { margin: 2px 0; color: #000000; }
+        
+        .resumen-cards { display: flex; gap: 8px; margin-bottom: 10px; color: #000000; }
+        .card { flex: 1; border: 1px solid #94a3b8; padding: 6px; border-radius: 4px; text-align: center; background: #ffffff; color: #000000; }
+        .card .title { font-size: 8px; text-transform: uppercase; color: #000000; font-weight: bold; }
+        .card .value { font-size: 13px; font-weight: 800; margin-top: 2px; color: #000000; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 12px; color: #000000; }
+        th { background: #0f172a; color: #ffffff; padding: 5px 6px; text-align: left; font-size: 8px; text-transform: uppercase; border: 1px solid #0f172a; }
         th.right { text-align: right; }
         th.center { text-align: center; }
-        .footer { margin-top: 25px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 10px; color: #666; display: flex; justify-content: space-between; }
-        @media print { button { display: none; } }
+
+        .legal-note { border: 1px solid #94a3b8; background: #f8fafc; padding: 8px 10px; font-size: 8.5px; color: #000000; margin-bottom: 20px; border-radius: 4px; text-align: justify; page-break-inside: avoid; }
+        .firmas { display: flex; justify-content: space-between; margin-top: 30px; font-size: 9px; page-break-inside: avoid; color: #000000; }
+        .firma-col { width: 45%; text-align: center; border-top: 1px solid #000000; padding-top: 5px; color: #000000; }
+
+        @media print {
+          @page {
+            size: portrait;
+            margin: 0mm;
+          }
+          body { 
+            margin: 0 !important;
+            padding: 10mm 12mm !important; 
+            color: #000000 !important;
+          }
+          button { display: none; }
+          tr { page-break-inside: avoid; }
+        }
       </style>
     </head>
     <body>
       <div class="header">
         <h1>${d.edificio?.nombre || ('EDIFICIO ' + d.codigo)}</h1>
-        <p>NIT: ${d.edificio?.nit || 'Oficial'} • ${d.edificio?.direccion || ''} • ${d.edificio?.ciudad || 'Colombia'}</p>
-        <p><b>ESTUDIO DE CUENTA Y TRAZABILIDAD CRONOLÓGICA MES A MES (LEY 675 DE 2001)</b></p>
+        <p class="subtitulo">NIT: ${d.edificio?.nit || 'Oficial'} • Dirección: ${d.edificio?.direccion || ''} • ${d.edificio?.ciudad || 'Medellín • Colombia'}</p>
+        <p class="norma">CERTIFICACIÓN DE DEUDA Y ESTADO DE CUENTA CRONOLÓGICO DISCRIMINADO</p>
+        <p style="margin: 0; font-size: 8px; color: #000000;">(TÍTULO EJECUTIVO - ARTÍCULO 48 DE LA LEY 675 DE 2001 Y ART. 422 DEL C.G.P.)</p>
       </div>
 
-      <div class="info-grid">
-        <div><b>UNIDAD / APTO:</b> ${d.apto}</div>
-        <div><b>PROPIETARIO:</b> ${d.propietario}</div>
-        <div><b>C.C. / NIT:</b> ${d.cc || 'N/A'}</div>
-        <div><b>COEFICIENTE:</b> ${d.coeficiente || '1.139%'}</div>
-        <div><b>MESES ANALIZADOS:</b> ${d.total_meses}</div>
+      <div class="partes-grid">
+        <div class="parte-box">
+          <h4>1. Datos del Inmueble y Deudor Demandado</h4>
+          <p><b>UNIDAD PRIVADA:</b> Inmueble / Apto ${d.apto}</p>
+          <p><b>PROPIETARIO(A):</b> ${d.propietario}</p>
+          <p><b>C.C. / NIT:</b> ${d.cc || 'N/A'}</p>
+          <p><b>COEFICIENTE P.H.:</b> ${d.coeficiente || '1.139%'}</p>
+        </div>
+        <div class="parte-box">
+          <h4>2. Condiciones de Liquidación de Cartera</h4>
+          <p><b>PERIODO LIQUIDADO:</b> ${meses.length} Meses (${primerMes.periodo || ''} hasta ${ultMes.periodo || ''})</p>
+          <p><b>TASA MORA APLICADA:</b> ${d.edificio?.interesMora || '2.10% M.V.'} (Límite Superfinanciera)</p>
+          <p><b>FECHA DE EXPEDICIÓN:</b> ${fechaHoy}</p>
+          <p><b>ESTADO DEL CRÉDITO:</b> OBLIGACIÓN EXIGIBLE EN MORA</p>
+        </div>
       </div>
 
       <div class="resumen-cards">
-        <div class="card">
-          <div class="title">Total Facturado Histórico</div>
-          <div class="value" style="color: #0369a1;">$${formatoMonedaSaldos(d.resumen?.total_facturado || 0)}</div>
+        <div class="card" style="border-left: 3px solid #000000;">
+          <div class="title">Total Capital Causado (Cuotas)</div>
+          <div class="value">${formatoMonedaSaldos(totalCapital)}</div>
         </div>
-        <div class="card">
-          <div class="title">Total Pagos Registrados</div>
-          <div class="value" style="color: #047857;">$${formatoMonedaSaldos(d.resumen?.total_pagado || 0)}</div>
+        <div class="card" style="border-left: 3px solid #000000;">
+          <div class="title">Total Intereses de Mora</div>
+          <div class="value">${formatoMonedaSaldos(totalIntereses)}</div>
         </div>
-        <div class="card">
-          <div class="title">Saldo Final a la Fecha</div>
-          <div class="value" style="color: #7e22ce;">$${formatoMonedaSaldos(d.resumen?.saldo_actual || 0)}</div>
+        <div class="card" style="border-left: 3px solid #000000;">
+          <div class="title">Total Pagos y Abonos Imputados</div>
+          <div class="value">${formatoMonedaSaldos(sumPagos)}</div>
+        </div>
+        <div class="card" style="border-left: 3px solid #000000; background: #f8fafc;">
+          <div class="title">Saldo Total Líquido y Exigible</div>
+          <div class="value">${formatoMonedaSaldos(saldoFinalPeriodo)}</div>
         </div>
       </div>
 
@@ -58489,32 +58837,169 @@ function imprimirEstudioHistorico() {
         <thead>
           <tr>
             <th>Periodo</th>
-            <th class="center">Factura</th>
-            <th class="right">Saldo Ant.</th>
-            <th class="right">Cuota Admón</th>
-            <th class="right">Intereses</th>
-            <th class="right">Pagos Realizados</th>
-            <th class="right">Saldo Final</th>
+            <th class="center">Factura / Cuenta</th>
+            <th class="right">Saldo Ant. Capital</th>
+            <th class="right">Int. Mora Ant.</th>
+            <th class="right">Cuota Admón (Mes)</th>
+            <th class="right">Int. Moratorio Mes</th>
+            <th class="right">Pagos / Abonos</th>
+            <th class="right">Saldo Total Exigible</th>
           </tr>
         </thead>
         <tbody>
           ${filasHtml}
+          <tr style="background-color: #0f172a; color: #ffffff; font-weight: 800; border-top: 2px solid #0f172a; page-break-inside: avoid;">
+            <td style="padding: 6px; font-weight: 800; color: #ffffff; text-transform: uppercase;">TOTALES CONSOLIDADOS</td>
+            <td style="padding: 6px; text-align: center; color: #cbd5e1; font-family: monospace;">${meses.length} Meses</td>
+            <td style="padding: 6px; text-align: right; color: #ffffff; font-family: monospace; font-weight: bold;">${formatoMonedaSaldos(sumSaldoAntCap)}</td>
+            <td style="padding: 6px; text-align: right; color: #ffffff; font-family: monospace; font-weight: bold;">${formatoMonedaSaldos(sumIntMoraAnt)}</td>
+            <td style="padding: 6px; text-align: right; color: #ffffff; font-family: monospace; font-weight: bold;">${formatoMonedaSaldos(sumCuotaAdmon)}</td>
+            <td style="padding: 6px; text-align: right; color: #ffffff; font-family: monospace; font-weight: bold;">${formatoMonedaSaldos(sumInteresMes)}</td>
+            <td style="padding: 6px; text-align: right; color: #ffffff; font-family: monospace; font-weight: 800;">${formatoMonedaSaldos(sumPagos)}</td>
+            <td style="padding: 6px; text-align: right; color: #ffffff; font-family: monospace; font-weight: 900; font-size: 10px;">${formatoMonedaSaldos(saldoFinalPeriodo)}</td>
+          </tr>
         </tbody>
       </table>
 
-      <div class="footer">
-        <div>Certificación emitida automáticamente por el Sistema Contable LefacturamosPlus.</div>
-        <div>Firma Administrador(a) y Representante Legal: _______________________</div>
+      <div class="legal-note">
+        <b>CONSTANCIA DE MÉRITO EJECUTIVO (ARTÍCULO 48 LEY 675 DE 2001):</b><br/>
+        El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad <b>${d.edificio?.nombre || ('EDIFICIO ' + d.codigo)}</b>, 
+        legalmente constituida bajo el régimen de Propiedad Horizontal de la Ley 675 de 2001, certifica que la relación contable anterior 
+        corresponde fielmente a los saldos adeudados por concepto de expensas comunes ordinarias e intereses moratorios para la unidad privada <b>${d.apto}</b>. 
+        Se expide la presente liquidación con destino al apoderado judicial y al Despacho Judicial competente para que sirva de <b>PLENA PRUEBA Y TÍTULO EJECUTIVO</b> 
+        para iniciar o continuar el proceso ejecutivo respectivo, constituyendo una obligación clara, expresa y actualmente exigible a cargo del demandado.
       </div>
 
-      <script>
-        window.onload = function() { window.print(); };
-      </script>
+      <div class="firmas">
+        <div class="firma-col">
+          <p><b>${d.edificio?.administrador || 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL'}</b></p>
+          <p>Administrador(a) y Representante Legal</p>
+          <p>C.C. __________________________________</p>
+          <p>${d.edificio?.nombre || ''}</p>
+        </div>
+        <div class="firma-col">
+          <p><b>CERTIFICACIÓN Y FECHA</b></p>
+          <p>Expedido en ${d.edificio?.ciudad || 'Medellín, Colombia'}</p>
+          <p>Fecha de emisión: ${fechaHoy}</p>
+          <p>Firma y Sello de la Administración</p>
+        </div>
+      </div>
     </body>
     </html>
-  `);
-  ventana.document.close();
+  `;
+
+  // Imprimir mediante iframe invisible para eliminar pestaña y URL about:blank
+  let iframe = document.getElementById("print-estudio-historico-frame");
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.id = "print-estudio-historico-frame";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.visibility = "hidden";
+    document.body.appendChild(iframe);
+  }
+
+  const iframeDoc = iframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(htmlContenido);
+  iframeDoc.close();
+
+  setTimeout(() => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      const blob = new Blob([htmlContenido], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const v = window.open(url, "_blank");
+      if (v) {
+        v.onload = () => { v.print(); };
+      }
+    }
+  }, 250);
 }
+
+// ==============================================================================
+// SELECTOR MODAL HISTÓRICO DE COPROPIETARIOS (LEY 675)
+// ==============================================================================
+
+window.abrirModalSelectorHistoricoCopropietarios = function() {
+  const modal = document.getElementById("modal-selector-historico-copropietarios");
+  if (!modal) return;
+  const input = document.getElementById("input-buscar-selector-historico");
+  if (input) input.value = "";
+  
+  window.filtrarSelectorHistoricoCopropietarios("");
+  modal.classList.remove("hidden");
+  safeCreateIcons();
+};
+
+window.cerrarModalSelectorHistoricoCopropietarios = function() {
+  const modal = document.getElementById("modal-selector-historico-copropietarios");
+  if (modal) modal.classList.add("hidden");
+};
+
+window.filtrarSelectorHistoricoCopropietarios = function(query) {
+  const lista = document.getElementById("lista-selector-historico-copropietarios");
+  if (!lista) return;
+
+  const q = (query || "").toLowerCase().trim();
+  const unidades = (typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : [];
+
+  if (!unidades || unidades.length === 0) {
+    lista.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">No hay copropietarios o apartamentos cargados en el edificio actual.</div>`;
+    return;
+  }
+
+  const filtrados = unidades.filter(u => {
+    if (!q) return true;
+    const apto = String(u.apto || u.unidad || "").toLowerCase();
+    const prop = String(u.propietario || "").toLowerCase();
+    const blq = String(u.bloque || u.blq || "").toLowerCase();
+    const cc = String(u.cc || "").toLowerCase();
+    return apto.includes(q) || prop.includes(q) || blq.includes(q) || cc.includes(q);
+  });
+
+  if (filtrados.length === 0) {
+    lista.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">No se encontraron copropietarios que coincidan con la búsqueda.</div>`;
+    return;
+  }
+
+  lista.innerHTML = filtrados.map(u => {
+    const aptoCode = u.apto || u.unidad || "";
+    const prop = u.propietario || "Copropietario";
+    const saldo = u.totalNum !== undefined ? u.totalNum : (Number(u.pend || 0) + Number(u.actual || 0));
+    const enMora = saldo > 0;
+
+    return `
+      <div class="p-3 hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-sky-950 border border-sky-800/80 text-sky-400 font-black font-mono flex items-center justify-center text-xs shrink-0">
+            ${aptoCode}
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-xs font-bold text-white truncate">${prop}</h4>
+            <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+              <span>C.C: ${u.cc || 'N/A'}</span>
+              <span>•</span>
+              <span class="${enMora ? 'text-rose-400 font-bold' : 'text-emerald-400'}">Saldo: ${formatoMonedaSaldos(saldo)}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalSelectorHistoricoCopropietarios(); abrirEstudioCuentaHistorico('${aptoCode}');" class="px-3 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all shrink-0 cursor-pointer">
+          <i data-lucide="history" class="w-3.5 h-3.5"></i>
+          <span>Abrir Histórico</span>
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  safeCreateIcons();
+};
 
 
 

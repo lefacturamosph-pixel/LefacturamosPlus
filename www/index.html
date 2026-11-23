@@ -16440,31 +16440,115 @@
 
 
 
-      <!-- Resumen Cards (Facturado, Pagado, Saldo) -->
+      <!-- Resumen Cards Discriminadas para Cobro Jurídico (Capital, Intereses, Pagos, Saldo Exigible) -->
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
 
         <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800">
 
-          <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Cobros Facturados Histórico</span>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Capital Causado</span>
 
-          <span id="estudio-hist-res-facturado" class="text-lg font-black text-sky-300 font-mono">$0</span>
+          <span id="estudio-hist-res-capital" class="text-base sm:text-lg font-black text-sky-300 font-mono">$0</span>
+
+        </div>
+
+        <div class="p-3 rounded-2xl bg-amber-950/30 border border-amber-800/40">
+
+          <span class="text-[10px] uppercase font-bold text-amber-400 block">Total Intereses Mora</span>
+
+          <span id="estudio-hist-res-intereses" class="text-base sm:text-lg font-black text-amber-300 font-mono">$0</span>
 
         </div>
 
         <div class="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-800/40">
 
-          <span class="text-[10px] uppercase font-bold text-emerald-400 block">Total Pagos y Abonos Registrados</span>
+          <span class="text-[10px] uppercase font-bold text-emerald-400 block">Total Pagos y Abonos</span>
 
-          <span id="estudio-hist-res-pagado" class="text-lg font-black text-emerald-400 font-mono">$0</span>
+          <span id="estudio-hist-res-pagado" class="text-base sm:text-lg font-black text-emerald-400 font-mono">$0</span>
 
         </div>
 
         <div class="p-3 rounded-2xl bg-purple-950/30 border border-purple-800/40">
 
-          <span class="text-[10px] uppercase font-bold text-purple-300 block">Saldo Actual a la Fecha</span>
+          <span class="text-[10px] uppercase font-bold text-purple-300 block">Saldo Exigible en Cobro</span>
 
-          <span id="estudio-hist-res-saldo" class="text-lg font-black text-purple-200 font-mono">$0</span>
+          <span id="estudio-hist-res-saldo" class="text-base sm:text-lg font-black text-purple-200 font-mono">$0</span>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Filtro Dinámico de Periodo y Detección de Deuda -->
+
+      <div class="flex flex-wrap items-center justify-between gap-2.5 bg-slate-950/80 px-3.5 py-2.5 rounded-2xl border border-slate-800 shrink-0">
+
+        <div class="flex flex-wrap items-center gap-2">
+
+          <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+
+            <i data-lucide="filter" class="w-3.5 h-3.5 text-sky-400"></i>
+
+            Periodo de Análisis:
+
+          </span>
+
+          <select id="estudio-hist-filtro-tipo" onchange="cambiarFiltroEstudioHistorico()" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-1.5 focus:border-sky-500 focus:outline-none font-medium cursor-pointer">
+
+            <option value="todos">Todo el Histórico Completo</option>
+
+            <option value="deuda" selected>⚡ Desde que entró en deuda / mora</option>
+
+            <option value="personalizado">📅 Seleccionar Año y Mes de Inicio...</option>
+
+          </select>
+
+
+
+          <!-- Selectores condicionales de Año y Mes -->
+
+          <div id="estudio-hist-selectores-personalizados" class="hidden items-center gap-1.5">
+
+            <select id="estudio-hist-filtro-anio" onchange="aplicarFiltroEstudioHistorico()" class="bg-slate-900 border border-slate-700 text-sky-300 text-xs rounded-xl px-2.5 py-1.5 focus:border-sky-500 focus:outline-none font-mono font-bold cursor-pointer">
+
+            </select>
+
+            <select id="estudio-hist-filtro-mes" onchange="aplicarFiltroEstudioHistorico()" class="bg-slate-900 border border-slate-700 text-sky-300 text-xs rounded-xl px-2.5 py-1.5 focus:border-sky-500 focus:outline-none font-medium cursor-pointer">
+
+              <option value="01">01 - Enero</option>
+
+              <option value="02">02 - Febrero</option>
+
+              <option value="03">03 - Marzo</option>
+
+              <option value="04">04 - Abril</option>
+
+              <option value="05">05 - Mayo</option>
+
+              <option value="06">06 - Junio</option>
+
+              <option value="07">07 - Julio</option>
+
+              <option value="08">08 - Agosto</option>
+
+              <option value="09">09 - Septiembre</option>
+
+              <option value="10">10 - Octubre</option>
+
+              <option value="11">11 - Noviembre</option>
+
+              <option value="12">12 - Diciembre</option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+
+        <div id="estudio-hist-filtro-badge" class="text-xs font-semibold text-sky-400 bg-sky-950/60 border border-sky-800/60 px-3 py-1 rounded-xl">
 
         </div>
 
@@ -16486,11 +16570,13 @@
 
               <th class="p-2.5 text-center">Factura</th>
 
-              <th class="p-2.5 text-right">Saldo Ant.</th>
+              <th class="p-2.5 text-right">Saldo Ant. (Capital)</th>
+
+              <th class="p-2.5 text-right text-amber-400">Int. Mora Ant.</th>
 
               <th class="p-2.5 text-right">Cuota Admón</th>
 
-              <th class="p-2.5 text-right">Intereses Mes</th>
+              <th class="p-2.5 text-right text-amber-300">Interés Mes</th>
 
               <th class="p-2.5 text-right bg-emerald-950/40 text-emerald-300">Pago Mes (Abono)</th>
 
@@ -16505,6 +16591,12 @@
             <!-- Render dinámico -->
 
           </tbody>
+
+          <tfoot id="estudio-hist-tfoot" class="bg-slate-950 font-bold border-t-2 border-slate-700 sticky bottom-0 z-10 font-mono">
+
+            <!-- Render dinámico de totales -->
+
+          </tfoot>
 
         </table>
 
@@ -16553,6 +16645,84 @@
           </button>
 
         </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ======================================================== -->
+
+  <!-- MODAL SELECTOR HISTÓRICO DE COPROPIETARIOS               -->
+
+  <!-- ======================================================== -->
+
+  <div id="modal-selector-historico-copropietarios" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+
+    <div class="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl space-y-4 my-6 max-h-[90vh] flex flex-col">
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+
+        <div class="flex items-center gap-3">
+
+          <div class="p-2.5 rounded-2xl bg-sky-950 border border-sky-800 text-sky-400">
+
+            <i data-lucide="history" class="w-6 h-6"></i>
+
+          </div>
+
+          <div>
+
+            <h3 class="font-extrabold text-white text-base sm:text-lg">Histórico de Copropietarios (Ley 675)</h3>
+
+            <p class="text-xs text-slate-400">Seleccione un inmueble para generar el estudio de cuenta y certificación de deuda mes a mes.</p>
+
+          </div>
+
+        </div>
+
+        <button type="button" onclick="cerrarModalSelectorHistoricoCopropietarios()" class="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer">
+
+          <i data-lucide="x" class="w-6 h-6"></i>
+
+        </button>
+
+      </div>
+
+
+
+      <!-- Buscador -->
+
+      <div class="relative shrink-0">
+
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+
+        <input type="text" id="input-buscar-selector-historico" onkeyup="filtrarSelectorHistoricoCopropietarios(this.value)" placeholder="Buscar por apartamento, bloque o nombre de copropietario..." class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-all font-mono" />
+
+      </div>
+
+
+
+      <!-- Lista Scrollable de Inmuebles -->
+
+      <div class="overflow-y-auto flex-1 rounded-2xl border border-slate-800 bg-slate-950/60 divide-y divide-slate-800/80 max-h-[50vh]" id="lista-selector-historico-copropietarios">
+
+        <!-- Render dinámico -->
+
+      </div>
+
+
+
+      <div class="flex justify-end pt-2 border-t border-slate-800 shrink-0">
+
+        <button type="button" onclick="cerrarModalSelectorHistoricoCopropietarios()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer">
+
+          Cerrar
+
+        </button>
 
       </div>
 
