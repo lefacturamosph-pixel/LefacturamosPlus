@@ -13775,6 +13775,7 @@ let listaCopropiedadesSuperadmin = [
     passwordAdmin: "Admin123*",
 
     administrador: "Sofía Jiménez Rangel",
+    cedulaAdmin: "42.772.924",
 
     telefono: "3137856910",
 
@@ -20200,9 +20201,9 @@ const DIRECTORIO_ADMINISTRADORES = {
     edificios: ["4160", "0127", "0202"],
     password: "Admin123*"
   },
-  "43123456": {
+    "42772924": {
     nombre: "Sofía Jiménez Rangel",
-    cedula: "43.123.456",
+    cedula: "42.772.924",
     codigoEdificio: "4901",
     nombreEdificio: "EDIFICIO ROBLE ALTO P.H.",
     edificios: ["4901", "0950", "7480", "5304"],
@@ -20274,46 +20275,132 @@ const DIRECTORIO_ADMINISTRADORES = {
   }
 };
 
+function formatearCedulaConPuntos(val) {
+  if (!val) return "";
+  const digits = String(val).replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+window.formatearCedulaConPuntos = formatearCedulaConPuntos;
+
+function manejarInputCedulaAdmin(el) {
+  if (!el) return;
+  const raw = el.value || "";
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) {
+    el.value = "";
+    if (typeof detectarNombreAdministrador === "function") {
+      detectarNombreAdministrador("");
+    }
+    return;
+  }
+  const cursorPos = el.selectionStart;
+  const prevLen = raw.length;
+  const formatted = formatearCedulaConPuntos(digits);
+  el.value = formatted;
+  if (cursorPos !== null) {
+    const diff = formatted.length - prevLen;
+    const newPos = Math.max(0, cursorPos + diff);
+    try {
+      el.setSelectionRange(newPos, newPos);
+    } catch(e) {}
+  }
+  if (typeof detectarNombreAdministrador === "function") {
+    detectarNombreAdministrador(digits);
+  }
+}
+window.manejarInputCedulaAdmin = manejarInputCedulaAdmin;
+
+function formatearCedulaAdminOnBlur(el) {
+  if (!el) return;
+  const digits = String(el.value || "").replace(/\D/g, "");
+  if (digits) {
+    el.value = formatearCedulaConPuntos(digits);
+    if (typeof detectarNombreAdministrador === "function") {
+      detectarNombreAdministrador(digits);
+    }
+  }
+}
+window.formatearCedulaAdminOnBlur = formatearCedulaAdminOnBlur;
+
 function buscarAdministradorPorCedula(cedulaInput) {
   if (!cedulaInput) return null;
   const limpia = String(cedulaInput).replace(/[^0-9a-zA-Z]/g, "").trim();
   if (!limpia) return null;
 
-  // 1. Coincidencia en localStorage lefacturamos_directorio_admins
+  // 1. PRIMERA PRIORIDAD: listaCopropiedadesSuperadmin (incluyendo ediciones guardadas en localStorage)
+  let listaSuper = [];
   try {
-    const dirStr = localStorage.getItem("lefacturamos_directorio_admins");
-    if (dirStr) {
-      const dirObj = JSON.parse(dirStr);
-      if (dirObj && dirObj[limpia]) {
-        return dirObj[limpia];
-      }
+    const customStr = localStorage.getItem("lefacturamos_copropiedades_custom");
+    if (customStr) {
+      const parsed = JSON.parse(customStr);
+      if (Array.isArray(parsed) && parsed.length > 0) listaSuper = parsed;
     }
   } catch (e) {}
-
-  // 2. Coincidencia directa en DIRECTORIO_ADMINISTRADORES
-  if (typeof DIRECTORIO_ADMINISTRADORES !== "undefined" && DIRECTORIO_ADMINISTRADORES[limpia]) {
-    return DIRECTORIO_ADMINISTRADORES[limpia];
+  if (listaSuper.length === 0 && typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+    listaSuper = listaCopropiedadesSuperadmin;
   }
 
-  // 3. Coincidencia en listaCopropiedadesSuperadmin (por cédula, código o nit)
-  if (typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
-    const cop = listaCopropiedadesSuperadmin.find(c => {
+  if (Array.isArray(listaSuper)) {
+    const cop = listaSuper.find(c => {
       if (!c) return false;
       const cCod = String(c.codigo || "").replace(/[^0-9a-zA-Z]/g, "");
       const cNit = String(c.nit || "").replace(/[^0-9a-zA-Z]/g, "");
       const cCed = String(c.cedulaAdmin || c.cedula || "").replace(/[^0-9a-zA-Z]/g, "");
-      return cCed === limpia || cCod === limpia || cNit === limpia;
+      return (cCed && cCed === limpia) || (cCod && cCod === limpia) || (cNit && cNit === limpia);
     });
     if (cop && cop.administrador) {
       const pref = cop.codigo ? String(cop.codigo).slice(0, 2) : "";
       return {
         nombre: cop.administrador,
-        cedula: cop.cedulaAdmin || cop.cedula || limpia,
-        codigoEdificio: cop.codigo || "0361",
-        nombreEdificio: (cop.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
+        cedula: formatearCedulaConPuntos(cop.cedulaAdmin || cop.cedula || limpia),
+        codigoEdificio: cop.codigo || "0950",
+        nombreEdificio: (cop.nombre || "").replace(/DO[¥]A/g, "DOÑA"),
         password: cop.passwordAdmin || "Admin123*",
         edificios: typeof obtenerCodigosEdificiosPorPrefijo === "function" ? obtenerCodigosEdificiosPorPrefijo(pref) : [cop.codigo]
       };
+    }
+  }
+
+  // 2. Coincidencia en localStorage lefacturamos_directorio_admins (descartar si el edificio fue reasignado a otra cédula)
+  try {
+    const dirStr = localStorage.getItem("lefacturamos_directorio_admins");
+    if (dirStr) {
+      const dirObj = JSON.parse(dirStr);
+      if (dirObj && dirObj[limpia]) {
+        const item = dirObj[limpia];
+        const copActual = listaSuper.find(c => c && c.codigo === item.codigoEdificio);
+        if (copActual) {
+          const actualCed = String(copActual.cedulaAdmin || copActual.cedula || "").replace(/[^0-9a-zA-Z]/g, "");
+          if (!actualCed || actualCed === limpia) {
+            return {
+              ...item,
+              cedula: formatearCedulaConPuntos(item.cedula || limpia),
+              password: copActual.passwordAdmin || item.password || "Admin123*"
+            };
+          }
+        } else {
+          return item;
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 3. Coincidencia directa en DIRECTORIO_ADMINISTRADORES (validando que no esté obsoleta)
+  if (typeof DIRECTORIO_ADMINISTRADORES !== "undefined" && DIRECTORIO_ADMINISTRADORES[limpia]) {
+    const item = DIRECTORIO_ADMINISTRADORES[limpia];
+    const copActual = listaSuper.find(c => c && c.codigo === item.codigoEdificio);
+    if (copActual) {
+      const actualCed = String(copActual.cedulaAdmin || copActual.cedula || "").replace(/[^0-9a-zA-Z]/g, "");
+      if (!actualCed || actualCed === limpia) {
+        return {
+          ...item,
+          cedula: formatearCedulaConPuntos(item.cedula || limpia),
+          password: copActual.passwordAdmin || item.password || "Admin123*"
+        };
+      }
+    } else {
+      return item;
     }
   }
 
@@ -20324,13 +20411,14 @@ function buscarAdministradorPorCedula(cedulaInput) {
       const catCed = String(cat.cedulaAdmin || "").replace(/[^0-9a-zA-Z]/g, "");
       const catCod = String(cat.codigo || codKey).replace(/[^0-9a-zA-Z]/g, "");
       if (catCed === limpia || catCod === limpia) {
+        const copActual = listaSuper.find(c => c && c.codigo === (cat.codigo || codKey));
         const pref = catCod.slice(0, 2);
         return {
-          nombre: cat.administrador || "Administrador",
-          cedula: cat.cedulaAdmin || limpia,
+          nombre: (copActual && copActual.administrador) || cat.administrador || "Administrador",
+          cedula: formatearCedulaConPuntos((copActual && copActual.cedulaAdmin) || cat.cedulaAdmin || limpia),
           codigoEdificio: cat.codigo || codKey,
-          nombreEdificio: (cat.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
-          password: cat.passwordAdmin || "Admin123*",
+          nombreEdificio: (cat.nombre || "").replace(/DO[¥]A/g, "DOÑA"),
+          password: (copActual && copActual.passwordAdmin) || cat.passwordAdmin || "Admin123*",
           edificios: typeof obtenerCodigosEdificiosPorPrefijo === "function" ? obtenerCodigosEdificiosPorPrefijo(pref) : [cat.codigo || codKey]
         };
       }
@@ -20340,12 +20428,13 @@ function buscarAdministradorPorCedula(cedulaInput) {
   // 5. Coincidencia en CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO
   if (typeof CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO !== "undefined" && CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO[limpia]) {
     const cat = CATALOGO_ADMINISTRADORES_OFICIAL_EDIFICIO[limpia];
+    const copActual = listaSuper.find(c => c && c.codigo === (cat.codigo || limpia));
     return {
-      nombre: cat.administrador || "Administrador",
-      cedula: limpia,
+      nombre: (copActual && copActual.administrador) || cat.administrador || "Administrador",
+      cedula: formatearCedulaConPuntos(limpia),
       codigoEdificio: cat.codigo || limpia,
-      nombreEdificio: (cat.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
-      password: "Admin123*"
+      nombreEdificio: (cat.nombre || "").replace(/DO[¥]A/g, "DOÑA"),
+      password: (copActual && copActual.passwordAdmin) || "Admin123*"
     };
   }
 
@@ -20354,7 +20443,12 @@ function buscarAdministradorPorCedula(cedulaInput) {
   for (const k in DIRECTORIO_ADMINISTRADORES) {
     const a = DIRECTORIO_ADMINISTRADORES[k];
     if (a.nombre && a.nombre.toLowerCase().replace(/[^a-z0-9]/g, "").includes(limpiaLower)) {
-      return a;
+      const copActual = listaSuper.find(c => c && c.codigo === a.codigoEdificio);
+      return {
+        ...a,
+        cedula: formatearCedulaConPuntos(a.cedula || k),
+        password: (copActual && copActual.passwordAdmin) || a.password || "Admin123*"
+      };
     }
   }
 
@@ -21220,15 +21314,21 @@ function loginPantallaEntrada() {
 
     const passClean = password.trim();
     const codEdif = adminDetectado.codigoEdificio || "0950";
-    const esClaveAdminValida = (
-      passClean === "Admin123*" ||
-      (adminDetectado.password && passClean === adminDetectado.password) ||
-      passClean.toLowerCase() === ("admin" + codEdif).toLowerCase() ||
-      passClean === codEdif ||
-      passClean === cedulaLimpia ||
-      passClean === "4901" ||
-      passClean === "0950"
-    );
+    
+    // Obtener la contraseña oficial configurada para este edificio
+    let claveEsperada = adminDetectado.password ? String(adminDetectado.password).trim() : "";
+    if (typeof obtenerDatosCopropiedad === "function") {
+      const cop = obtenerDatosCopropiedad(codEdif);
+      if (cop && cop.passwordAdmin) {
+        claveEsperada = String(cop.passwordAdmin).trim();
+      }
+    }
+    if (!claveEsperada) {
+      claveEsperada = "Admin123*";
+    }
+
+    // Validación ESTRICTA: Solo la clave configurada es válida. Sin puertas traseras.
+    const esClaveAdminValida = (passClean === claveEsperada);
 
     if (!esClaveAdminValida) {
       if (typeof mostrarToast === "function") {
@@ -21540,14 +21640,9 @@ function loginPantallaEntrada() {
     }
 
     const passClean = password.trim();
-    const esClaveAdminValida = (
-      (claveConfigurada && passClean.toLowerCase() === claveConfigurada.toLowerCase()) ||
-      (codigoAdminConfigurado && passClean.toLowerCase() === codigoAdminConfigurado.toLowerCase()) ||
-      passClean === "Admin123*" ||
-      passClean.toLowerCase() === `Admin${codigoEdificio}`.toLowerCase() ||
-      passClean === codigoEdificio ||
-      passClean === "4901"
-    );
+    const claveEsperada = claveConfigurada || "Admin123*";
+    // Validación ESTRICTA: Solo la clave configurada o el código de admin oficial. Sin puertas traseras.
+    const esClaveAdminValida = (passClean === claveEsperada || (codigoAdminConfigurado && passClean === codigoAdminConfigurado));
 
     if (!esClaveAdminValida) {
       if (typeof mostrarToast === "function") {
@@ -42755,6 +42850,9 @@ async function guardarEdicionEdificio() {
     cop.ciudad = getVal("edit-cop-ciudad") || cop.ciudad || "Medellín • Antioquia";
     cop.administrador = getVal("edit-cop-admin-nom-login") || getVal("edit-cop-admin-nom") || cop.administrador;
     cop.cedulaAdmin = getVal("edit-cop-admin-cedula") || cop.cedulaAdmin || "79.845.120";
+    if (typeof formatearCedulaConPuntos === "function") {
+      cop.cedulaAdmin = formatearCedulaConPuntos(cop.cedulaAdmin);
+    }
     cop.telefono = getVal("edit-cop-telefono") || cop.telefono;
     cop.email = getVal("edit-cop-email") || cop.email;
     cop.banco = getVal("edit-cop-banco") || cop.banco;
@@ -42790,13 +42888,19 @@ async function guardarEdicionEdificio() {
 
     const cedLimpia = String(cop.cedulaAdmin || "").replace(/[^0-9a-zA-Z]/g, "");
     if (cedLimpia && typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+      // Limpiar cédulas anteriores asignadas a este edificio para evitar que sigan activas
+      for (const k of Object.keys(DIRECTORIO_ADMINISTRADORES)) {
+        if (DIRECTORIO_ADMINISTRADORES[k] && DIRECTORIO_ADMINISTRADORES[k].codigoEdificio === cop.codigo && k !== cedLimpia) {
+          delete DIRECTORIO_ADMINISTRADORES[k];
+        }
+      }
       const prefix = cop.codigo ? String(cop.codigo).slice(0, 2) : "";
       const edifs = (typeof obtenerCodigosEdificiosPorPrefijo === "function") ? obtenerCodigosEdificiosPorPrefijo(prefix) : [cop.codigo];
       DIRECTORIO_ADMINISTRADORES[cedLimpia] = {
         nombre: cop.administrador,
-        cedula: cop.cedulaAdmin,
+        cedula: formatearCedulaConPuntos(cop.cedulaAdmin),
         codigoEdificio: cop.codigo,
-        nombreEdificio: (cop.nombre || "").replace(/DO[¥�]A/g, "DOÑA"),
+        nombreEdificio: (cop.nombre || "").replace(/DO[¥]A/g, "DOÑA"),
         password: cop.passwordAdmin || "Admin123*",
         edificios: edifs
       };
