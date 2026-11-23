@@ -120,18 +120,34 @@ def compilar_historico_edificio(codigo: str) -> Dict[str, Any]:
 
                 pend = float(r.get("PEND", 0) or 0)
                 intp = float(r.get("INTP", 0) or 0)
+                extrap = float(r.get("EXTRAP", 0) or 0)
+                otrosp = float(r.get("OTROSP", 0) or 0)
+                multap = float(r.get("MULTAP", 0) or 0)
+                serpup = float(r.get("SERPUP", 0) or 0)
+                servip = float(r.get("SERVIP", 0) or 0)
+                ndncp = float(r.get("NDNCP", 0) or 0)
+
                 actual = float(r.get("ACTUAL", 0) or 0)
                 inta = float(r.get("INTA", 0) or 0)
                 extraa = float(r.get("EXTRAA", 0) or 0)
-                extrap = float(r.get("EXTRAP", 0) or 0)
                 otrosa = float(r.get("OTROSA", 0) or 0)
-                otrosp = float(r.get("OTROSP", 0) or 0)
+                multaa = float(r.get("MULTAA", 0) or 0)
+                serpua = float(r.get("SERPUA", 0) or 0)
+                servia = float(r.get("SERVIA", 0) or 0)
+                ndnca = float(r.get("NDNCA", 0) or 0)
+
+                valdesc = float(r.get("VALDESC", 0) or 0)
                 valpag = float(r.get("VALPAG", 0) or 0)
                 total = float(r.get("TOTAL", 0) or 0)
                 fac = str(r.get("FAC", "")).strip()
 
-                subtotal_cobro_mes = actual + inta + extraa + otrosa
-                subtotal_pendiente_ant = pend + intp + extrap + otrosp
+                # Saldo anterior capital y demás conceptos causados previamente (excluye mora anterior)
+                saldo_ant_capital = pend + extrap + otrosp + multap + serpup + servip + ndncp
+                subtotal_pendiente_ant = saldo_ant_capital + intp
+
+                # Cargos del mes por cuota ordinaria y conceptos adicionales del mes (excluye mora del mes)
+                cargos_mes_capital = actual + extraa + otrosa + multaa + serpua + servia + ndnca
+                subtotal_cobro_mes = cargos_mes_capital + inta
 
                 historico_por_apto[apto].append({
                     "anio": anio,
@@ -141,16 +157,31 @@ def compilar_historico_edificio(codigo: str) -> Dict[str, Any]:
                     "periodo_iso": periodo_iso,
                     "fac": fac,
                     "bloq": str(r.get("BLOQ", "AP")).strip(),
-                    "saldo_anterior": pend,
+                    # Conceptos anteriores consolidados y discriminados
+                    "saldo_anterior": saldo_ant_capital,
                     "interes_anterior": intp,
+                    "pend_puro": pend,
                     "extra_anterior": extrap,
                     "otros_anterior": otrosp,
+                    "multa_anterior": multap,
+                    "serpub_anterior": serpup,
+                    "serv_anterior": servip,
+                    "notas_anterior": ndncp,
                     "total_pendiente_ant": subtotal_pendiente_ant,
-                    "cuota_admon": actual,
+                    # Conceptos del mes consolidados y discriminados
+                    "cuota_admon": cargos_mes_capital,
+                    "actual_puro": actual,
                     "interes_mes": inta,
+                    "extra_mes": extraa,
                     "cuota_extra": extraa,
                     "otros_mes": otrosa,
+                    "multa_mes": multaa,
+                    "serpub_mes": serpua,
+                    "serv_mes": servia,
+                    "notas_mes": ndnca,
                     "total_cobro_mes": subtotal_cobro_mes,
+                    # Pagos, descuentos y saldo total
+                    "valdesc": valdesc,
                     "valpag": valpag,
                     "total": total,
                     "novedad": str(r.get("NOVEDAD", "")).strip()

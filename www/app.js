@@ -58578,7 +58578,46 @@ async function abrirEstudioCuentaHistorico(apto) {
     console.warn("Aviso consultando endpoint histórico:", err);
   }
 
-  // Si no hay datos o solo tiene 1 mes, generar simulación fiel de 36 meses
+  // Si no hay datos o solo tiene 1 mes, intentar cargar desde JSON histórico local
+  if (!data || !data.meses || data.meses.length <= 1) {
+    try {
+      const resJson = await fetch(`data/edificio_${cleanCod}_historico.json`);
+      if (resJson.ok) {
+        const fullEdif = await resJson.json();
+        const hist = fullEdif.historico_por_apto || {};
+        const candKeys = [cleanApto, cleanApto.padStart(4, "0"), cleanApto.replace(/^0+/, ""), "0" + cleanApto];
+        let foundKey = candKeys.find(k => hist[k]);
+        if (!foundKey) {
+          foundKey = Object.keys(hist).find(k => k.replace(/^0+/, "") === cleanApto.replace(/^0+/, ""));
+        }
+        if (foundKey && hist[foundKey] && hist[foundKey].length > 0) {
+          const mesesApto = hist[foundKey];
+          const infoU = (fullEdif.unidades_master && (fullEdif.unidades_master[foundKey] || fullEdif.unidades_master[cleanApto])) || {};
+          data = {
+            codigo: cleanCod,
+            edificio: fullEdif.edificio || { codigo: cleanCod, nombre: `Edificio ${cleanCod}` },
+            apto: foundKey,
+            propietario: infoU.propietario || "Copropietario Registrado",
+            cc: infoU.cc || "",
+            email: infoU.email || "",
+            tel: infoU.tel || "",
+            coeficiente: infoU.coeficiente || "",
+            total_meses: mesesApto.length,
+            meses: mesesApto,
+            resumen: {
+              total_facturado: mesesApto.reduce((a, b) => a + (b.total_cobro_mes || 0), 0),
+              total_pagado: mesesApto.reduce((a, b) => a + (b.valpag || 0), 0),
+              saldo_actual: mesesApto[mesesApto.length - 1]?.total || 0
+            }
+          };
+        }
+      }
+    } catch (eJson) {
+      console.warn("Aviso cargando JSON local historico:", eJson);
+    }
+  }
+
+  // Si aún no hay datos, generar simulación fiel de 36 meses
   if (!data || !data.meses || data.meses.length <= 1) {
     const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cleanCod) : null;
     const unidades = (typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : [];
@@ -58759,6 +58798,26 @@ function aplicarFiltroEstudioHistorico() {
         const tienePago = Number(m.valpag || 0) > 0;
         const saldoFinal = Number(m.total || 0);
 
+        // Desglose de conceptos adicionales del mes
+        const tagsMes = [];
+        if (Number(m.notas_mes || 0) !== 0) tagsMes.push(`Nota D/C: ${formatoMonedaSaldos(m.notas_mes)}`);
+        if (Number(m.multa_mes || 0) !== 0) tagsMes.push(`Multa: ${formatoMonedaSaldos(m.multa_mes)}`);
+        if (Number(m.extra_mes || 0) !== 0) tagsMes.push(`Extra: ${formatoMonedaSaldos(m.extra_mes)}`);
+        if (Number(m.otros_mes || 0) !== 0) tagsMes.push(`Otros: ${formatoMonedaSaldos(m.otros_mes)}`);
+        if (Number(m.serpub_mes || 0) !== 0) tagsMes.push(`Serv. Públ.: ${formatoMonedaSaldos(m.serpub_mes)}`);
+        if (Number(m.serv_mes || 0) !== 0) tagsMes.push(`Servicios: ${formatoMonedaSaldos(m.serv_mes)}`);
+        const subDetalleMes = tagsMes.length > 0 ? `<div class="text-[10px] text-sky-400 font-normal leading-tight mt-0.5 tracking-tight">${tagsMes.join(' • ')}</div>` : '';
+
+        // Desglose de conceptos anteriores pendientes
+        const tagsAnt = [];
+        if (Number(m.notas_anterior || 0) !== 0) tagsAnt.push(`Nota D/C pend.: ${formatoMonedaSaldos(m.notas_anterior)}`);
+        if (Number(m.multa_anterior || 0) !== 0) tagsAnt.push(`Multa pend.: ${formatoMonedaSaldos(m.multa_anterior)}`);
+        if (Number(m.extra_anterior || 0) !== 0) tagsAnt.push(`Extra pend.: ${formatoMonedaSaldos(m.extra_anterior)}`);
+        if (Number(m.otros_anterior || 0) !== 0) tagsAnt.push(`Otros pend.: ${formatoMonedaSaldos(m.otros_anterior)}`);
+        if (Number(m.serpub_anterior || 0) !== 0) tagsAnt.push(`Serv. Públ. pend.: ${formatoMonedaSaldos(m.serpub_anterior)}`);
+        if (Number(m.serv_anterior || 0) !== 0) tagsAnt.push(`Servicios pend.: ${formatoMonedaSaldos(m.serv_anterior)}`);
+        const subDetalleAnt = tagsAnt.length > 0 ? `<div class="text-[10px] text-amber-300 font-normal leading-tight mt-0.5 tracking-tight">${tagsAnt.join(' • ')}</div>` : '';
+
         return `
           <tr class="hover:bg-slate-800/40 transition-colors ${idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/20'}">
             <td class="p-2.5 font-bold text-white whitespace-nowrap">
@@ -58768,13 +58827,15 @@ function aplicarFiltroEstudioHistorico() {
               ${m.fac ? ('Fac. ' + m.fac) : '-'}
             </td>
             <td class="p-2.5 text-right font-mono ${saldoCapAnt > 0 ? 'text-slate-100 font-semibold' : 'text-slate-500'}">
-              ${formatoMonedaSaldos(saldoCapAnt)}
+              <div>${formatoMonedaSaldos(saldoCapAnt)}</div>
+              ${subDetalleAnt}
             </td>
             <td class="p-2.5 text-right font-mono ${intAnt > 0 ? 'text-amber-400' : 'text-slate-500'}">
               ${intAnt > 0 ? formatoMonedaSaldos(intAnt) : '$0'}
             </td>
             <td class="p-2.5 text-right font-mono font-medium text-slate-200">
-              ${formatoMonedaSaldos(cuotaM)}
+              <div>${formatoMonedaSaldos(cuotaM)}</div>
+              ${subDetalleMes}
             </td>
             <td class="p-2.5 text-right font-mono ${intM > 0 ? 'text-amber-300' : 'text-slate-500'}">
               ${intM > 0 ? formatoMonedaSaldos(intM) : '$0'}
@@ -58902,14 +58963,30 @@ function descargarExcelEstudioHistorico(tipoParam) {
       "FACTURA / CUENTA",
       "SALDO ANT. CAPITAL",
       "INT. MORA ANT.",
-      "CUOTA MENSUAL",
+      "CUOTA Y CARGOS MES",
       "INT. MORA MES",
       "PAGOS / ABONOS",
-      esAbogado ? "SALDO TOTAL EXIGIBLE" : "SALDO FINAL"
+      esAbogado ? "SALDO TOTAL EXIGIBLE" : "SALDO FINAL",
+      "DISCRIMINACIÓN DE CONCEPTOS / NOTAS"
     ]
   ];
 
   meses.forEach(m => {
+    const notasList = [];
+    if (Number(m.notas_mes || 0) !== 0) notasList.push(`Nota D/C Mes: $${Number(m.notas_mes).toLocaleString('es-CO')}`);
+    if (Number(m.notas_anterior || 0) !== 0) notasList.push(`Nota D/C Pendiente: $${Number(m.notas_anterior).toLocaleString('es-CO')}`);
+    if (Number(m.multa_mes || 0) !== 0) notasList.push(`Multa Mes: $${Number(m.multa_mes).toLocaleString('es-CO')}`);
+    if (Number(m.multa_anterior || 0) !== 0) notasList.push(`Multa Pendiente: $${Number(m.multa_anterior).toLocaleString('es-CO')}`);
+    if (Number(m.extra_mes || 0) !== 0) notasList.push(`Cuota Extra Mes: $${Number(m.extra_mes).toLocaleString('es-CO')}`);
+    if (Number(m.extra_anterior || 0) !== 0) notasList.push(`Cuota Extra Pendiente: $${Number(m.extra_anterior).toLocaleString('es-CO')}`);
+    if (Number(m.otros_mes || 0) !== 0) notasList.push(`Otros Mes: $${Number(m.otros_mes).toLocaleString('es-CO')}`);
+    if (Number(m.otros_anterior || 0) !== 0) notasList.push(`Otros Pendiente: $${Number(m.otros_anterior).toLocaleString('es-CO')}`);
+    if (Number(m.serpub_mes || 0) !== 0) notasList.push(`Serv. Públicos Mes: $${Number(m.serpub_mes).toLocaleString('es-CO')}`);
+    if (Number(m.serpub_anterior || 0) !== 0) notasList.push(`Serv. Públicos Pendiente: $${Number(m.serpub_anterior).toLocaleString('es-CO')}`);
+    if (Number(m.serv_mes || 0) !== 0) notasList.push(`Serv. Especiales Mes: $${Number(m.serv_mes).toLocaleString('es-CO')}`);
+    if (Number(m.serv_anterior || 0) !== 0) notasList.push(`Serv. Especiales Pendiente: $${Number(m.serv_anterior).toLocaleString('es-CO')}`);
+    if (m.novedad) notasList.push(`Novedad: ${m.novedad}`);
+
     filasExcel.push([
       m.periodo || `${m.anio}-${m.mes}`,
       m.fac ? `Fac. ${m.fac}` : "-",
@@ -58918,7 +58995,8 @@ function descargarExcelEstudioHistorico(tipoParam) {
       Number(m.cuota_admon) || 0,
       Number(m.interes_mes) || 0,
       Number(m.valpag) || 0,
-      Number(m.total) || 0
+      Number(m.total) || 0,
+      notasList.join(" | ") || "-"
     ]);
   });
 
@@ -58932,7 +59010,8 @@ function descargarExcelEstudioHistorico(tipoParam) {
     sumCuotaAdmon,
     sumInteresMes,
     sumPagos,
-    saldoFinalPeriodo
+    saldoFinalPeriodo,
+    "Consolidado multianual verificado"
   ]);
 
   // Resumen Ejecutivo de Liquidación
@@ -58984,13 +59063,14 @@ function descargarExcelEstudioHistorico(tipoParam) {
   // Anchos profesionales de columna adaptados a juzgados y empresas
   ws["!cols"] = [
     { wch: 22 }, // Col A: Periodo
-    { wch: 20 }, // Col B: Factura / Cuenta
+    { wch: 18 }, // Col B: Factura / Cuenta
     { wch: 24 }, // Col C: Saldo Ant. Capital
-    { wch: 22 }, // Col D: Int. Mora Ant.
-    { wch: 22 }, // Col E: Cuota Mensual
+    { wch: 20 }, // Col D: Int. Mora Ant.
+    { wch: 24 }, // Col E: Cuota y Cargos Mes
     { wch: 20 }, // Col F: Int. Mora Mes
-    { wch: 24 }, // Col G: Pagos / Abonos
-    { wch: 26 }  // Col H: Saldo Total Exigible
+    { wch: 22 }, // Col G: Pagos / Abonos
+    { wch: 26 }, // Col H: Saldo Total Exigible
+    { wch: 42 }  // Col I: Discriminación de Conceptos / Notas
   ];
 
   const wb = XLSX.utils.book_new();
@@ -59044,13 +59124,37 @@ function imprimirEstudioHistorico(tipoParam) {
     const pagoM = Number(m.valpag) || 0;
     const saldoFin = Number(m.total) || 0;
 
+    const tagsMes = [];
+    if (Number(m.notas_mes || 0) !== 0) tagsMes.push(`Nota D/C: ${formatoMonedaSaldos(m.notas_mes)}`);
+    if (Number(m.multa_mes || 0) !== 0) tagsMes.push(`Multa: ${formatoMonedaSaldos(m.multa_mes)}`);
+    if (Number(m.extra_mes || 0) !== 0) tagsMes.push(`Extra: ${formatoMonedaSaldos(m.extra_mes)}`);
+    if (Number(m.otros_mes || 0) !== 0) tagsMes.push(`Otros: ${formatoMonedaSaldos(m.otros_mes)}`);
+    if (Number(m.serpub_mes || 0) !== 0) tagsMes.push(`Serv. Públ.: ${formatoMonedaSaldos(m.serpub_mes)}`);
+    if (Number(m.serv_mes || 0) !== 0) tagsMes.push(`Servicios: ${formatoMonedaSaldos(m.serv_mes)}`);
+    const subDetalleMes = tagsMes.length > 0 ? `<div style="font-size: 8px; color: #334155; font-weight: normal; margin-top: 1px;">(${tagsMes.join(' • ')})</div>` : '';
+
+    const tagsAnt = [];
+    if (Number(m.notas_anterior || 0) !== 0) tagsAnt.push(`Nota pend.: ${formatoMonedaSaldos(m.notas_anterior)}`);
+    if (Number(m.multa_anterior || 0) !== 0) tagsAnt.push(`Multa pend.: ${formatoMonedaSaldos(m.multa_anterior)}`);
+    if (Number(m.extra_anterior || 0) !== 0) tagsAnt.push(`Extra pend.: ${formatoMonedaSaldos(m.extra_anterior)}`);
+    if (Number(m.otros_anterior || 0) !== 0) tagsAnt.push(`Otros pend.: ${formatoMonedaSaldos(m.otros_anterior)}`);
+    if (Number(m.serpub_anterior || 0) !== 0) tagsAnt.push(`Serv. Públ. pend.: ${formatoMonedaSaldos(m.serpub_anterior)}`);
+    if (Number(m.serv_anterior || 0) !== 0) tagsAnt.push(`Servicios pend.: ${formatoMonedaSaldos(m.serv_anterior)}`);
+    const subDetalleAnt = tagsAnt.length > 0 ? `<div style="font-size: 8px; color: #334155; font-weight: normal; margin-top: 1px;">(${tagsAnt.join(' • ')})</div>` : '';
+
     return `
       <tr style="border-bottom: 1px solid #cbd5e1; ${idx % 2 === 0 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
         <td style="padding: 5px 6px; font-weight: bold; color: #000000;">${m.periodo || (m.anio + '-' + m.mes)}</td>
         <td style="padding: 5px 6px; text-align: center; color: #000000; font-family: monospace;">${m.fac ? ('Fac. ' + m.fac) : '-'}</td>
-        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace; font-weight: 500;">${formatoMonedaSaldos(capAnt)}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace; font-weight: 500;">
+          <div>${formatoMonedaSaldos(capAnt)}</div>
+          ${subDetalleAnt}
+        </td>
         <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">${intAnt > 0 ? formatoMonedaSaldos(intAnt) : '$0'}</td>
-        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">${formatoMonedaSaldos(cuotaM)}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">
+          <div>${formatoMonedaSaldos(cuotaM)}</div>
+          ${subDetalleMes}
+        </td>
         <td style="padding: 5px 6px; text-align: right; color: #000000; font-family: monospace;">${intM > 0 ? formatoMonedaSaldos(intM) : '$0'}</td>
         <td style="padding: 5px 6px; text-align: right; color: #000000; font-weight: bold; font-family: monospace;">${pagoM > 0 ? formatoMonedaSaldos(pagoM) : '$0'}</td>
         <td style="padding: 5px 6px; text-align: right; font-weight: bold; color: #000000; font-family: monospace;">${formatoMonedaSaldos(saldoFin)}</td>
@@ -59240,7 +59344,7 @@ function imprimirEstudioHistorico(tipoParam) {
             <th class="center">Factura / Cuenta</th>
             <th class="right">Saldo Ant. Capital</th>
             <th class="right">Int. Mora Ant.</th>
-            <th class="right">Cuota Admón (Mes)</th>
+            <th class="right">Cuota y Cargos Mes</th>
             <th class="right">Int. Moratorio Mes</th>
             <th class="right">Pagos / Abonos</th>
             <th class="right">${labelColSaldo}</th>
