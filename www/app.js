@@ -63874,18 +63874,6 @@ function renderizarDocumentosInmueblesDrive(docs) {
 
             </button>
 
-            ${!esResidente && doc.archivo_xlsx ? `
-
-              <button type="button" onclick="descargarDocumentoDriveDirecto('${doc.id}', 'XLSX')" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-800/80 text-emerald-300 font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer" title="Descargar en formato Excel">
-
-                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
-
-                <span>Descargar Excel</span>
-
-              </button>
-
-            ` : ''}
-
             <button type="button" onclick="verDocumentoDriveEnModal('${doc.id}')" title="Ver PDF" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
 
               <i data-lucide="eye" class="w-3.5 h-3.5"></i>
@@ -64470,8 +64458,6 @@ function verDocumentoDriveEnModal(docId) {
 
   const btnDescargar = document.getElementById("modal-ver-doc-btn-descargar");
 
-  const btnDescargarExcel = document.getElementById("modal-ver-doc-btn-descargar-excel");
-
   const btnWa = document.getElementById("modal-ver-doc-btn-whatsapp");
 
   const linkDrive = document.getElementById("modal-ver-doc-link-externo");
@@ -64479,12 +64465,6 @@ function verDocumentoDriveEnModal(docId) {
   if (btnPagar) btnPagar.classList.toggle("hidden", !esResidente || doc.tipo !== "FACTURA");
 
   if (btnDescargar) btnDescargar.classList.toggle("hidden", !!esSoloExcel);
-
-  if (btnDescargarExcel) {
-
-    btnDescargarExcel.classList.toggle("hidden", !docDriveActualSeleccionado.tiene_xlsx);
-
-  }
 
   if (btnWa) btnWa.classList.toggle("hidden", esResidente);
 
