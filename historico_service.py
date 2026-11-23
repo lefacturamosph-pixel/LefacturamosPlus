@@ -289,3 +289,340 @@ def obtener_estudio_cuenta_apto(codigo: str, apto_query: str) -> Dict[str, Any]:
             "saldo_actual": saldo_actual
         }
     }
+def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Path:
+    """
+    Genera un archivo Excel profesional (.xlsx) con la liquidación detallada del estudio histórico.
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    res = obtener_estudio_cuenta_apto(codigo, apto)
+    edif = res.get("edificio", {})
+    meses = res.get("meses", [])
+    es_abogado = str(tipo).lower() == "abogado"
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Cobro_Juridico" if es_abogado else "Estado_Cuenta"
+    ws.views.sheetView[0].showGridLines = True
+
+    # Estilos
+    font_title = Font(name="Calibri", size=11, bold=True, color="000000")
+    font_sub = Font(name="Calibri", size=9, bold=True, color="333333")
+    font_header = Font(name="Calibri", size=9, bold=True, color="FFFFFF")
+    font_bold = Font(name="Calibri", size=9, bold=True)
+    font_regular = Font(name="Calibri", size=9)
+    fill_header = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    fill_total = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
+    fill_meta = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+
+    thin_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    # 1. Título principal
+    ws["A1"] = "CERTIFICACIÓN DE DEUDA Y LIQUIDACIÓN DISCRIMINADA DE CRÉDITO PARA COBRO JUDICIAL" if es_abogado else "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA"
+    ws["A1"].font = font_title
+    ws["A2"] = "(EXPEDIDO DE CONFORMIDAD CON EL ARTÍCULO 48 DE LA LEY 675 DE 2001 - PRESTA MÉRITO EJECUTIVO)" if es_abogado else "(INFORME CONTABLE DETALLADO DE PAGOS Y CUOTAS DE ADMINISTRACIÓN)"
+    ws["A2"].font = font_sub
+
+    # 2. Metadatos
+    primer_mes = meses[0]["periodo"] if meses else ""
+    ult_mes = meses[-1]["periodo"] if meses else ""
+    periodo_txt = f"{len(meses)} MESES ({primer_mes} HASTA {ult_mes})"
+
+    meta = [
+        ("COPROPIEDAD (ACREEDORA):", edif.get("nombre", f"EDIFICIO {codigo}"), "NIT:", edif.get("nit", "901690778-9"), "CÓDIGO:", str(codigo)),
+        ("DIRECCIÓN:", edif.get("direccion", "Medellín"), "CIUDAD:", edif.get("ciudad", "Medellín • Antioquia"), "ADMINISTRADOR:", edif.get("administrador", "ADMINISTRACIÓN")),
+        ("DEMANDADO / PROPIETARIO:" if es_abogado else "COPROPIETARIO:", res.get("propietario", ""), "IDENTIFICACIÓN C.C./NIT:", str(res.get("cc", "")), "INMUEBLE / PREDIO:", f"APTO {res.get('apto', '')}"),
+        ("COEFICIENTE:", str(res.get("coeficiente", "")), "TASA MORA:", edif.get("interesMora", "2.10% M.V."), "PERIODO LIQUIDADO:", periodo_txt)
+    ]
+
+    for idx, row_vals in enumerate(meta, start=4):
+        ws.cell(row=idx, column=1, value=row_vals[0]).font = font_bold
+        ws.cell(row=idx, column=2, value=row_vals[1]).font = font_regular
+        ws.cell(row=idx, column=3, value=row_vals[2]).font = font_bold
+        ws.cell(row=idx, column=4, value=row_vals[3]).font = font_regular
+        ws.cell(row=idx, column=5, value=row_vals[4]).font = font_bold
+        ws.cell(row=idx, column=6, value=row_vals[5]).font = font_regular
+        for c in range(1, 7):
+            ws.cell(row=idx, column=c).fill = fill_meta
+
+    # 3. Encabezados de tabla
+    headers = [
+        "PERIODO (AÑO-MES)",
+        "FACTURA / CUENTA COBRO NO.",
+        "SALDO ANTERIOR CAPITAL",
+        "INTERÉS MORA ANTERIOR",
+        "CUOTA ADMÓN MES (CAPITAL)",
+        "INTERÉS MORATORIO MES",
+        "PAGO MES (ABONO)",
+        "SALDO TOTAL EXIGIBLE"
+    ]
+    header_row = 9
+    for col_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=col_idx, value=h)
+        cell.font = font_header
+        cell.fill = fill_header
+        cell.alignment = Alignment(horizontal="center" if col_idx <= 2 else "right", vertical="center", wrap_text=True)
+
+    # 4. Datos mes a mes
+    curr_row = 10
+    num_fmt = "$#,##0"
+    for m in meses:
+        periodo_label = m.get("periodo") or f"{m.get('anio')}-{m.get('mes')}"
+        fac_num = f"Fac. {m.get('fac')}" if m.get("fac") else "-"
+        cap_ant = float(m.get("saldo_anterior", 0) or 0)
+        int_ant = float(m.get("interes_anterior", 0) or 0)
+        cuota_m = float(m.get("cuota_admon", 0) or 0)
+        int_m = float(m.get("interes_mes", 0) or 0)
+        pago_m = float(m.get("valpag", 0) or 0)
+        saldo_tot = float(m.get("total", 0) or 0)
+
+        ws.cell(row=curr_row, column=1, value=periodo_label).font = font_bold
+        ws.cell(row=curr_row, column=2, value=fac_num).alignment = Alignment(horizontal="center")
+        
+        c3 = ws.cell(row=curr_row, column=3, value=cap_ant)
+        c4 = ws.cell(row=curr_row, column=4, value=int_ant)
+        c5 = ws.cell(row=curr_row, column=5, value=cuota_m)
+        c6 = ws.cell(row=curr_row, column=6, value=int_m)
+        c7 = ws.cell(row=curr_row, column=7, value=pago_m)
+        c8 = ws.cell(row=curr_row, column=8, value=saldo_tot)
+
+        for col_idx, cell in enumerate([c3, c4, c5, c6, c7, c8], start=3):
+            cell.number_format = num_fmt
+            cell.alignment = Alignment(horizontal="right")
+            cell.font = font_bold if col_idx in (7, 8) else font_regular
+
+        for c in range(1, 9):
+            ws.cell(row=curr_row, column=c).border = thin_border
+
+        curr_row += 1
+
+    # 5. Fila de Totales
+    total_row = curr_row
+    ws.cell(row=total_row, column=1, value=f"TOTALES CONSOLIDADOS ({len(meses)} MESES)").font = font_bold
+    ws.cell(row=total_row, column=2, value="-").alignment = Alignment(horizontal="center")
+    
+    for c_idx in range(3, 8):
+        col_letter = get_column_letter(c_idx)
+        cell = ws.cell(row=total_row, column=c_idx, value=f"=SUM({col_letter}10:{col_letter}{total_row-1})")
+        cell.font = font_bold
+        cell.number_format = num_fmt
+        cell.alignment = Alignment(horizontal="right")
+    
+    # Saldo final exigible es el valor del último mes
+    ult_row_idx = total_row - 1
+    cell_final = ws.cell(row=total_row, column=8, value=f"=H{ult_row_idx}")
+    cell_final.font = font_bold
+    cell_final.number_format = num_fmt
+    cell_final.alignment = Alignment(horizontal="right")
+
+    for c in range(1, 9):
+        ws.cell(row=total_row, column=c).fill = fill_total
+        ws.cell(row=total_row, column=c).border = thin_border
+
+    # Anchos de columna
+    col_widths = {1: 22, 2: 24, 3: 24, 4: 24, 5: 26, 6: 24, 7: 24, 8: 24}
+    for col_idx, width in col_widths.items():
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    out_dir = Path("data/drive_docs") / str(codigo) / "historicos"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"Cobro_Juridico_Art48_{codigo}_Apto_{apto}_{len(meses)}_Meses.xlsx" if es_abogado else f"Estado_Cuenta_Historico_{codigo}_Apto_{apto}.xlsx"
+    out_path = out_dir / filename
+    wb.save(out_path)
+    return out_path
+
+
+def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str:
+    """
+    Genera el documento HTML completo listo para visualizar o imprimir en PDF oficial.
+    """
+    import datetime
+    res = obtener_estudio_cuenta_apto(codigo, apto)
+    edif = res.get("edificio", {})
+    meses = res.get("meses", [])
+    es_abogado = str(tipo).lower() == "abogado"
+
+    primer_mes = meses[0] if meses else {}
+    ult_mes = meses[-1] if meses else {}
+    saldo_inicial_cap = float(primer_mes.get("saldo_anterior", 0) or 0)
+    int_mora_inicial = float(primer_mes.get("interes_anterior", 0) or 0)
+
+    sum_cuotas = sum(float(m.get("cuota_admon", 0) or 0) for m in meses)
+    sum_int_mes = sum(float(m.get("interes_mes", 0) or 0) for m in meses)
+    sum_pagos = sum(float(m.get("valpag", 0) or 0) for m in meses)
+    saldo_final = float(ult_mes.get("total", 0) or 0)
+
+    total_cap = saldo_inicial_cap + sum_cuotas
+    total_int = int_mora_inicial + sum_int_mes
+    fecha_hoy = datetime.datetime.now().strftime("%d de %B de %Y")
+
+    def fmt(v):
+        return f"${v:,.0f}".replace(",", ".")
+
+    filas_tr = []
+    for idx, m in enumerate(meses):
+        bg = "#f8fafc" if idx % 2 == 0 else "#ffffff"
+        periodo = m.get("periodo") or f"{m.get('anio')}-{m.get('mes')}"
+        fac = f"Fac. {m.get('fac')}" if m.get("fac") else "-"
+        cap_ant = float(m.get("saldo_anterior", 0) or 0)
+        int_ant = float(m.get("interes_anterior", 0) or 0)
+        cuota = float(m.get("cuota_admon", 0) or 0)
+        int_m = float(m.get("interes_mes", 0) or 0)
+        pago = float(m.get("valpag", 0) or 0)
+        tot = float(m.get("total", 0) or 0)
+
+        filas_tr.append(f"""
+        <tr style="border-bottom: 1px solid #cbd5e1; background-color: {bg};">
+          <td style="padding: 5px 6px; font-weight: bold; color: #000;">{periodo}</td>
+          <td style="padding: 5px 6px; text-align: center; font-family: monospace;">{fac}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(cap_ant)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(int_ant)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(cuota)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(int_m)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(pago)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(tot)}</td>
+        </tr>
+        """)
+
+    titulo_doc = "CERTIFICACIÓN DE DEUDA Y ESTADO DE CUENTA CRONOLÓGICO DISCRIMINADO" if es_abogado else "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA"
+    subtitulo_doc = "(TÍTULO EJECUTIVO - ARTÍCULO 48 DE LA LEY 675 DE 2001 Y ART. 422 DEL C.G.P.)" if es_abogado else "(INFORME CONTABLE DETALLADO MES A MES PARA EL COPROPIETARIO)"
+
+    nota_legal = f"""
+      <div style="border: 1px solid #94a3b8; background: #f8fafc; padding: 10px; font-size: 9px; text-align: justify; margin: 15px 0; border-radius: 4px;">
+        <b>CONSTANCIA DE MÉRITO EJECUTIVO (ARTÍCULO 48 LEY 675 DE 2001):</b><br/>
+        El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad <b>{edif.get('nombre', 'EDIFICIO ' + str(codigo))}</b>, 
+        certifica que la relación contable anterior corresponde fielmente a los saldos adeudados por concepto de expensas comunes ordinarias e intereses moratorios para la unidad privada <b>{res.get('apto', '')}</b>. 
+        Se expide la presente liquidación para que sirva de <b>PLENA PRUEBA Y TÍTULO EJECUTIVO</b> constituyendo una obligación clara, expresa y actualmente exigible.
+      </div>
+    """ if es_abogado else f"""
+      <div style="border: 1px solid #94a3b8; background: #f8fafc; padding: 10px; font-size: 9px; text-align: justify; margin: 15px 0; border-radius: 4px;">
+        <b>ESTADO DE CUENTA INFORMATIVO PARA EL COPROPIETARIO:</b><br/>
+        La presente relación refleja fielmente la trazabilidad de cuotas causadas, intereses y pagos imputados a la unidad privada <b>{res.get('apto', '')}</b>. 
+        Para cualquier inquietud o conciliación de pagos, favor comunicarse con la Administración.
+      </div>
+    """
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>{titulo_doc} - Apto {res.get('apto', '')}</title>
+  <style>
+    @page {{ size: portrait; margin: 10mm; }}
+    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 10px; color: #000; padding: 10px; background: #fff; }}
+    .header {{ text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 8px; margin-bottom: 12px; }}
+    .header h1 {{ font-size: 16px; margin: 0; font-weight: 800; text-transform: uppercase; }}
+    .header p {{ margin: 2px 0; font-size: 9.5px; }}
+    .meta-grid {{ display: flex; gap: 10px; margin-bottom: 12px; }}
+    .meta-box {{ flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 8px; background: #f8fafc; font-size: 9.5px; }}
+    .meta-box h4 {{ margin: 0 0 4px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; text-transform: uppercase; font-size: 9.5px; }}
+    .cards {{ display: flex; gap: 8px; margin-bottom: 12px; }}
+    .card {{ flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 6px; text-align: center; background: #fff; }}
+    .card .title {{ font-size: 8px; font-weight: bold; text-transform: uppercase; }}
+    .card .val {{ font-size: 13px; font-weight: 800; margin-top: 2px; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 15px; }}
+    th {{ background: #0f172a; color: #fff; padding: 6px; text-align: left; font-size: 8px; text-transform: uppercase; border: 1px solid #0f172a; }}
+    .firmas {{ display: flex; justify-content: space-between; margin-top: 30px; font-size: 9px; }}
+    .firma-col {{ width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 5px; }}
+    @media print {{ button {{ display: none; }} }}
+  </style>
+</head>
+<body>
+  <div style="text-align: right; margin-bottom: 10px;">
+    <button onclick="window.print()" style="padding: 6px 14px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🖨️ Imprimir / Guardar en PDF</button>
+  </div>
+  <div class="header">
+    <h1>{edif.get('nombre', 'EDIFICIO ' + str(codigo))}</h1>
+    <p>NIT: {edif.get('nit', '901690778-9')} • Dirección: {edif.get('direccion', 'Medellín')} • {edif.get('ciudad', 'Medellín • Colombia')}</p>
+    <p><b>{titulo_doc}</b></p>
+    <p style="font-size: 8.5px; color: #475569;">{subtitulo_doc}</p>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-box">
+      <h4>1. DATOS DEL INMUEBLE Y DESTINATARIO</h4>
+      <p><b>UNIDAD PRIVADA:</b> Inmueble / Apto {res.get('apto', '')}</p>
+      <p><b>PROPIETARIO(A):</b> {res.get('propietario', '')}</p>
+      <p><b>C.C. / NIT:</b> {res.get('cc', '')}</p>
+      <p><b>COEFICIENTE P.H.:</b> {res.get('coeficiente', '')}</p>
+    </div>
+    <div class="meta-box">
+      <h4>2. CONDICIONES DE LIQUIDACIÓN</h4>
+      <p><b>PERIODO ANALIZADO:</b> {len(meses)} Meses ({primer_mes.get('periodo', '')} hasta {ult_mes.get('periodo', '')})</p>
+      <p><b>TASA MORA APLICADA:</b> {edif.get('interesMora', '2.10% M.V.')}</p>
+      <p><b>FECHA DE EXPEDICIÓN:</b> {fecha_hoy}</p>
+      <p><b>ESTADO:</b> {'OBLIGACIÓN EXIGIBLE EN MORA' if saldo_final > 0 else 'A PAZ Y SALVO'}</p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card" style="border-left: 3px solid #0f172a;">
+      <div class="title">Total Capital Causado</div>
+      <div class="val">{fmt(total_cap)}</div>
+    </div>
+    <div class="card" style="border-left: 3px solid #d97706;">
+      <div class="title">Total Intereses Mora</div>
+      <div class="val">{fmt(total_int)}</div>
+    </div>
+    <div class="card" style="border-left: 3px solid #16a34a;">
+      <div class="title">Total Pagos Imputados</div>
+      <div class="val">{fmt(sum_pagos)}</div>
+    </div>
+    <div class="card" style="border-left: 3px solid #dc2626;">
+      <div class="title">Saldo Exigible a la Fecha</div>
+      <div class="val">{fmt(saldo_final)}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Periodo</th>
+        <th style="text-align: center;">Factura</th>
+        <th style="text-align: right;">Saldo Ant. Capital</th>
+        <th style="text-align: right;">Int. Mora Ant.</th>
+        <th style="text-align: right;">Cuota Admón</th>
+        <th style="text-align: right;">Interés Mes</th>
+        <th style="text-align: right;">Pago Mes (Abono)</th>
+        <th style="text-align: right;">Saldo Exigible</th>
+      </tr>
+    </thead>
+    <tbody>
+      {''.join(filas_tr)}
+      <tr style="background: #e2e8f0; font-weight: bold; border-top: 2px solid #0f172a;">
+        <td style="padding: 6px;">TOTALES ({len(meses)} MESES)</td>
+        <td style="padding: 6px; text-align: center;">-</td>
+        <td style="padding: 6px; text-align: right;">{fmt(sum(float(m.get('saldo_anterior',0) or 0) for m in meses))}</td>
+        <td style="padding: 6px; text-align: right;">{fmt(sum(float(m.get('interes_anterior',0) or 0) for m in meses))}</td>
+        <td style="padding: 6px; text-align: right;">{fmt(sum_cuotas)}</td>
+        <td style="padding: 6px; text-align: right;">{fmt(sum_int_mes)}</td>
+        <td style="padding: 6px; text-align: right;">{fmt(sum_pagos)}</td>
+        <td style="padding: 6px; text-align: right; color: #dc2626;">{fmt(saldo_final)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {nota_legal}
+
+  <div class="firmas">
+    <div class="firma-col">
+      <p><b>{edif.get('administrador', 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL')}</b></p>
+      <p>Administrador(a) y Representante Legal</p>
+      <p>{edif.get('nombre', '')}</p>
+    </div>
+    <div class="firma-col">
+      <p><b>CONSTANCIA DE EMISIÓN</b></p>
+      <p>Expedido en {edif.get('ciudad', 'Medellín • Colombia')}</p>
+      <p>Fecha de emisión: {fecha_hoy}</p>
+    </div>
+  </div>
+</body>
+</html>"""
+    return html

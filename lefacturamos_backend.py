@@ -1540,6 +1540,36 @@ def api_estudio_cuenta_historico(conjunto_id: str, numero_apto: str):
         raise HTTPException(status_code=500, detail=f"Error consultando histórico: {str(e)}")
 
 
+@app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}/excel")
+@app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}/excel")
+def api_estudio_historico_excel(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
+    try:
+        from historico_service import generar_excel_historico
+        file_path = generar_excel_historico(conjunto_id, numero_apto, tipo)
+        filename = file_path.name
+        return FileResponse(
+            path=str(file_path),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename=filename
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando Excel: {str(e)}")
+
+
+@app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}/imprimir")
+@app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}/imprimir")
+@app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}/pdf")
+@app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}/pdf")
+def api_estudio_historico_imprimir(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
+    try:
+        from fastapi.responses import HTMLResponse
+        from historico_service import generar_html_historico
+        html_content = generar_html_historico(conjunto_id, numero_apto, tipo)
+        return HTMLResponse(content=html_content, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando visualización: {str(e)}")
+
+
 
 
 # ==============================================================================

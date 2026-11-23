@@ -64637,10 +64637,6 @@ function pagarDesdeVisor() {
 
 
 // ==============================================================================
-// FUNCIONES GLOBALES DE WHATSAPP PARA DOCUMENTOS, CARTERA Y COMUNICADOS
-// ==============================================================================
-
-// ==============================================================================
 // FUNCIONES GLOBALES DE WHATSAPP Y GESTIÓN DE TELÉFONO DE INMUEBLE
 // ==============================================================================
 function formatearTelefonoWhatsApp(tel) {
@@ -64758,7 +64754,7 @@ function enviarEstudioHistoricoWhatsApp() {
   }
   const data = currentEstudioHistoricoData;
   const apto = data.apto || "";
-  const tel = obtenerTelefonoUnidad(apto) || data.tel || "";
+  const tel = (typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(apto) : "") || data.tel || "";
   if (!tel) {
     if (typeof mostrarToast === "function") mostrarToast(`⚠️ No hay celular registrado para la unidad ${apto}. Ingréselo en 'Apartamentos y Coeficientes' -> 'Editar Inmueble'.`, "warning");
     return;
@@ -64771,17 +64767,25 @@ function enviarEstudioHistoricoWhatsApp() {
   const tipoFiltro = document.getElementById("estudio-hist-filtro-destinatario")?.value || "abogado";
   const esAbogado = tipoFiltro === "abogado";
   const nombreEdif = data.edificio?.nombre || "la Administración";
+  const codEdif = (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || data.codigo || "4901";
+  const cleanCod = String(codEdif).replace(/^cj_/, "").trim();
+  const origin = window.location.origin;
 
-  // Calcular totales del periodo
-  let totalCapitalCausado = 0;
-  let totalInteresesCausados = 0;
-  let sumPagos = 0;
-  mesesFiltrados.forEach(m => {
-    totalCapitalCausado += Number(m.cuota_mes || 0);
-    totalInteresesCausados += Number(m.interes_mes || 0);
-    sumPagos += Number(m.pago_mes || 0);
-  });
+  // Calcular acumulados con las propiedades reales de la base contable
+  const saldoInicialCap = Number(primerMes.saldo_anterior) || 0;
+  const intMoraInicial = Number(primerMes.interes_anterior) || 0;
+
+  const sumCuotaAdmon = mesesFiltrados.reduce((acc, m) => acc + (Number(m.cuota_admon || m.cuota_mes || m.actual_puro || 0)), 0);
+  const sumInteresMes = mesesFiltrados.reduce((acc, m) => acc + (Number(m.interes_mes || 0)), 0);
+  const sumPagos = mesesFiltrados.reduce((acc, m) => acc + (Number(m.valpag || m.pago_mes || 0)), 0);
   const saldoFinalPeriodo = ultMesFiltrado ? Number(ultMesFiltrado.total || 0) : 0;
+
+  const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
+  const totalInteresesCausados = intMoraInicial + sumInteresMes;
+
+  // URLs oficiales de descarga directa para adjuntos
+  const urlPdf = `${origin}/api/estudio-cuenta-historico/${cleanCod}/${apto}/imprimir?tipo=${tipoFiltro}`;
+  const urlExcel = `${origin}/api/estudio-cuenta-historico/${cleanCod}/${apto}/excel?tipo=${tipoFiltro}`;
 
   const msg = esAbogado
     ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
@@ -64790,15 +64794,30 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `La presente certificación presta mérito ejecutivo en los términos de ley.`
+      `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
+      `📎 *DOCUMENTOS ADJUNTOS OFICIALES:*\n` +
+      `📄 *Certificado en PDF (Descargar):* ${urlPdf}\n` +
+      `📊 *Liquidación en Excel (Descargar):* ${urlExcel}\n\n` +
+      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
       `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
+      `📎 *DOCUMENTOS ADJUNTOS:*\n` +
+      `📄 *Estado de Cuenta en PDF:* ${urlPdf}\n` +
+      `📊 *Informe Detallado en Excel:* ${urlExcel}\n\n` +
       `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
 
+  // 1. Descarga automática local del archivo Excel para tenerlo en la bandeja de descargas listo para adjuntar
+  try {
+    if (typeof descargarExcelEstudioHistorico === "function") {
+      descargarExcelEstudioHistorico(tipoFiltro);
+    }
+  } catch(e) {}
+
+  // 2. Despachar a WhatsApp
   despacharWhatsAppDirecto({
     telefono: tel,
     mensaje: msg,
@@ -64837,23 +64856,26 @@ function compartirDocumentoWhatsApp(docId) {
   // Buscar teléfono únicamente a través de la fuente centralizada del inmueble
   const tel = typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(apto) : "";
 
-  const linkDescarga = `${window.location.origin}${doc.url_descarga || doc.url_ver || `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&archivo=${encodeURIComponent(doc.nombre_archivo || doc.nombre || doc.titulo)}`}`;
+  const linkDescarga = `${window.location.origin}${doc.url_descarga || doc.url_ver || `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&archivo=${encodeURIComponent(doc.nombre_archivo || doc.nombre || doc.titulo)}&descargar=true`}`;
 
   const msg =
-    `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*
-
-` +
-    `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:
-` +
-    `Le compartimos su *${tipo}*${valor}.
-
-` +
-    `📄 *Documento:* ${doc.nombre_archivo || doc.nombre || doc.titulo}
-` +
-    `🔗 *Enlace Seguro:* ${linkDescarga}
-
-` +
+    `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*\n\n` +
+    `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
+    `Le compartimos su *${tipo}*${valor}.\n\n` +
+    `📄 *Archivo Adjunto:* ${doc.nombre_archivo || doc.nombre || doc.titulo}\n` +
+    `📥 *Descargar PDF Oficial:* ${linkDescarga}\n\n` +
+    `💳 *Pago en Línea PSE / Bre-B:* ${window.location.origin}/pagar?apto=${apto}\n\n` +
     `_Plataforma Oficial LEFACTURAMOS PH_`;
+
+  // Descarga local automática del archivo para facilitar arrastrar o adjuntar
+  try {
+    const a = document.createElement("a");
+    a.href = linkDescarga;
+    a.download = doc.nombre_archivo || `${tipo}_${apto}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(e) {}
 
   despacharWhatsAppDirecto({
     telefono: tel,
