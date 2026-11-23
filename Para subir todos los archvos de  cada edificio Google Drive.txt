@@ -1,6 +1,6 @@
-https://lefacturamos.onrender.com/superadmin
+https://lefacturamosplus.onrender.com/superadmin
 http://localhost:8000/superadmin
-https://lefacturamos.onrender.com
+https://lefacturamosplus.onrender.com
 
 https://github.com/lefacturamosph-pixel/lefacturamos.git
 
@@ -33,7 +33,7 @@ Haces clic en ⚡ Cargar Directo C:\dbplus\0202.
 El sistema leerá en vivo los archivos reales EDIFICIO.DBF, MM0202.DBF y SS0202.DBF de tu disco duro.
 Verás en la tabla todos los apartamentos reales (por ejemplo, para el 0202 cargará sus 14 apartamentos reales de Laureles Colonial).
 Pulsas ⚡ Crear Base Completa del Edificio y listo.
-2. Si estás trabajando en la versión en la Nube (https://lefacturamos.onrender.com)
+2. Si estás trabajando en la versión en la Nube (https://lefacturamosplus.onrender.com)
 Diferencia técnica fundamental: El servidor de Render está en la nube en internet (Linux) y no puede acceder al disco duro físico C:\ de tu computador personal.
 Por esta razón:
 Los edificios pre-integrados en el sistema (4160 Edificio Mixto Riachuelo con 25 aptos, 4901 Roble Alto con 83 aptos, 7480 Manchester con 44 aptos, 5304 Vallados y 0127 Class 48) ya están sembrados permanentemente en la nube y funcionan directos sin subir nada.

@@ -4648,7 +4648,7 @@ function safeCreateIcons() {
 
 // Función para resolver la URL base del backend local (FastAPI / SQLite / DBPLUS)
 
-const DEFAULT_BACKEND_TUNNEL_URL = "https://lefacturamos.onrender.com";
+const DEFAULT_BACKEND_TUNNEL_URL = "https://lefacturamosplus.onrender.com";
 const DEFAULT_BACKEND_LAN_URL = "http://192.168.1.24:8000";
 
 function getApiBaseUrl() {
@@ -20807,7 +20807,7 @@ async function sincronizarEdificiosPC() {
 
       if (icon) icon.classList.remove("animate-spin");
 
-      mostrarToast("🔄 Sincronización completa con servidor local y nube Lefacturamos.");
+      mostrarToast("🔄 Sincronización completa con servidor local y nube LefacturamosPlus.");
 
     }, 700);
 
@@ -45453,7 +45453,7 @@ function enviarWhatsAppVisitante() {
 
   const candidatos = [
     originCtx,
-    "https://lefacturamos.onrender.com",
+    "https://lefacturamosplus.onrender.com",
     (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
     ""
   ];
@@ -45664,7 +45664,7 @@ function generarQRAnticipado() {
 
   const candidatosPost = [
     originCtx,
-    "https://lefacturamos.onrender.com",
+    "https://lefacturamosplus.onrender.com",
     (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
     ""
   ];
@@ -46132,7 +46132,7 @@ async function sincronizarVisitantesDesdeServidor() {
   if (origin && !origin.startsWith("file:") && !origin.startsWith("capacitor:")) {
     candidateBases.push(origin);
   }
-  candidateBases.push("https://lefacturamos.onrender.com");
+  candidateBases.push("https://lefacturamosplus.onrender.com");
   if (typeof getApiBaseUrl === "function") {
     candidateBases.push(getApiBaseUrl());
   }
@@ -48117,7 +48117,7 @@ async function registrarSalidaVisitante(visId) {
   // Enviar salida al backend en segundo plano para sincronizar con todos los dispositivos
   const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
   const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
-  const candidatos = [originCtx, "https://lefacturamos.onrender.com", (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "", ""];
+  const candidatos = [originCtx, "https://lefacturamosplus.onrender.com", (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "", ""];
   if (!isHttpsCtx) {
     candidatos.push("http://192.168.1.24:8000");
     candidatos.push("http://127.0.0.1:8000");
@@ -48189,7 +48189,7 @@ async function registrarSalidaPorMinuta(minId, inmueble) {
 
   const isHttpsCtx = typeof window !== "undefined" && window.location && window.location.protocol === "https:";
   const originCtx = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
-  const candidatos = [originCtx, "https://lefacturamos.onrender.com", (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "", ""];
+  const candidatos = [originCtx, "https://lefacturamosplus.onrender.com", (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "", ""];
   if (!isHttpsCtx) {
     candidatos.push("http://192.168.1.24:8000");
     candidatos.push("http://127.0.0.1:8000");
@@ -48870,7 +48870,7 @@ async function validarQRPorteria() {
 
   const candidatosUrl = [
     origin,
-    "https://lefacturamos.onrender.com",
+    "https://lefacturamosplus.onrender.com",
     (typeof getApiBaseUrl === "function") ? getApiBaseUrl() : "",
     ""
   ];
@@ -57226,6 +57226,12 @@ function renderizarBaseSaldosMatriz(datos = null) {
 
                 </button>
 
+                <button type="button" onclick="abrirEstudioCuentaHistorico('${aptoCode}')" title="📜 Estudio de Cuenta Histórico Multianual (Mes a Mes)" class="p-1.5 rounded-lg bg-sky-950/60 hover:bg-sky-900/60 text-sky-400 border border-sky-800/60 transition-colors">
+
+                  <i data-lucide="history" class="w-3.5 h-3.5"></i>
+
+                </button>
+
               </div>
 
             </td>
@@ -57935,6 +57941,7 @@ function guardarEdicionAptoSaldos(e) {
 // Modal Detalle de Cuenta & Recibo Digital
 
 function verDetalleCuentaSaldos(apto) {
+  window.currentAptoDetalleSaldos = apto;
 
   const cj = (typeof obtenerDatosCopropiedad === "function")
 
@@ -58139,6 +58146,376 @@ function cerrarModalDetalleCuentaSaldos() {
   document.getElementById("modal-detalle-cuenta-saldos")?.classList.add("hidden");
 
 }
+
+function abrirEstudioCuentaHistoricoDesdeModal() {
+  cerrarModalDetalleCuentaSaldos();
+  if (window.currentAptoDetalleSaldos) {
+    abrirEstudioCuentaHistorico(window.currentAptoDetalleSaldos);
+  }
+}
+
+let currentEstudioHistoricoData = null;
+
+async function abrirEstudioCuentaHistorico(apto) {
+  const edifCod = AppState.codigoEdificio || AppState.conjuntoId || "4901";
+  const cleanCod = String(edifCod).replace(/^(cj_)+/, "").trim() || "4901";
+  const cleanApto = String(apto).trim();
+
+  const modal = document.getElementById("modal-estudio-cuenta-historico");
+  if (!modal) return;
+
+  const lblUnidad = document.getElementById("estudio-hist-unidad");
+  const lblSub = document.getElementById("estudio-hist-subtitulo");
+  const lblTotalMeses = document.getElementById("estudio-hist-total-meses");
+  const banner = document.getElementById("estudio-hist-info-banner");
+  const tbody = document.getElementById("estudio-hist-tbody");
+  const resFac = document.getElementById("estudio-hist-res-facturado");
+  const resPag = document.getElementById("estudio-hist-res-pagado");
+  const resSal = document.getElementById("estudio-hist-res-saldo");
+  const btnWa = document.getElementById("estudio-hist-btn-wa");
+
+  if (lblUnidad) lblUnidad.innerText = cleanApto;
+  if (lblSub) lblSub.innerText = "Cargando trazabilidad multianual mes a mes desde bases contables oficiales...";
+  if (lblTotalMeses) lblTotalMeses.innerText = "Consultando...";
+  if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-sky-400"></i>Compilando todos los meses y años históricos...</td></tr>`;
+
+  modal.classList.remove("hidden");
+  safeCreateIcons();
+
+  let data = null;
+  const baseUrl = (AppState && AppState.apiBaseUrl) || getApiBaseUrl();
+
+  try {
+    const res = await fetch(`${baseUrl}/api/conjuntos/${cleanCod}/estudio-cuenta-historico/${encodeURIComponent(cleanApto)}`);
+    if (res.ok) {
+      data = await res.json();
+    }
+  } catch (err) {
+    console.warn("Aviso consultando endpoint histórico:", err);
+  }
+
+  // Fallback si no hay conexión o no respondió
+  if (!data || !data.meses || data.meses.length === 0) {
+    const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cleanCod) : null;
+    const unidades = (typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : [];
+    const item = unidades.find(x => x.apto === cleanApto || x.unidad === cleanApto) || {};
+    
+    data = {
+      codigo: cleanCod,
+      edificio: cj || { codigo: cleanCod, nombre: `Edificio ${cleanCod}`, nit: "901690778-9" },
+      apto: cleanApto,
+      propietario: item.propietario || "Copropietario Registrado",
+      cc: item.cc || "",
+      coeficiente: item.coeficiente || "1.139%",
+      total_meses: 1,
+      meses: [
+        {
+          periodo: "NOVIEMBRE 2026",
+          periodo_iso: "2026-11",
+          fac: item.fac || "2828",
+          saldo_anterior: Number(item.pend) || 0,
+          interes_anterior: Number(item.intp) || 0,
+          cuota_admon: Number(item.actual) || 0,
+          interes_mes: Number(item.inta) || 0,
+          cuota_extra: Number(item.extraa) || 0,
+          otros_mes: Number(item.otrosa) || 0,
+          total_cobro_mes: (Number(item.actual) || 0) + (Number(item.inta) || 0),
+          valpag: (typeof obtenerValpagFila === "function") ? obtenerValpagFila(item) : (Number(item.valpag) || 0),
+          total: item.totalNum !== undefined ? item.totalNum : ((Number(item.pend) || 0) + (Number(item.actual) || 0))
+        }
+      ],
+      resumen: {
+        total_facturado: (Number(item.actual) || 0) + (Number(item.inta) || 0),
+        total_pagado: (typeof obtenerValpagFila === "function") ? obtenerValpagFila(item) : (Number(item.valpag) || 0),
+        saldo_actual: item.totalNum !== undefined ? item.totalNum : 0
+      }
+    };
+  }
+
+  currentEstudioHistoricoData = data;
+
+  // Llenar cabeceras y banner
+  if (lblUnidad) lblUnidad.innerText = data.apto;
+  if (lblTotalMeses) lblTotalMeses.innerText = `${data.total_meses} meses registrados en el sistema`;
+  if (lblSub) lblSub.innerText = `${data.edificio?.nombre || ('Edificio ' + cleanCod)} • Propietario: ${data.propietario}`;
+
+  if (banner) {
+    banner.innerHTML = `
+      <div>
+        <span class="text-slate-400 block text-[10px] uppercase font-bold">Propietario(a)</span>
+        <span class="font-bold text-white truncate block">${data.propietario || 'Copropietario'}</span>
+      </div>
+      <div>
+        <span class="text-slate-400 block text-[10px] uppercase font-bold">Identificación C.C.</span>
+        <span class="font-bold text-white">${data.cc || 'N/A'}</span>
+      </div>
+      <div>
+        <span class="text-slate-400 block text-[10px] uppercase font-bold">Coeficiente P.H.</span>
+        <span class="font-bold text-emerald-400">${data.coeficiente || '1.139%'}</span>
+      </div>
+      <div>
+        <span class="text-slate-400 block text-[10px] uppercase font-bold">Edificio / NIT</span>
+        <span class="font-bold text-sky-300 truncate block">${data.edificio?.nombre || cleanCod} (${data.edificio?.nit || 'NIT Oficial'})</span>
+      </div>
+    `;
+  }
+
+  // Resumen
+  if (resFac) resFac.innerText = `$${formatoMonedaSaldos(data.resumen.total_facturado)}`;
+  if (resPag) resPag.innerText = `$${formatoMonedaSaldos(data.resumen.total_pagado)}`;
+  if (resSal) resSal.innerText = `$${formatoMonedaSaldos(data.resumen.saldo_actual)}`;
+
+  // Renderizar filas de la tabla cronológica
+  if (tbody) {
+    const mesesRev = [...(data.meses || [])].reverse();
+    if (mesesRev.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No se encontraron registros contables para la unidad ${cleanApto}.</td></tr>`;
+    } else {
+      tbody.innerHTML = mesesRev.map((m, idx) => {
+        const saldoAntTot = (m.saldo_anterior || 0) + (m.interes_anterior || 0) + (m.extra_anterior || 0) + (m.otros_anterior || 0);
+        const intMesTot = (m.interes_mes || 0);
+        const tienePago = Number(m.valpag || 0) > 0;
+        const saldoFinal = Number(m.total || 0);
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors ${idx % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/20'}">
+            <td class="p-2.5 font-bold text-white whitespace-nowrap">
+              <span class="text-sky-400 mr-1.5">•</span>${m.periodo || (m.anio + '-' + m.mes)}
+            </td>
+            <td class="p-2.5 text-center text-slate-400 font-mono">
+              ${m.fac ? ('Fac. ' + m.fac) : '-'}
+            </td>
+            <td class="p-2.5 text-right ${saldoAntTot > 0 ? 'text-rose-400' : 'text-slate-500'}">
+              $${formatoMonedaSaldos(saldoAntTot)}
+            </td>
+            <td class="p-2.5 text-right font-medium text-slate-200">
+              $${formatoMonedaSaldos(m.cuota_admon || 0)}
+            </td>
+            <td class="p-2.5 text-right ${intMesTot > 0 ? 'text-amber-400' : 'text-slate-500'}">
+              $${formatoMonedaSaldos(intMesTot)}
+            </td>
+            <td class="p-2.5 text-right font-bold ${tienePago ? 'text-emerald-400 bg-emerald-950/20' : 'text-slate-600'}">
+              ${tienePago ? ('✓ $' + formatoMonedaSaldos(m.valpag)) : '$0'}
+            </td>
+            <td class="p-2.5 text-right font-black ${saldoFinal > 0 ? 'text-purple-300 bg-purple-950/20' : 'text-emerald-400'}">
+              $${formatoMonedaSaldos(saldoFinal)}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+  }
+
+  // Configurar enlace de WhatsApp
+  if (btnWa) {
+    const nombreEdif = data.edificio?.nombre || "la Administración";
+    const msg = encodeURIComponent(
+      `Estimado(a) ${data.propietario}, le compartimos el *Estudio de Cuenta Histórico Multianual* correspondiente a la unidad ${data.apto} en ${nombreEdif}:\n\n` +
+      `• Histórico analizado: ${data.total_meses} meses registrados en el sistema.\n` +
+      `• Total Facturado en el Periodo: $${formatoMonedaSaldos(data.resumen.total_facturado)}\n` +
+      `• Total Pagos Registrados: $${formatoMonedaSaldos(data.resumen.total_pagado)}\n` +
+      `• *SALDO ACTUAL A LA FECHA: $${formatoMonedaSaldos(data.resumen.saldo_actual)}*\n\n` +
+      `Puede consultar el desglose detallado mes a mes en el portal: https://lefacturamosplus.onrender.com`
+    );
+    btnWa.href = `https://api.whatsapp.com/send?phone=57${data.tel || '3147593118'}&text=${msg}`;
+  }
+
+  safeCreateIcons();
+}
+
+function cerrarModalEstudioCuentaHistorico() {
+  const modal = document.getElementById("modal-estudio-cuenta-historico");
+  if (modal) modal.classList.add("hidden");
+}
+
+function descargarExcelEstudioHistorico() {
+  if (!currentEstudioHistoricoData || !currentEstudioHistoricoData.meses) {
+    if (typeof mostrarToast === "function") mostrarToast("⚠️ No hay datos cargados para exportar a Excel.", "warning");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    if (typeof mostrarToast === "function") mostrarToast("⚠️ Librería de Excel cargando... intente de nuevo en un segundo.", "warning");
+    return;
+  }
+
+  const d = currentEstudioHistoricoData;
+  const filasExcel = [
+    ["ESTUDIO DE CUENTA Y CARTERA HISTÓRICA MULTIANUAL (MES A MES)"],
+    ["COPROPIEDAD:", d.edificio?.nombre || "", "NIT:", d.edificio?.nit || "", "CÓDIGO:", d.codigo || ""],
+    ["INMUEBLE:", d.apto || "", "PROPIETARIO:", d.propietario || "", "IDENTIFICACIÓN C.C.:", d.cc || ""],
+    ["COEFICIENTE:", d.coeficiente || "", "TOTAL MESES ANALIZADOS:", d.total_meses || 0],
+    [],
+    [
+      "PERIODO (AÑO-MES)",
+      "FACTURA NO.",
+      "SALDO ANTERIOR (COP)",
+      "CUOTA ADMÓN (COP)",
+      "INTERESES MES (COP)",
+      "EXTRAORDINARIA (COP)",
+      "OTROS CONCEPTOS (COP)",
+      "TOTAL COBRO MES (COP)",
+      "PAGOS / ABONOS REGISTRADOS (COP)",
+      "SALDO FINAL RESULTANTE (COP)"
+    ]
+  ];
+
+  d.meses.forEach(m => {
+    const saldoAnt = (m.saldo_anterior || 0) + (m.interes_anterior || 0) + (m.extra_anterior || 0) + (m.otros_anterior || 0);
+    filasExcel.push([
+      m.periodo || `${m.anio}-${m.mes}`,
+      m.fac || "-",
+      saldoAnt,
+      m.cuota_admon || 0,
+      m.interes_mes || 0,
+      m.cuota_extra || 0,
+      m.otros_mes || 0,
+      m.total_cobro_mes || 0,
+      m.valpag || 0,
+      m.total || 0
+    ]);
+  });
+
+  // Fila de totales finales
+  filasExcel.push([]);
+  filasExcel.push([
+    "TOTALES HISTÓRICOS CONSOLIDADOS",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    d.resumen?.total_facturado || 0,
+    d.resumen?.total_pagado || 0,
+    d.resumen?.saldo_actual || 0
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(filasExcel);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Estudio_Cuenta");
+
+  const nombreArchivo = `Estudio_Cuenta_Historico_${d.codigo}_Apto_${d.apto}.xlsx`;
+  XLSX.writeFile(wb, nombreArchivo);
+
+  if (typeof mostrarToast === "function") {
+    mostrarToast(`✓ Excel de Estudio de Cuenta descargado: ${nombreArchivo}`);
+  }
+}
+
+function imprimirEstudioHistorico() {
+  if (!currentEstudioHistoricoData || !currentEstudioHistoricoData.meses) {
+    if (typeof mostrarToast === "function") mostrarToast("⚠️ No hay datos cargados para imprimir.", "warning");
+    return;
+  }
+
+  const d = currentEstudioHistoricoData;
+  const ventana = window.open("", "_blank");
+  if (!ventana) {
+    alert("Por favor permita las ventanas emergentes para imprimir.");
+    return;
+  }
+
+  const filasHtml = [...(d.meses || [])].map((m, idx) => {
+    const saldoAnt = (m.saldo_anterior || 0) + (m.interes_anterior || 0);
+    return `
+      <tr style="border-bottom: 1px solid #ddd; ${idx % 2 === 0 ? 'background-color: #f9f9f9;' : ''}">
+        <td style="padding: 6px; font-weight: bold;">${m.periodo || (m.anio + '-' + m.mes)}</td>
+        <td style="padding: 6px; text-align: center;">${m.fac || '-'}</td>
+        <td style="padding: 6px; text-align: right;">$${formatoMonedaSaldos(saldoAnt)}</td>
+        <td style="padding: 6px; text-align: right;">$${formatoMonedaSaldos(m.cuota_admon || 0)}</td>
+        <td style="padding: 6px; text-align: right;">$${formatoMonedaSaldos(m.interes_mes || 0)}</td>
+        <td style="padding: 6px; text-align: right; color: #047857; font-weight: bold;">${Number(m.valpag) > 0 ? ('$' + formatoMonedaSaldos(m.valpag)) : '$0'}</td>
+        <td style="padding: 6px; text-align: right; font-weight: bold;">$${formatoMonedaSaldos(m.total || 0)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <title>Estudio de Cuenta - Unidad ${d.apto}</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px; }
+        .header h1 { font-size: 16px; margin: 0; text-transform: uppercase; }
+        .header p { margin: 2px 0; font-size: 11px; color: #555; }
+        .info-grid { display: flex; justify-content: space-between; background: #f0f4f8; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; }
+        .resumen-cards { display: flex; gap: 10px; margin-bottom: 15px; }
+        .card { flex: 1; border: 1px solid #ccc; padding: 8px; border-radius: 6px; text-align: center; }
+        .card .title { font-size: 9px; text-transform: uppercase; color: #666; font-weight: bold; }
+        .card .value { font-size: 14px; font-weight: bold; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #1e293b; color: white; padding: 6px; text-align: left; }
+        th.right { text-align: right; }
+        th.center { text-align: center; }
+        .footer { margin-top: 25px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 10px; color: #666; display: flex; justify-content: space-between; }
+        @media print { button { display: none; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>${d.edificio?.nombre || ('EDIFICIO ' + d.codigo)}</h1>
+        <p>NIT: ${d.edificio?.nit || 'Oficial'} • ${d.edificio?.direccion || ''} • ${d.edificio?.ciudad || 'Colombia'}</p>
+        <p><b>ESTUDIO DE CUENTA Y TRAZABILIDAD CRONOLÓGICA MES A MES (LEY 675 DE 2001)</b></p>
+      </div>
+
+      <div class="info-grid">
+        <div><b>UNIDAD / APTO:</b> ${d.apto}</div>
+        <div><b>PROPIETARIO:</b> ${d.propietario}</div>
+        <div><b>C.C. / NIT:</b> ${d.cc || 'N/A'}</div>
+        <div><b>COEFICIENTE:</b> ${d.coeficiente || '1.139%'}</div>
+        <div><b>MESES ANALIZADOS:</b> ${d.total_meses}</div>
+      </div>
+
+      <div class="resumen-cards">
+        <div class="card">
+          <div class="title">Total Facturado Histórico</div>
+          <div class="value" style="color: #0369a1;">$${formatoMonedaSaldos(d.resumen?.total_facturado || 0)}</div>
+        </div>
+        <div class="card">
+          <div class="title">Total Pagos Registrados</div>
+          <div class="value" style="color: #047857;">$${formatoMonedaSaldos(d.resumen?.total_pagado || 0)}</div>
+        </div>
+        <div class="card">
+          <div class="title">Saldo Final a la Fecha</div>
+          <div class="value" style="color: #7e22ce;">$${formatoMonedaSaldos(d.resumen?.saldo_actual || 0)}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Periodo</th>
+            <th class="center">Factura</th>
+            <th class="right">Saldo Ant.</th>
+            <th class="right">Cuota Admón</th>
+            <th class="right">Intereses</th>
+            <th class="right">Pagos Realizados</th>
+            <th class="right">Saldo Final</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHtml}
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <div>Certificación emitida automáticamente por el Sistema Contable LefacturamosPlus.</div>
+        <div>Firma Administrador(a) y Representante Legal: _______________________</div>
+      </div>
+
+      <script>
+        window.onload = function() { window.print(); };
+      </script>
+    </body>
+    </html>
+  `);
+  ventana.document.close();
+}
+
 
 
 

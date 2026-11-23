@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 
 GOOGLE_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link"
-LOCAL_DRIVE_PATH = Path(r"G:\Mi unidad\Lefacturamos (1)")
+LOCAL_DRIVE_PATH = Path(r"G:\Mi unidad\LefacturamosPlus")
 
 app = FastAPI(
     title="LEFACTURAMOS - Sincronizador Google Drive",

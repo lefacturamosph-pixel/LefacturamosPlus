@@ -996,7 +996,7 @@
 
         <div class="text-center pt-2">
 
-          <p class="text-[11px] text-slate-400">¿No tiene sus credenciales? Comuníquese con la Administración de su conjunto o soporte técnico Lefacturamos.</p>
+          <p class="text-[11px] text-slate-400">¿No tiene sus credenciales? Comuníquese con la Administración de su conjunto o soporte técnico LefacturamosPlus.</p>
 
         </div>
 
@@ -6769,8 +6769,6 @@
 
             <div id="kpi-saldos-pendientes" class="text-xl sm:text-2xl font-black text-rose-400 font-mono tracking-tight">$48.645.651</div>
 
-            <p class="text-[10px] text-slate-400 mt-1">PEND + INTP + OTROSP + EXTRAP...</p>
-
           </div>
 
 
@@ -6793,8 +6791,6 @@
 
             <div id="kpi-saldos-cobro-mes" class="text-xl sm:text-2xl font-black text-sky-400 font-mono tracking-tight">$12.310.800</div>
 
-            <p class="text-[10px] text-slate-400 mt-1">ACTUAL + INTA + OTROSA + EXTRAA...</p>
-
           </div>
 
 
@@ -6816,8 +6812,6 @@
             </div>
 
             <div id="kpi-saldos-pagos-anterior" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">$0</div>
-
-            <p class="text-[10px] text-slate-400 mt-1">VALPAG (Total recaudado anterior)</p>
 
           </div>
 
@@ -16362,9 +16356,9 @@
 
 
 
-      <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+      <div class="flex items-center justify-between pt-3 border-t border-slate-800 gap-2">
 
-        <a id="det-saldos-btn-wa" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-md">
+        <a id="det-saldos-btn-wa" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-md text-xs">
 
           <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
 
@@ -16372,11 +16366,200 @@
 
         </a>
 
+        <button type="button" onclick="abrirEstudioCuentaHistoricoDesdeModal()" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center gap-1.5 shadow-md text-xs transition-colors cursor-pointer">
+
+          <i data-lucide="history" class="w-3.5 h-3.5"></i>
+
+          <span>📜 Ver Estudio Histórico Completo</span>
+
+        </button>
+
       </div>
 
     </div>
 
   </div>
+
+
+
+  <!-- ======================================================== -->
+
+  <!-- MODAL ESTUDIO DE CUENTA HISTÓRICO MULTIANUAL (MES A MES) -->
+
+  <!-- ======================================================== -->
+
+  <div id="modal-estudio-cuenta-historico" class="hidden fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+
+    <div class="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl space-y-4 my-6 max-h-[94vh] flex flex-col">
+
+      <!-- Modal Header -->
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+
+        <div class="flex items-center gap-3">
+
+          <div class="p-2.5 rounded-2xl bg-sky-950 border border-sky-800 text-sky-400">
+
+            <i data-lucide="history" class="w-6 h-6"></i>
+
+          </div>
+
+          <div>
+
+            <div class="flex items-center gap-2">
+
+              <h3 class="font-extrabold text-white text-base sm:text-lg">Estudio de Cuenta Histórico: Unidad <span id="estudio-hist-unidad" class="text-sky-400"></span></h3>
+
+              <span id="estudio-hist-total-meses" class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-bold"></span>
+
+            </div>
+
+            <p id="estudio-hist-subtitulo" class="text-xs text-slate-400"></p>
+
+          </div>
+
+        </div>
+
+        <button type="button" onclick="cerrarModalEstudioCuentaHistorico()" class="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer">
+
+          <i data-lucide="x" class="w-6 h-6"></i>
+
+        </button>
+
+      </div>
+
+
+
+      <!-- Owner & Property Info Banner -->
+
+      <div id="estudio-hist-info-banner" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-950/70 p-3 rounded-2xl border border-slate-800 text-xs shrink-0 font-mono">
+
+        <!-- Render dinámico -->
+
+      </div>
+
+
+
+      <!-- Resumen Cards (Facturado, Pagado, Saldo) -->
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
+
+        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800">
+
+          <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Cobros Facturados Histórico</span>
+
+          <span id="estudio-hist-res-facturado" class="text-lg font-black text-sky-300 font-mono">$0</span>
+
+        </div>
+
+        <div class="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-800/40">
+
+          <span class="text-[10px] uppercase font-bold text-emerald-400 block">Total Pagos y Abonos Registrados</span>
+
+          <span id="estudio-hist-res-pagado" class="text-lg font-black text-emerald-400 font-mono">$0</span>
+
+        </div>
+
+        <div class="p-3 rounded-2xl bg-purple-950/30 border border-purple-800/40">
+
+          <span class="text-[10px] uppercase font-bold text-purple-300 block">Saldo Actual a la Fecha</span>
+
+          <span id="estudio-hist-res-saldo" class="text-lg font-black text-purple-200 font-mono">$0</span>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Table Container (Scrollable) -->
+
+      <div class="overflow-x-auto overflow-y-auto flex-1 rounded-2xl border border-slate-800 bg-slate-950/50 min-h-[220px]">
+
+        <table class="w-full text-xs text-left border-collapse">
+
+          <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold sticky top-0 z-10 border-b border-slate-800">
+
+            <tr>
+
+              <th class="p-2.5">Periodo</th>
+
+              <th class="p-2.5 text-center">Factura</th>
+
+              <th class="p-2.5 text-right">Saldo Ant.</th>
+
+              <th class="p-2.5 text-right">Cuota Admón</th>
+
+              <th class="p-2.5 text-right">Intereses Mes</th>
+
+              <th class="p-2.5 text-right bg-emerald-950/40 text-emerald-300">Pago Mes (Abono)</th>
+
+              <th class="p-2.5 text-right bg-purple-950/40 text-purple-300">Saldo Final Mes</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="estudio-hist-tbody" class="divide-y divide-slate-800 font-mono">
+
+            <!-- Render dinámico -->
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+
+      <!-- Action Buttons -->
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800 shrink-0">
+
+        <div class="flex items-center gap-2">
+
+          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors">
+
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+
+            <span>Descargar en Excel (.xlsx)</span>
+
+          </button>
+
+          <button type="button" onclick="imprimirEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors">
+
+            <i data-lucide="printer" class="w-4 h-4"></i>
+
+            <span>Imprimir / PDF</span>
+
+          </button>
+
+        </div>
+
+        <div class="flex items-center gap-2">
+
+          <a id="estudio-hist-btn-wa" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md">
+
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+
+            <span>Enviar WhatsApp</span>
+
+          </a>
+
+          <button type="button" onclick="cerrarModalEstudioCuentaHistorico()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer">
+
+            Cerrar
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
 
 
 
@@ -19180,7 +19363,7 @@
 
           <span class="text-slate-400 text-[10px] uppercase font-bold">Ruta Local Sincronizada</span>
 
-          <p class="font-mono text-emerald-400 text-[11px] truncate">G:\Mi unidad\Lefacturamos (1)\</p>
+          <p class="font-mono text-emerald-400 text-[11px] truncate">G:\Mi unidad\LefacturamosPlus\</p>
 
           <p class="text-[10px] text-slate-500">Última comprobación: Hoy 17:42 p. m. (En línea)</p>
 

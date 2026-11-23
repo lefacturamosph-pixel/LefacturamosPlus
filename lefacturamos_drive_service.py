@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 GOOGLE_DRIVE_ROOT_URL = "https://drive.google.com/drive/folders/1x9dAsErwPBQrZuawj4PFxOS9O4_VBj1E?usp=drive_link"
-GOOGLE_DRIVE_LOCAL_PATH = Path(r"G:\Mi unidad\Lefacturamos (1)")
+GOOGLE_DRIVE_LOCAL_PATH = Path(r"G:\Mi unidad\LefacturamosPlus")
 DBPLUS_LOCAL_PATH = Path(r"C:\dbplus")
 REPO_ROOT = Path(__file__).resolve().parent
 REPO_DRIVE_PATH = REPO_ROOT / "data" / "drive_docs"

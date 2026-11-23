@@ -1509,6 +1509,23 @@ def consultar_estado_cuenta(conjunto_id: str, numero_apto: str):
 
 
 
+@app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}")
+@app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}")
+def api_estudio_cuenta_historico(conjunto_id: str, numero_apto: str):
+    """
+    Retorna la trazabilidad cronológica multianual mes a mes de cobros, facturas,
+    intereses, cuotas extraordinarias y pagos para un copropietario específico.
+    """
+    try:
+        from historico_service import obtener_estudio_cuenta_apto
+        res = obtener_estudio_cuenta_apto(conjunto_id, numero_apto)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error consultando histórico: {str(e)}")
+
+
+
+
 # ==============================================================================
 
 # 5. PAGOS, BRE-B (INTEROPERABLE), PSE, PASARELAS Y WEBHOOKS
@@ -3844,7 +3861,7 @@ def listar_informes_asamblea(conjunto_id: str):
 
 DRIVE_URL = "https://drive.google.com/drive/folders/1u1remh8F3vwpk108ZhibqfDhHErBtYBv?usp=drive_link"
 
-LOCAL_DRIVE_PATH = r"G:\Mi unidad\Lefacturamos (1)"
+LOCAL_DRIVE_PATH = r"G:\Mi unidad\LefacturamosPlus"
 
 LEY_675_SENADO_URL = "http://www.secretariasenado.gov.co/senado/basedoc/ley_0675_2001.html"
 
@@ -3858,7 +3875,7 @@ def drive_archivos_locales(copropiedad: Optional[str] = None):
 
     r"""
 
-    Explora los archivos y carpetas sincronizados en G:\Mi unidad\Lefacturamos (1)\*.*
+    Explora los archivos y carpetas sincronizados en G:\Mi unidad\LefacturamosPlus\*.*
 
     """
 
