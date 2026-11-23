@@ -15523,6 +15523,28 @@
 
           <div>
 
+            <label class="block text-slate-400 font-bold mb-1">Celular / Teléfono WhatsApp</label>
+
+            <input type="tel" id="edit-inmueble-tel" placeholder="Ej: 3243554115" class="w-full bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-2 text-emerald-300 font-bold focus:outline-none focus:border-emerald-400 font-mono" />
+
+          </div>
+
+          <div>
+
+            <label class="block text-slate-400 font-bold mb-1">Correo Electrónico</label>
+
+            <input type="email" id="edit-inmueble-email" placeholder="correo@ejemplo.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500" />
+
+          </div>
+
+        </div>
+
+
+
+        <div class="grid grid-cols-2 gap-3">
+
+          <div>
+
             <label class="block text-slate-400 font-bold mb-1">Condición de Habitación</label>
 
             <select id="edit-inmueble-habita" onchange="toggleInquilinoInput(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
@@ -16595,13 +16617,13 @@
 
         <div class="flex items-center gap-2">
 
-          <a id="estudio-hist-btn-wa" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md">
+          <button id="estudio-hist-btn-wa" type="button" onclick="enviarEstudioHistoricoWhatsApp()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Enviar Estado de Cuenta por WhatsApp">
 
             <i data-lucide="share-2" class="w-4 h-4"></i>
 
             <span>Enviar WhatsApp</span>
 
-          </a>
+          </button>
 
           <button type="button" onclick="cerrarModalEstudioCuentaHistorico()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer">
 

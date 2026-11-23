@@ -29483,7 +29483,9 @@ function getUnidadesRobleAlto4901Master() {
     "propietario": "Eliana Yurley Higuita Ríos",
     "cc": "1037324319",
     "email": "leidyge@outlook.com",
-    "telefono": "3135620391",
+    "telefono": "3243554115",
+    "tel": "3243554115",
+    "celular": "3243554115",
     "coefNum": 1.262,
     "coeficiente": "1.262%",
     "fac": 2829,
@@ -58918,7 +58920,10 @@ function aplicarFiltroEstudioHistorico() {
           `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
           `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`
         );
-    btnWa.href = `https://api.whatsapp.com/send?phone=57${data.tel || '3147593118'}&text=${msg}`;
+    window.currentEstudioHistoricoMesesFiltrados = mesesFiltrados;
+    const aptoCur = data.apto || '';
+    const telCur = (typeof obtenerTelefonoUnidad === 'function' ? obtenerTelefonoUnidad(aptoCur) : '') || data.tel || '';
+    btnWa.title = telCur ? `Enviar WhatsApp a ${telCur}` : 'Enviar WhatsApp';
   }
 
   safeCreateIcons();
@@ -59508,61 +59513,43 @@ window.filtrarSelectorHistoricoCopropietarios = function(query) {
 
 
 function enviarCobroWhatsApp(apto) {
-
   const cj = (typeof obtenerDatosCopropiedad === "function")
-
     ? obtenerDatosCopropiedad(AppState.codigoEdificio || AppState.conjuntoId || "4901")
-
     : null;
 
   const unidades = obtenerUnidadesActivas();
-
   const item = unidades.find(x => x.apto === apto || x.unidad === apto) || (typeof BASE_SALDOS_MATRIZ_DATA !== "undefined" ? BASE_SALDOS_MATRIZ_DATA.find(x => x.apto === apto) : null);
-
   if (!item) return;
 
-
-
   const pend = Number(item.pend) || 0;
-
   const actual = Number(item.actual) || 0;
-
   const intp = Number(item.intp) || 0;
-
   const inta = Number(item.inta) || 0;
-
   const pendTotal = pend + intp + (item.extrap || 0);
-
   const mesTotal = actual + inta;
-
   const totalRow = item.totalNum !== undefined ? item.totalNum : (pendTotal + mesTotal);
-
-  const tel = item.telefono || "3147593118";
-
+  const tel = (typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(item.apto || item.unidad) : "") || item.telefono || "3147593118";
   const nombreEdif = cj ? cj.nombre : "la Administración";
 
+  const msg =
+    `Cordial saludo ${item.propietario || 'Copropietario'}. Desde la Administración de ${nombreEdif} le compartimos su estado de cuenta para la unidad ${item.apto || item.unidad}:
+` +
+    `• Cuota del Mes: ${formatoMonedaSaldos(mesTotal)}
+` +
+    `• Saldo en Mora: ${formatoMonedaSaldos(pendTotal)}
+` +
+    `• TOTAL A CANCELAR: ${formatoMonedaSaldos(totalRow)}
 
+` +
+    `Puede realizar su transferencia o pago en línea PSE / Bre-B en: https://lefacturamos.com/pagar?apto=${item.apto || item.unidad}`;
 
-  const msg = encodeURIComponent(
-
-    `Cordial saludo ${item.propietario || 'Copropietario'}. Desde la Administración de ${nombreEdif} le compartimos su estado de cuenta para la unidad ${item.apto || item.unidad}:\n` +
-
-    `• Cuota del Mes: ${formatoMonedaSaldos(mesTotal)}\n` +
-
-    `• Saldo en Mora: ${formatoMonedaSaldos(pendTotal)}\n` +
-
-    `• TOTAL A CANCELAR: ${formatoMonedaSaldos(totalRow)}\n\n` +
-
-    `Puede realizar su transferencia o pago en línea PSE / Bre-B en: https://lefacturamos.com/pagar?apto=${item.apto || item.unidad}`
-
-  );
-
-  const cleanTelCobro = String(tel).replace(/\D/g, "");
-  const fullPhoneCobro = cleanTelCobro.startsWith("57") ? cleanTelCobro : (cleanTelCobro.length === 10 ? `57${cleanTelCobro}` : cleanTelCobro);
-  window.open(`https://api.whatsapp.com/send?phone=${fullPhoneCobro}&text=${msg}`, "_blank");
-
-  mostrarToast(`💬 Abriendo WhatsApp para cobro de unidad ${item.apto || item.unidad}`);
-
+  despacharWhatsAppDirecto({
+    telefono: tel,
+    mensaje: msg,
+    contexto: "cobro_mensual",
+    unidad: item.apto || item.unidad,
+    destinatario: item.propietario
+  });
 }
 
 
@@ -60342,55 +60329,57 @@ function filtrarInventarioInmuebles(query) {
 
 
 function editarInmuebleInventario(unidad) {
-
   const unidadesBase = obtenerUnidadesActivas();
-
-  const item = unidadesBase.find(i => (i.unidad === unidad || i.apto === unidad)) || 
-
-               (typeof INVENTARIO_INMUEBLES_DATA !== "undefined" ? INVENTARIO_INMUEBLES_DATA.find(i => i.unidad === unidad) : null);
-
+  let item = unidadesBase.find(i => (i.unidad === unidad || i.apto === unidad)) || 
+             (typeof INVENTARIO_INMUEBLES_DATA !== "undefined" ? INVENTARIO_INMUEBLES_DATA.find(i => (i.unidad === unidad || i.apto === unidad)) : null) ||
+             (typeof DIRECTORIO_RESIDENTES_DATA !== "undefined" ? DIRECTORIO_RESIDENTES_DATA.find(i => (i.apto === unidad || i.unidad === unidad)) : null);
   if (!item) return;
 
-
-
   const modal = document.getElementById("modal-editar-inmueble");
-
   if (!modal) return;
 
-
-
   const uCode = item.unidad || item.apto;
+  const resMatch = (typeof DIRECTORIO_RESIDENTES_DATA !== "undefined") ? DIRECTORIO_RESIDENTES_DATA.find(r => r.apto === uCode || r.unidad === uCode) : null;
 
-  document.getElementById("edit-inmueble-titulo-unidad").innerText = uCode;
+  if (document.getElementById("edit-inmueble-titulo-unidad")) document.getElementById("edit-inmueble-titulo-unidad").innerText = uCode;
+  if (document.getElementById("edit-inmueble-unidad")) document.getElementById("edit-inmueble-unidad").value = uCode;
 
-  document.getElementById("edit-inmueble-unidad").value = uCode;
+  if (document.getElementById("edit-inmueble-bloq")) document.getElementById("edit-inmueble-bloq").value = item.bloq !== undefined ? item.bloq : (item.torre || "00");
+  if (document.getElementById("edit-inmueble-tipo")) document.getElementById("edit-inmueble-tipo").value = item.tipo || "Apartamento";
+  if (document.getElementById("edit-inmueble-area")) document.getElementById("edit-inmueble-area").value = item.area || (resMatch ? resMatch.area : "") || "75 m²";
+  if (document.getElementById("edit-inmueble-coef")) document.getElementById("edit-inmueble-coef").value = item.coeficiente || item.coef || (resMatch ? resMatch.coeficiente : "") || "0.000%";
+  if (document.getElementById("edit-inmueble-parqueadero")) document.getElementById("edit-inmueble-parqueadero").value = item.parqueadero || item.pk || (resMatch ? resMatch.parqueadero : "") || "";
+  if (document.getElementById("edit-inmueble-cuartoutil")) document.getElementById("edit-inmueble-cuartoutil").value = item.cuartoUtil || item.cu || (resMatch ? resMatch.cuartoUtil : "") || "";
+  if (document.getElementById("edit-inmueble-matricula")) document.getElementById("edit-inmueble-matricula").value = item.matricula || "";
 
-  document.getElementById("edit-inmueble-bloq").value = item.bloq !== undefined ? item.bloq : "00";
+  // Propietario y Teléfono
+  if (document.getElementById("edit-inmueble-propietario")) document.getElementById("edit-inmueble-propietario").value = item.propietario || item.nombre || (item.prop ? item.prop : "");
+  if (document.getElementById("edit-inmueble-doc")) document.getElementById("edit-inmueble-doc").value = item.documento || (item.cc ? `CC: ${item.cc}` : (resMatch ? resMatch.documento : "")) || "";
+  
+  const curTel = (typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(uCode) : "") || item.telefono || item.tel || item.celular || (resMatch ? resMatch.tel : "") || "";
+  const curEmail = item.email || item.correo || (resMatch ? resMatch.email : "") || "";
+  if (document.getElementById("edit-inmueble-tel")) document.getElementById("edit-inmueble-tel").value = curTel;
+  if (document.getElementById("edit-inmueble-email")) document.getElementById("edit-inmueble-email").value = curEmail;
+  if (document.getElementById("edit-inmueble-dir")) document.getElementById("edit-inmueble-dir").value = item.direccionCorrespondencia || item.direccion || item.dir || "";
+  if (document.getElementById("edit-inmueble-ciudad")) document.getElementById("edit-inmueble-ciudad").value = item.ciudadNotificacion || item.ciudad || "Medellín";
 
-  document.getElementById("edit-inmueble-tipo").value = item.tipo || "Apartamento";
+  // Residente / Inquilino
+  const esArrendado = !!(item.esInquilino || item.tipo === "inquilino" || (item.inquilino && item.inquilino !== "Propietario habita"));
+  if (document.getElementById("edit-inmueble-habita")) document.getElementById("edit-inmueble-habita").value = esArrendado ? "arrendatario" : "propietario";
+  if (document.getElementById("edit-inmueble-residente")) document.getElementById("edit-inmueble-residente").value = esArrendado ? (item.residente || (item.inquilino ? (item.inquilino.nombre || item.inquilino) : "")) : "";
+  if (document.getElementById("edit-inmueble-residente-tel")) document.getElementById("edit-inmueble-residente-tel").value = item.telefonoResidente || item.telInquilino || (item.inquilino && typeof item.inquilino === "object" ? item.inquilino.tel : "") || "";
+  if (document.getElementById("edit-inmueble-residente-email")) document.getElementById("edit-inmueble-residente-email").value = item.emailResidente || item.correoInquilino || (item.inquilino && typeof item.inquilino === "object" ? item.inquilino.email : "") || "";
 
-  document.getElementById("edit-inmueble-area").value = item.area || "";
+  // Financiero y Clave
+  if (document.getElementById("edit-inmueble-cartera")) document.getElementById("edit-inmueble-cartera").value = item.totalNum ? formatoCOP(item.totalNum) : (item.cartera || "Al día");
+  if (document.getElementById("edit-inmueble-clave")) document.getElementById("edit-inmueble-clave").value = item.clave || "1234";
 
-  document.getElementById("edit-inmueble-coef").value = item.coeficiente || "0.000%";
-
-  document.getElementById("edit-inmueble-propietario").value = item.propietario || "";
-
-  document.getElementById("edit-inmueble-doc").value = item.documento || (item.cc ? `CC: ${item.cc}` : "");
-
-  document.getElementById("edit-inmueble-habita").value = item.esInquilino ? "arrendatario" : "propietario";
-
-  document.getElementById("edit-inmueble-residente").value = item.esInquilino ? (item.residente || "") : "";
-
-  document.getElementById("edit-inmueble-cartera").value = item.totalNum ? formatoCOP(item.totalNum) : (item.cartera || "Al día");
-
-  document.getElementById("edit-inmueble-clave").value = item.clave || "1234";
-
-
+  if (typeof toggleInquilinoInput === "function" && document.getElementById("edit-inmueble-habita")) {
+    toggleInquilinoInput(document.getElementById("edit-inmueble-habita").value);
+  }
 
   modal.classList.remove("hidden");
-
   safeCreateIcons();
-
 }
 
 
@@ -60428,57 +60417,101 @@ function toggleInquilinoInput(habita) {
 
 
 function guardarEdicionInmueble(e) {
-
   if (e) e.preventDefault();
-
   const unidad = document.getElementById("edit-inmueble-unidad").value;
-
   const unidadesBase = obtenerUnidadesActivas();
-
-  const item = unidadesBase.find(i => (i.unidad === unidad || i.apto === unidad));
-
-  if (item) {
-
-    const esArrendatario = document.getElementById("edit-inmueble-habita").value === "arrendatario";
-
-    const nuevoResidente = esArrendatario 
-
-      ? (document.getElementById("edit-inmueble-residente").value.trim() || "Arrendatario registrado")
-
-      : "Propietario habita";
-
-
-
-    item.bloq = document.getElementById("edit-inmueble-bloq").value;
-
-    item.tipo = document.getElementById("edit-inmueble-tipo").value;
-
-    item.area = document.getElementById("edit-inmueble-area").value;
-
-    item.coeficiente = document.getElementById("edit-inmueble-coef").value;
-
-    item.propietario = document.getElementById("edit-inmueble-propietario").value;
-
-    item.documento = document.getElementById("edit-inmueble-doc").value;
-
-    item.esInquilino = esArrendatario;
-
-    item.residente = nuevoResidente;
-
-    item.cartera = document.getElementById("edit-inmueble-cartera").value;
-
-    item.clave = document.getElementById("edit-inmueble-clave").value;
-
-
-
-    cerrarModalEditarInmueble();
-
-    renderizarInventarioInmuebles();
-
-    mostrarToast(`✓ Inmueble ${unidad} actualizado exitosamente`);
-
+  let item = unidadesBase.find(i => (i.unidad === unidad || i.apto === unidad));
+  if (!item && typeof INVENTARIO_INMUEBLES_DATA !== "undefined") {
+    item = INVENTARIO_INMUEBLES_DATA.find(i => (i.unidad === unidad || i.apto === unidad));
+  }
+  if (!item && typeof DIRECTORIO_RESIDENTES_DATA !== "undefined") {
+    item = DIRECTORIO_RESIDENTES_DATA.find(i => (i.apto === unidad || i.unidad === unidad));
   }
 
+  if (item) {
+    const esArrendatario = document.getElementById("edit-inmueble-habita")?.value === "arrendatario";
+    const nuevoResidente = esArrendatario 
+      ? ((document.getElementById("edit-inmueble-residente")?.value || "").trim() || "Arrendatario registrado")
+      : "Propietario habita";
+
+    if (document.getElementById("edit-inmueble-bloq")) item.bloq = document.getElementById("edit-inmueble-bloq").value.trim();
+    if (document.getElementById("edit-inmueble-tipo")) item.tipo = document.getElementById("edit-inmueble-tipo").value;
+    if (document.getElementById("edit-inmueble-area")) item.area = document.getElementById("edit-inmueble-area").value.trim();
+    if (document.getElementById("edit-inmueble-coef")) item.coeficiente = document.getElementById("edit-inmueble-coef").value.trim();
+    if (document.getElementById("edit-inmueble-parqueadero")) item.parqueadero = document.getElementById("edit-inmueble-parqueadero").value.trim();
+    if (document.getElementById("edit-inmueble-cuartoutil")) item.cuartoUtil = document.getElementById("edit-inmueble-cuartoutil").value.trim();
+    if (document.getElementById("edit-inmueble-matricula")) item.matricula = document.getElementById("edit-inmueble-matricula").value.trim();
+
+    if (document.getElementById("edit-inmueble-propietario")) item.propietario = document.getElementById("edit-inmueble-propietario").value.trim();
+    if (document.getElementById("edit-inmueble-doc")) item.documento = document.getElementById("edit-inmueble-doc").value.trim();
+
+    const nuevoTel = document.getElementById("edit-inmueble-tel") ? document.getElementById("edit-inmueble-tel").value.trim() : "";
+    const nuevoEmail = document.getElementById("edit-inmueble-email") ? document.getElementById("edit-inmueble-email").value.trim() : "";
+    item.telefono = nuevoTel;
+    item.tel = nuevoTel;
+    item.celular = nuevoTel;
+    item.email = nuevoEmail;
+    item.correo = nuevoEmail;
+
+    if (document.getElementById("edit-inmueble-dir")) item.direccionCorrespondencia = document.getElementById("edit-inmueble-dir").value.trim();
+    if (document.getElementById("edit-inmueble-ciudad")) item.ciudadNotificacion = document.getElementById("edit-inmueble-ciudad").value.trim();
+
+    item.esInquilino = esArrendatario;
+    item.residente = nuevoResidente;
+    if (document.getElementById("edit-inmueble-cartera")) item.cartera = document.getElementById("edit-inmueble-cartera").value.trim();
+    if (document.getElementById("edit-inmueble-clave")) item.clave = document.getElementById("edit-inmueble-clave").value.trim();
+
+    // Sincronizar en DIRECTORIO_RESIDENTES_DATA
+    if (typeof DIRECTORIO_RESIDENTES_DATA !== "undefined") {
+      const resItem = DIRECTORIO_RESIDENTES_DATA.find(r => r.apto === unidad || r.unidad === unidad);
+      if (resItem) {
+        resItem.nombre = item.propietario;
+        resItem.documento = item.documento;
+        resItem.tel = item.telefono;
+        resItem.email = item.email;
+        resItem.tipo = esArrendatario ? "inquilino" : "propietario";
+        resItem.clave = item.clave;
+      }
+    }
+
+    // Persistir en localStorage
+    try {
+      const activeCode = (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901";
+      const codClean = String(activeCode).replace(/^cj_/, "").trim();
+      const storageKey = `lefacturamos_inmuebles_editados_${codClean}`;
+      const customMap = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      customMap[unidad] = {
+        ...(customMap[unidad] || {}),
+        telefono: nuevoTel,
+        tel: nuevoTel,
+        celular: nuevoTel,
+        email: nuevoEmail,
+        correo: nuevoEmail,
+        propietario: item.propietario,
+        documento: item.documento,
+        clave: item.clave
+      };
+      localStorage.setItem(storageKey, JSON.stringify(customMap));
+
+      // Sincronizar en listaCopropiedadesSuperadmin
+      if (typeof listaCopropiedadesSuperadmin !== "undefined") {
+        const cj = listaCopropiedadesSuperadmin.find(c => String(c.codigo).trim() === codClean || c.id === activeCode);
+        if (cj && cj.unidades) {
+          const idx = cj.unidades.findIndex(u => (u.unidad === unidad || u.apto === unidad));
+          if (idx >= 0) {
+            cj.unidades[idx] = { ...cj.unidades[idx], ...item };
+          }
+          localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
+        }
+      }
+    } catch(err) {
+      console.warn("Error persistiendo datos de inmueble:", err);
+    }
+
+    cerrarModalEditarInmueble();
+    if (typeof renderizarInventarioInmuebles === "function") renderizarInventarioInmuebles();
+    mostrarToast(`✓ Inmueble ${unidad} actualizado exitosamente (Celular: ${nuevoTel || 'Sin asignar'})`);
+  }
 }
 
 
@@ -60515,7 +60548,7 @@ function verDetalleInmueble(unidad) {
 
 
 
-  const telLimpio = (item.telefono || "3147593118").replace(/\s/g, "");
+  const telLimpio = ((typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(uCode) : "") || item.telefono || "3147593118").replace(/\s/g, "");
 
   const nombreEdif = cj ? cj.nombre : "la Copropiedad";
 
@@ -60627,13 +60660,13 @@ function verDetalleInmueble(unidad) {
 
         </div>
 
-        <a href="https://api.whatsapp.com/send?phone=57${telLimpio}&text=Estimado(a)%20${encodeURIComponent(item.propietario || 'Copropietario')},%20le%20saludamos%20de%20la%20Administraci%C3%B3n%20${encodeURIComponent(nombreEdif)}%20respecto%20al%20inmueble%20${uCode}" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-600/40 font-bold flex items-center gap-1.5 transition-colors">
+        <button type="button" onclick="despacharWhatsAppDirecto({ telefono: '${telLimpio}', mensaje: 'Estimado(a) ' + (item.propietario || 'Copropietario') + ', le saludamos de la Administración ' + nombreEdif + ' respecto al inmueble ' + uCode, contexto: 'detalle_inmueble', unidad: uCode, destinatario: item.propietario || '' })" class="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-600/40 font-bold flex items-center gap-1.5 transition-colors cursor-pointer">
 
           <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
 
           <span>WhatsApp</span>
 
-        </a>
+        </button>
 
       </div>
 
@@ -64606,6 +64639,175 @@ function pagarDesdeVisor() {
 // ==============================================================================
 // FUNCIONES GLOBALES DE WHATSAPP PARA DOCUMENTOS, CARTERA Y COMUNICADOS
 // ==============================================================================
+
+// ==============================================================================
+// FUNCIONES GLOBALES DE WHATSAPP Y GESTIÓN DE TELÉFONO DE INMUEBLE
+// ==============================================================================
+function formatearTelefonoWhatsApp(tel) {
+  if (!tel) return "";
+  let clean = String(tel).replace(/\D/g, "");
+  if (clean.length === 10 && clean.startsWith("3")) {
+    clean = "57" + clean;
+  }
+  return clean;
+}
+
+function obtenerTelefonoUnidad(apto) {
+  if (!apto) return "";
+  const sApto = String(apto).trim();
+  const activeCode = (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901";
+  const codClean = String(activeCode).replace(/^cj_/, "").trim();
+
+  // 1. Revisar si fue editado en localStorage (máxima prioridad)
+  try {
+    const customMap = JSON.parse(localStorage.getItem(`lefacturamos_inmuebles_editados_${codClean}`) || "{}");
+    if (customMap[sApto] && (customMap[sApto].telefono || customMap[sApto].tel || customMap[sApto].celular)) {
+      return customMap[sApto].telefono || customMap[sApto].tel || customMap[sApto].celular;
+    }
+    const altKey = sApto.startsWith("0") ? sApto.replace(/^0+/, "") : ("0" + sApto);
+    if (customMap[altKey] && (customMap[altKey].telefono || customMap[altKey].tel || customMap[altKey].celular)) {
+      return customMap[altKey].telefono || customMap[altKey].tel || customMap[altKey].celular;
+    }
+  } catch (e) {}
+
+  // 2. Buscar en unidades activas de la copropiedad
+  if (typeof obtenerUnidadesActivas === "function") {
+    const list = obtenerUnidadesActivas();
+    const u = list.find(x => String(x.apto || x.unidad).trim() === sApto || String(Number(x.apto || x.unidad)) === String(Number(sApto)));
+    if (u && (u.telefono || u.tel || u.celular)) {
+      return u.telefono || u.tel || u.celular;
+    }
+  }
+
+  // 3. Buscar en INVENTARIO_INMUEBLES_DATA
+  if (typeof INVENTARIO_INMUEBLES_DATA !== "undefined") {
+    const inv = INVENTARIO_INMUEBLES_DATA.find(x => String(x.unidad || x.apto).trim() === sApto || String(Number(x.unidad || x.apto)) === String(Number(sApto)));
+    if (inv && (inv.telefono || inv.tel || inv.celular)) {
+      return inv.telefono || inv.tel || inv.celular;
+    }
+  }
+
+  // 4. Buscar en BASE_SALDOS_MATRIZ_DATA
+  if (typeof BASE_SALDOS_MATRIZ_DATA !== "undefined") {
+    const s = BASE_SALDOS_MATRIZ_DATA.find(x => String(x.apto).trim() === sApto || String(Number(x.apto)) === String(Number(sApto)));
+    if (s && (s.telefono || s.tel || s.celular)) {
+      return s.telefono || s.tel || s.celular;
+    }
+  }
+
+  // 5. Fallback a currentEstudioHistoricoData si coincide el apto
+  if (typeof currentEstudioHistoricoData !== "undefined" && currentEstudioHistoricoData && currentEstudioHistoricoData.apto) {
+    if (String(currentEstudioHistoricoData.apto).trim() === sApto && currentEstudioHistoricoData.tel) {
+      return currentEstudioHistoricoData.tel;
+    }
+  }
+
+  return "";
+}
+
+function despacharWhatsAppDirecto(opts) {
+  const { telefono, mensaje, contexto, unidad, destinatario } = opts || {};
+  const cleanPhone = formatearTelefonoWhatsApp(telefono);
+  if (!cleanPhone) {
+    if (typeof mostrarToast === "function") {
+      mostrarToast("⚠️ La unidad no tiene celular registrado. Asígnelo en 'Apartamentos y Coeficientes' -> 'Editar Inmueble'.", "warning");
+    }
+    return;
+  }
+
+  // 1. Registro silencioso por debajo al backend para auditoría
+  try {
+    const activeCode = (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || "4901";
+    const codClean = String(activeCode).replace(/^cj_/, "").trim();
+    fetch("/api/notificaciones/enviar-whatsapp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conjunto_id: codClean,
+        telefono: cleanPhone,
+        mensaje: mensaje || "",
+        contexto: contexto || "general",
+        unidad: unidad || "",
+        destinatario: destinatario || ""
+      })
+    }).catch(() => {});
+  } catch (e) {}
+
+  // 2. Apertura directa sin pantallas intermedias ("Abrir aplicación o continuar en WhatsApp Web")
+  const msgEncoded = encodeURIComponent(mensaje || "");
+  const esMovil = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+
+  if (esMovil) {
+    // En APK / Dispositivo Móvil: protocolo nativo directo a la aplicación WhatsApp
+    window.location.href = `whatsapp://send?phone=${cleanPhone}&text=${msgEncoded}`;
+  } else {
+    // En PC / Desktop: va directamente a WhatsApp Web con el chat y texto pre-cargado
+    // sin pasar por la página intermedia de api.whatsapp.com
+    window.open(`https://web.whatsapp.com/send?phone=${cleanPhone}&text=${msgEncoded}`, "_blank");
+  }
+
+  if (typeof mostrarToast === "function") {
+    mostrarToast(`💬 Despachando WhatsApp al ${cleanPhone}...`, "success");
+  }
+}
+
+function enviarEstudioHistoricoWhatsApp() {
+  if (!currentEstudioHistoricoData) {
+    if (typeof mostrarToast === "function") mostrarToast("⚠️ No hay datos de estudio de cuenta para enviar.", "warning");
+    return;
+  }
+  const data = currentEstudioHistoricoData;
+  const apto = data.apto || "";
+  const tel = obtenerTelefonoUnidad(apto) || data.tel || "";
+  if (!tel) {
+    if (typeof mostrarToast === "function") mostrarToast(`⚠️ No hay celular registrado para la unidad ${apto}. Ingréselo en 'Apartamentos y Coeficientes' -> 'Editar Inmueble'.`, "warning");
+    return;
+  }
+
+  const mesesFiltrados = window.currentEstudioHistoricoMesesFiltrados || data.meses || [];
+  const primerMes = mesesFiltrados[0] || {};
+  const ultMesFiltrado = mesesFiltrados[mesesFiltrados.length - 1] || {};
+  
+  const tipoFiltro = document.getElementById("estudio-hist-filtro-destinatario")?.value || "abogado";
+  const esAbogado = tipoFiltro === "abogado";
+  const nombreEdif = data.edificio?.nombre || "la Administración";
+
+  // Calcular totales del periodo
+  let totalCapitalCausado = 0;
+  let totalInteresesCausados = 0;
+  let sumPagos = 0;
+  mesesFiltrados.forEach(m => {
+    totalCapitalCausado += Number(m.cuota_mes || 0);
+    totalInteresesCausados += Number(m.interes_mes || 0);
+    sumPagos += Number(m.pago_mes || 0);
+  });
+  const saldoFinalPeriodo = ultMesFiltrado ? Number(ultMesFiltrado.total || 0) : 0;
+
+  const msg = esAbogado
+    ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
+      `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
+      `• Total Capital Causado (Cuotas): ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
+      `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
+      `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
+      `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
+      `La presente certificación presta mérito ejecutivo en los términos de ley.`
+    : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
+      `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
+      `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
+      `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
+      `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
+      `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
+      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
+
+  despacharWhatsAppDirecto({
+    telefono: tel,
+    mensaje: msg,
+    contexto: esAbogado ? "cobro_judicial" : "historico_copropietario",
+    unidad: apto,
+    destinatario: data.propietario
+  });
+}
+
 function compartirDocumentoWhatsApp(docId) {
   let doc = null;
   if (typeof driveDocumentosInmueblesData !== "undefined") {
@@ -64618,7 +64820,7 @@ function compartirDocumentoWhatsApp(docId) {
     doc = docDriveActualSeleccionado;
   }
   if (!doc) {
-    mostrarToast("Documento no encontrado para compartir", true);
+    if (typeof mostrarToast === "function") mostrarToast("Documento no encontrado para compartir", true);
     return;
   }
 
@@ -64632,34 +64834,34 @@ function compartirDocumentoWhatsApp(docId) {
       : (doc.titulo || "Informe Oficial"));
   const valor = doc.valor ? ` por valor de ${doc.valor}` : "";
 
-  // Buscar teléfono si está disponible
-  let tel = "";
-  if (typeof obtenerUnidadesActivas === "function") {
-    const u = obtenerUnidadesActivas().find(x => String(x.apto || x.unidad).trim() === String(apto).trim());
-    if (u && u.telefono) tel = u.telefono;
-  }
-  if (!tel && typeof BASE_SALDOS_MATRIZ_DATA !== "undefined") {
-    const s = BASE_SALDOS_MATRIZ_DATA.find(x => String(x.apto).trim() === String(apto).trim());
-    if (s && s.telefono) tel = s.telefono;
-  }
-
-  const cleanTel = String(tel).replace(/\D/g, "");
-  const fullPhone = cleanTel ? (cleanTel.startsWith("57") ? cleanTel : (cleanTel.length === 10 ? `57${cleanTel}` : cleanTel)) : "";
+  // Buscar teléfono únicamente a través de la fuente centralizada del inmueble
+  const tel = typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(apto) : "";
 
   const linkDescarga = `${window.location.origin}${doc.url_descarga || doc.url_ver || `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&archivo=${encodeURIComponent(doc.nombre_archivo || doc.nombre || doc.titulo)}`}`;
 
-  const msg = encodeURIComponent(
-    `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*\n\n` +
-    `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
-    `Le compartimos su *${tipo}*${valor}.\n\n` +
-    `📄 *Documento:* ${doc.nombre_archivo || doc.nombre || doc.titulo}\n` +
-    `🔗 *Enlace Seguro:* ${linkDescarga}\n\n` +
-    `_Plataforma Oficial LEFACTURAMOS PH_`
-  );
+  const msg =
+    `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*
 
-  const waUrl = fullPhone ? `https://api.whatsapp.com/send?phone=${fullPhone}&text=${msg}` : `https://api.whatsapp.com/send?text=${msg}`;
-  window.open(waUrl, "_blank");
-  mostrarToast(`📲 Abriendo WhatsApp para compartir ${tipo}...`);
+` +
+    `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:
+` +
+    `Le compartimos su *${tipo}*${valor}.
+
+` +
+    `📄 *Documento:* ${doc.nombre_archivo || doc.nombre || doc.titulo}
+` +
+    `🔗 *Enlace Seguro:* ${linkDescarga}
+
+` +
+    `_Plataforma Oficial LEFACTURAMOS PH_`;
+
+  despacharWhatsAppDirecto({
+    telefono: tel,
+    mensaje: msg,
+    contexto: "documento_drive",
+    unidad: apto,
+    destinatario: prop
+  });
 }
 
 function compartirComunicadoWhatsApp(comId) {

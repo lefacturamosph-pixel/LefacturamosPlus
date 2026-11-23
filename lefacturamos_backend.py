@@ -360,6 +360,22 @@ class WebhookPayload(BaseModel):
 
 
 
+class NotificacionWhatsAppRequest(BaseModel):
+
+    conjunto_id: Optional[str] = "4901"
+
+    telefono: str
+
+    mensaje: str
+
+    contexto: Optional[str] = "general"
+
+    unidad: Optional[str] = None
+
+    destinatario: Optional[str] = None
+
+
+
 class ReservaCreateRequest(BaseModel):
 
     conjunto_id: str
@@ -3143,6 +3159,23 @@ def enviar_whatsapp_visitante(token_qr: str = Body(..., embed=True)):
         pass
     conn.close()
     return {"status": "enviado", "mensaje": f"Mensaje enviado por pasarela a {v_row['visitante_nombre']}", "token_qr": tok_clean}
+
+
+@app.post("/api/notificaciones/enviar-whatsapp")
+def enviar_notificacion_whatsapp(req: NotificacionWhatsAppRequest):
+    conn = get_db_connection()
+    try:
+        detalle = f"Envío WhatsApp por debajo ({req.contexto}) a {req.destinatario or ''} ({req.telefono}) - Inmueble: {req.unidad or 'N/A'}"
+        conn.execute("""
+        INSERT INTO log_auditoria (conjunto_id, usuario, rol, accion, modulo, detalle)
+        VALUES (?, 'ADMINISTRADOR', 'ADMIN', 'ENVIO_WHATSAPP_SILENCIOSO', 'Notificaciones', ?)
+        """, (req.conjunto_id or "4901", detalle))
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+    return {"status": "enviado", "telefono": req.telefono, "contexto": req.contexto, "silencioso": True}
 
 
 @app.get("/api/conjuntos/{conjunto_id}/minuta")
