@@ -5,8 +5,9 @@ call gradlew.bat --stop
 call gradlew.bat assembleDebug --no-daemon
 cd ..
 if exist "android\app\build\outputs\apk\debug\app-debug.apk" (
+    copy /y android\app\build\outputs\apk\debug\app-debug.apk Lefacturamos.apk
     copy /y android\app\build\outputs\apk\debug\app-debug.apk LEFACTURAMOS_Android_v4.apk
-    echo APK COMPILED SUCCESSFULLY
+    echo APK COMPILED SUCCESSFULLY COMO Lefacturamos.apk
 ) else (
     echo APK BUILD FAILED
 )
