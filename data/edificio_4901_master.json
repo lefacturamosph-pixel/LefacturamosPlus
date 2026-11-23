@@ -65,13 +65,15 @@
       "valdescFmt": "$0",
       "valpag": 440000.0,
       "valpagFmt": "$440.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$440.000",
       "totalNum": 440000.0,
       "totalPagar": "$440.000",
       "totalFinal": 440000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0104",
@@ -121,13 +123,15 @@
       "valdescFmt": "$0",
       "valpag": 451000.0,
       "valpagFmt": "$451.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": 451000.0,
       "totalPagar": "$451.000",
       "totalFinal": 451000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0105",
@@ -177,13 +181,15 @@
       "valdescFmt": "$0",
       "valpag": 472000.0,
       "valpagFmt": "$472.000",
-      "saldoPendiente": "$-6.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$466.000",
       "totalNum": 460000.0,
       "totalPagar": "$460.000",
       "totalFinal": 460000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -6000.0,
+      "totalPendienteAcumulado": -6000.0
     },
     {
       "unidad": "0106",
@@ -233,13 +239,15 @@
       "valdescFmt": "$0",
       "valpag": 451000.0,
       "valpagFmt": "$451.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": 451000.0,
       "totalPagar": "$451.000",
       "totalFinal": 451000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0107",
@@ -289,13 +297,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$951.610",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": 1433200.0,
       "totalPagar": "$1.433.200",
       "totalFinal": 1433200.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 962210.0,
+      "totalPendienteAcumulado": 962210.0
     },
     {
       "unidad": "0108",
@@ -345,13 +355,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$863.430",
+      "saldoPendiente": "",
       "cuotaMensual": "$485.000",
       "totalNum": 1374590.0,
       "totalPagar": "$1.374.590",
       "totalFinal": 1374590.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 871450.0,
+      "totalPendienteAcumulado": 871450.0
     },
     {
       "unidad": "0109",
@@ -401,13 +413,15 @@
       "valdescFmt": "$0",
       "valpag": 440000.0,
       "valpagFmt": "$440.000",
-      "saldoPendiente": "$-290",
+      "saldoPendiente": "",
       "cuotaMensual": "$440.000",
       "totalNum": 439710.0,
       "totalPagar": "$439.710",
       "totalFinal": 439710.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -290.0,
+      "totalPendienteAcumulado": -290.0
     },
     {
       "unidad": "0110",
@@ -457,13 +471,15 @@
       "valdescFmt": "$0",
       "valpag": 400000.0,
       "valpagFmt": "$400.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$400.000",
       "totalNum": 400000.0,
       "totalPagar": "$400.000",
       "totalFinal": 400000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0111",
@@ -513,13 +529,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$492.200",
+      "saldoPendiente": "",
       "cuotaMensual": "$444.000",
       "totalNum": 947560.0,
       "totalPagar": "$947.560",
       "totalFinal": 947560.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 493220.0,
+      "totalPendienteAcumulado": 493220.0
     },
     {
       "unidad": "0112",
@@ -569,13 +587,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0113",
@@ -625,13 +645,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0114",
@@ -681,13 +703,15 @@
       "valdescFmt": "$0",
       "valpag": 432000.0,
       "valpagFmt": "$432.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$432.000",
       "totalNum": 432000.0,
       "totalPagar": "$432.000",
       "totalFinal": 432000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0115",
@@ -737,13 +761,15 @@
       "valdescFmt": "$0",
       "valpag": 420000.0,
       "valpagFmt": "$420.000",
-      "saldoPendiente": "$-420.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$420.000",
       "totalNum": 0.0,
       "totalPagar": "$0",
       "totalFinal": 0.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -420000.0,
+      "totalPendienteAcumulado": -420000.0
     },
     {
       "unidad": "0116",
@@ -793,13 +819,15 @@
       "valdescFmt": "$0",
       "valpag": 413000.0,
       "valpagFmt": "$413.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$413.000",
       "totalNum": 413000.0,
       "totalPagar": "$413.000",
       "totalFinal": 413000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0201",
@@ -849,13 +877,15 @@
       "valdescFmt": "$0",
       "valpag": 450000.0,
       "valpagFmt": "$450.000",
-      "saldoPendiente": "$842.480",
+      "saldoPendiente": "",
       "cuotaMensual": "$405.000",
       "totalNum": 1265180.0,
       "totalPagar": "$1.265.180",
       "totalFinal": 1265180.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 842480.0,
+      "totalPendienteAcumulado": 842480.0
     },
     {
       "unidad": "0202",
@@ -905,13 +935,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$1.289.830",
+      "saldoPendiente": "",
       "cuotaMensual": "$430.000",
       "totalNum": 1774420.0,
       "totalPagar": "$1.774.420",
       "totalFinal": 1774420.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 1317320.0,
+      "totalPendienteAcumulado": 1317320.0
     },
     {
       "unidad": "0203",
@@ -961,13 +993,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0204",
@@ -1017,13 +1051,15 @@
       "valdescFmt": "$0",
       "valpag": 451000.0,
       "valpagFmt": "$451.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": 451000.0,
       "totalPagar": "$451.000",
       "totalFinal": 451000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0205",
@@ -1073,13 +1109,15 @@
       "valdescFmt": "$0",
       "valpag": 459000.0,
       "valpagFmt": "$459.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$459.000",
       "totalNum": 459000.0,
       "totalPagar": "$459.000",
       "totalFinal": 459000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0206",
@@ -1129,13 +1167,15 @@
       "valdescFmt": "$0",
       "valpag": 916000.0,
       "valpagFmt": "$916.000",
-      "saldoPendiente": "$974.910",
+      "saldoPendiente": "",
       "cuotaMensual": "$458.000",
       "totalNum": 1453390.0,
       "totalPagar": "$1.453.390",
       "totalFinal": 1453390.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 974910.0,
+      "totalPendienteAcumulado": 974910.0
     },
     {
       "unidad": "0207",
@@ -1185,13 +1225,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$-902.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": -451000.0,
       "totalPagar": "$-451.000",
       "totalFinal": -451000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -902000.0,
+      "totalPendienteAcumulado": -902000.0
     },
     {
       "unidad": "0208",
@@ -1241,13 +1283,15 @@
       "valdescFmt": "$0",
       "valpag": 485000.0,
       "valpagFmt": "$485.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$485.000",
       "totalNum": 485000.0,
       "totalPagar": "$485.000",
       "totalFinal": 485000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0209",
@@ -1297,13 +1341,15 @@
       "valdescFmt": "$0",
       "valpag": 440000.0,
       "valpagFmt": "$440.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$440.000",
       "totalNum": 440000.0,
       "totalPagar": "$440.000",
       "totalFinal": 440000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0210",
@@ -1353,13 +1399,15 @@
       "valdescFmt": "$0",
       "valpag": 444000.0,
       "valpagFmt": "$444.000",
-      "saldoPendiente": "$-44.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$400.000",
       "totalNum": 356000.0,
       "totalPagar": "$356.000",
       "totalFinal": 356000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -44000.0,
+      "totalPendienteAcumulado": -44000.0
     },
     {
       "unidad": "0211",
@@ -1409,13 +1457,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$8.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$444.000",
       "totalNum": 452170.0,
       "totalPagar": "$452.170",
       "totalFinal": 452170.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 8000.0,
+      "totalPendienteAcumulado": 8000.0
     },
     {
       "unidad": "0212",
@@ -1465,13 +1515,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$444.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$444.000",
       "totalNum": 897330.0,
       "totalPagar": "$897.330",
       "totalFinal": 897330.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 444000.0,
+      "totalPendienteAcumulado": 444000.0
     },
     {
       "unidad": "0213",
@@ -1521,13 +1573,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0214",
@@ -1577,13 +1631,15 @@
       "valdescFmt": "$0",
       "valpag": 428000.0,
       "valpagFmt": "$428.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$428.000",
       "totalNum": 428000.0,
       "totalPagar": "$428.000",
       "totalFinal": 428000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0215",
@@ -1633,13 +1689,15 @@
       "valdescFmt": "$0",
       "valpag": 420000.0,
       "valpagFmt": "$420.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$420.000",
       "totalNum": 420000.0,
       "totalPagar": "$420.000",
       "totalFinal": 420000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0216",
@@ -1689,13 +1747,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$420.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$420.000",
       "totalNum": 848820.0,
       "totalPagar": "$848.820",
       "totalFinal": 848820.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 420000.0,
+      "totalPendienteAcumulado": 420000.0
     },
     {
       "unidad": "0217",
@@ -1745,13 +1805,15 @@
       "valdescFmt": "$0",
       "valpag": 317000.0,
       "valpagFmt": "$317.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$317.000",
       "totalNum": 317000.0,
       "totalPagar": "$317.000",
       "totalFinal": 317000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0218",
@@ -1801,13 +1863,15 @@
       "valdescFmt": "$0",
       "valpag": 338000.0,
       "valpagFmt": "$338.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$338.000",
       "totalNum": 338000.0,
       "totalPagar": "$338.000",
       "totalFinal": 338000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0301",
@@ -1857,13 +1921,15 @@
       "valdescFmt": "$0",
       "valpag": 412000.0,
       "valpagFmt": "$412.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$412.000",
       "totalNum": 412000.0,
       "totalPagar": "$412.000",
       "totalFinal": 412000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0302",
@@ -1913,13 +1979,15 @@
       "valdescFmt": "$0",
       "valpag": 423000.0,
       "valpagFmt": "$423.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$423.000",
       "totalNum": 423000.0,
       "totalPagar": "$423.000",
       "totalFinal": 423000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0303",
@@ -1969,13 +2037,15 @@
       "valdescFmt": "$0",
       "valpag": 881230.0,
       "valpagFmt": "$881.230",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0304",
@@ -2025,13 +2095,15 @@
       "valdescFmt": "$0",
       "valpag": 460000.0,
       "valpagFmt": "$460.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$460.000",
       "totalNum": 460000.0,
       "totalPagar": "$460.000",
       "totalFinal": 460000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0305",
@@ -2081,13 +2153,15 @@
       "valdescFmt": "$0",
       "valpag": 464000.0,
       "valpagFmt": "$464.000",
-      "saldoPendiente": "$-494.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$459.000",
       "totalNum": -35000.0,
       "totalPagar": "$-35.000",
       "totalFinal": -35000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -494000.0,
+      "totalPendienteAcumulado": -494000.0
     },
     {
       "unidad": "0306",
@@ -2137,13 +2211,15 @@
       "valdescFmt": "$0",
       "valpag": 458000.0,
       "valpagFmt": "$458.000",
-      "saldoPendiente": "$120",
+      "saldoPendiente": "",
       "cuotaMensual": "$458.000",
       "totalNum": 458120.0,
       "totalPagar": "$458.120",
       "totalFinal": 458120.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 120.0,
+      "totalPendienteAcumulado": 120.0
     },
     {
       "unidad": "0307",
@@ -2193,13 +2269,15 @@
       "valdescFmt": "$0",
       "valpag": 450000.0,
       "valpagFmt": "$450.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$450.000",
       "totalNum": 450000.0,
       "totalPagar": "$450.000",
       "totalFinal": 450000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0308",
@@ -2249,13 +2327,15 @@
       "valdescFmt": "$0",
       "valpag": 484000.0,
       "valpagFmt": "$484.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$484.000",
       "totalNum": 484000.0,
       "totalPagar": "$484.000",
       "totalFinal": 484000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0309",
@@ -2305,13 +2385,15 @@
       "valdescFmt": "$0",
       "valpag": 446000.0,
       "valpagFmt": "$446.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$446.000",
       "totalNum": 446000.0,
       "totalPagar": "$446.000",
       "totalFinal": 446000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0310",
@@ -2361,13 +2443,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$390.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$390.000",
       "totalNum": 788190.0,
       "totalPagar": "$788.190",
       "totalFinal": 788190.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 390000.0,
+      "totalPendienteAcumulado": 390000.0
     },
     {
       "unidad": "0311",
@@ -2417,13 +2501,15 @@
       "valdescFmt": "$0",
       "valpag": 444000.0,
       "valpagFmt": "$444.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$444.000",
       "totalNum": 444000.0,
       "totalPagar": "$444.000",
       "totalFinal": 444000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0312",
@@ -2473,13 +2559,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0313",
@@ -2529,13 +2617,15 @@
       "valdescFmt": "$0",
       "valpag": 444000.0,
       "valpagFmt": "$444.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$444.000",
       "totalNum": 444000.0,
       "totalPagar": "$444.000",
       "totalFinal": 444000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0314",
@@ -2585,13 +2675,15 @@
       "valdescFmt": "$0",
       "valpag": 438000.0,
       "valpagFmt": "$438.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$438.000",
       "totalNum": 438000.0,
       "totalPagar": "$438.000",
       "totalFinal": 438000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0315",
@@ -2641,13 +2733,15 @@
       "valdescFmt": "$0",
       "valpag": 429000.0,
       "valpagFmt": "$429.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$429.000",
       "totalNum": 429000.0,
       "totalPagar": "$429.000",
       "totalFinal": 429000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0316",
@@ -2697,13 +2791,15 @@
       "valdescFmt": "$0",
       "valpag": 419000.0,
       "valpagFmt": "$419.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$419.000",
       "totalNum": 419000.0,
       "totalPagar": "$419.000",
       "totalFinal": 419000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0317",
@@ -2753,13 +2849,15 @@
       "valdescFmt": "$0",
       "valpag": 315000.0,
       "valpagFmt": "$315.000",
-      "saldoPendiente": "$-16",
+      "saldoPendiente": "",
       "cuotaMensual": "$315.000",
       "totalNum": 314984.0,
       "totalPagar": "$314.984",
       "totalFinal": 314984.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -16.0,
+      "totalPendienteAcumulado": -16.0
     },
     {
       "unidad": "0318",
@@ -2809,13 +2907,15 @@
       "valdescFmt": "$0",
       "valpag": 337000.0,
       "valpagFmt": "$337.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$337.000",
       "totalNum": 337000.0,
       "totalPagar": "$337.000",
       "totalFinal": 337000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0401",
@@ -2865,13 +2965,15 @@
       "valdescFmt": "$0",
       "valpag": 613000.0,
       "valpagFmt": "$613.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$613.000",
       "totalNum": 613000.0,
       "totalPagar": "$613.000",
       "totalFinal": 613000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0402",
@@ -2921,13 +3023,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$1.999.943",
+      "saldoPendiente": "",
       "cuotaMensual": "$678.000",
       "totalNum": 2747963.0,
       "totalPagar": "$2.747.963",
       "totalFinal": 2747963.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 2027943.0,
+      "totalPendienteAcumulado": 2027943.0
     },
     {
       "unidad": "0403",
@@ -2977,13 +3081,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$2.552.103",
+      "saldoPendiente": "",
       "cuotaMensual": "$720.000",
       "totalNum": 3364523.0,
       "totalPagar": "$3.364.523",
       "totalFinal": 3364523.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 2590903.0,
+      "totalPendienteAcumulado": 2590903.0
     },
     {
       "unidad": "0404",
@@ -3033,13 +3139,15 @@
       "valdescFmt": "$0",
       "valpag": 800000.0,
       "valpagFmt": "$800.000",
-      "saldoPendiente": "$796.020",
+      "saldoPendiente": "",
       "cuotaMensual": "$757.000",
       "totalNum": 1569740.0,
       "totalPagar": "$1.569.740",
       "totalFinal": 1569740.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 796020.0,
+      "totalPendienteAcumulado": 796020.0
     },
     {
       "unidad": "0405",
@@ -3089,13 +3197,15 @@
       "valdescFmt": "$0",
       "valpag": 768000.0,
       "valpagFmt": "$768.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$768.000",
       "totalNum": 768000.0,
       "totalPagar": "$768.000",
       "totalFinal": 768000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0406",
@@ -3145,13 +3255,15 @@
       "valdescFmt": "$0",
       "valpag": 768580.0,
       "valpagFmt": "$768.580",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$752.000",
       "totalNum": 752000.0,
       "totalPagar": "$752.000",
       "totalFinal": 752000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0407",
@@ -3201,13 +3313,15 @@
       "valdescFmt": "$0",
       "valpag": 450000.0,
       "valpagFmt": "$450.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$450.000",
       "totalNum": 450000.0,
       "totalPagar": "$450.000",
       "totalFinal": 450000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0408",
@@ -3257,13 +3371,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$-972.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$486.000",
       "totalNum": -486000.0,
       "totalPagar": "$-486.000",
       "totalFinal": -486000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -972000.0,
+      "totalPendienteAcumulado": -972000.0
     },
     {
       "unidad": "0409",
@@ -3313,13 +3429,15 @@
       "valdescFmt": "$0",
       "valpag": 449000.0,
       "valpagFmt": "$449.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$449.000",
       "totalNum": 449000.0,
       "totalPagar": "$449.000",
       "totalFinal": 449000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0410",
@@ -3369,13 +3487,15 @@
       "valdescFmt": "$0",
       "valpag": 409000.0,
       "valpagFmt": "$409.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$409.000",
       "totalNum": 409000.0,
       "totalPagar": "$409.000",
       "totalFinal": 409000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0411",
@@ -3425,13 +3545,15 @@
       "valdescFmt": "$0",
       "valpag": 452000.0,
       "valpagFmt": "$452.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$452.000",
       "totalNum": 452000.0,
       "totalPagar": "$452.000",
       "totalFinal": 452000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0412",
@@ -3481,13 +3603,15 @@
       "valdescFmt": "$0",
       "valpag": 453000.0,
       "valpagFmt": "$453.000",
-      "saldoPendiente": "$38.400",
+      "saldoPendiente": "",
       "cuotaMensual": "$447.000",
       "totalNum": 486210.0,
       "totalPagar": "$486.210",
       "totalFinal": 486210.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 38400.0,
+      "totalPendienteAcumulado": 38400.0
     },
     {
       "unidad": "0413",
@@ -3537,13 +3661,15 @@
       "valdescFmt": "$0",
       "valpag": 447000.0,
       "valpagFmt": "$447.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$447.000",
       "totalNum": 447000.0,
       "totalPagar": "$447.000",
       "totalFinal": 447000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0414",
@@ -3593,13 +3719,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$1.458.000",
+      "saldoPendiente": "",
       "cuotaMensual": "$729.000",
       "totalNum": 2233070.0,
       "totalPagar": "$2.233.070",
       "totalFinal": 2233070.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 1473440.0,
+      "totalPendienteAcumulado": 1473440.0
     },
     {
       "unidad": "0415",
@@ -3649,13 +3777,15 @@
       "valdescFmt": "$0",
       "valpag": 705000.0,
       "valpagFmt": "$705.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$705.000",
       "totalNum": 705000.0,
       "totalPagar": "$705.000",
       "totalFinal": 705000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0416",
@@ -3705,13 +3835,15 @@
       "valdescFmt": "$0",
       "valpag": 695000.0,
       "valpagFmt": "$695.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$695.000",
       "totalNum": 695000.0,
       "totalPagar": "$695.000",
       "totalFinal": 695000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0417",
@@ -3761,13 +3893,15 @@
       "valdescFmt": "$0",
       "valpag": 544000.0,
       "valpagFmt": "$544.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$544.000",
       "totalNum": 544000.0,
       "totalPagar": "$544.000",
       "totalFinal": 544000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9806",
@@ -3817,13 +3951,15 @@
       "valdescFmt": "$0",
       "valpag": 451000.0,
       "valpagFmt": "$451.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": 451000.0,
       "totalPagar": "$451.000",
       "totalFinal": 451000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9807",
@@ -3873,13 +4009,15 @@
       "valdescFmt": "$0",
       "valpag": 484000.0,
       "valpagFmt": "$484.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$484.000",
       "totalNum": 484000.0,
       "totalPagar": "$484.000",
       "totalFinal": 484000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9808",
@@ -3929,13 +4067,15 @@
       "valdescFmt": "$0",
       "valpag": 484000.0,
       "valpagFmt": "$484.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$484.000",
       "totalNum": 484000.0,
       "totalPagar": "$484.000",
       "totalFinal": 484000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9809",
@@ -3985,13 +4125,15 @@
       "valdescFmt": "$0",
       "valpag": 440000.0,
       "valpagFmt": "$440.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$440.000",
       "totalNum": 440000.0,
       "totalPagar": "$440.000",
       "totalFinal": 440000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9810",
@@ -4041,13 +4183,15 @@
       "valdescFmt": "$0",
       "valpag": 397000.0,
       "valpagFmt": "$397.000",
-      "saldoPendiente": "$14.160",
+      "saldoPendiente": "",
       "cuotaMensual": "$390.000",
       "totalNum": 404460.0,
       "totalPagar": "$404.460",
       "totalFinal": 404460.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 14160.0,
+      "totalPendienteAcumulado": 14160.0
     },
     {
       "unidad": "9811",
@@ -4097,13 +4241,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9812",
@@ -4153,13 +4299,15 @@
       "valdescFmt": "$0",
       "valpag": 436000.0,
       "valpagFmt": "$436.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$436.000",
       "totalNum": 436000.0,
       "totalPagar": "$436.000",
       "totalFinal": 436000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9906",
@@ -4209,13 +4357,15 @@
       "valdescFmt": "$0",
       "valpag": 451000.0,
       "valpagFmt": "$451.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$451.000",
       "totalNum": 451000.0,
       "totalPagar": "$451.000",
       "totalFinal": 451000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9907",
@@ -4265,13 +4415,15 @@
       "valdescFmt": "$0",
       "valpag": 998000.0,
       "valpagFmt": "$998.000",
-      "saldoPendiente": "$-100.600",
+      "saldoPendiente": "",
       "cuotaMensual": "$444.000",
       "totalNum": 343400.0,
       "totalPagar": "$343.400",
       "totalFinal": 343400.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -100600.0,
+      "totalPendienteAcumulado": -100600.0
     },
     {
       "unidad": "9908",
@@ -4321,13 +4473,15 @@
       "valdescFmt": "$0",
       "valpag": 474000.0,
       "valpagFmt": "$474.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$474.000",
       "totalNum": 474000.0,
       "totalPagar": "$474.000",
       "totalFinal": 474000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9909",
@@ -4377,13 +4531,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$497.530",
+      "saldoPendiente": "",
       "cuotaMensual": "$440.000",
       "totalNum": 949200.0,
       "totalPagar": "$949.200",
       "totalFinal": 949200.0,
       "estado": "En Mora",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 498750.0,
+      "totalPendienteAcumulado": 498750.0
     },
     {
       "unidad": "9910",
@@ -4433,13 +4589,15 @@
       "valdescFmt": "$0",
       "valpag": 400000.0,
       "valpagFmt": "$400.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$400.000",
       "totalNum": 400000.0,
       "totalPagar": "$400.000",
       "totalFinal": 400000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9911",
@@ -4489,13 +4647,15 @@
       "valdescFmt": "$0",
       "valpag": 0.0,
       "valpagFmt": "$0",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$435.000",
       "totalNum": 435000.0,
       "totalPagar": "$435.000",
       "totalFinal": 435000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "9912",
@@ -4545,13 +4705,15 @@
       "valdescFmt": "$0",
       "valpag": 440000.0,
       "valpagFmt": "$440.000",
-      "saldoPendiente": "$-20.840",
+      "saldoPendiente": "",
       "cuotaMensual": "$435.000",
       "totalNum": 414160.0,
       "totalPagar": "$414.160",
       "totalFinal": 414160.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": -20840.0,
+      "totalPendienteAcumulado": -20840.0
     },
     {
       "unidad": "0001",
@@ -4601,13 +4763,15 @@
       "valdescFmt": "$0",
       "valpag": 667000.0,
       "valpagFmt": "$667.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$885.000",
       "totalNum": 885000.0,
       "totalPagar": "$885.000",
       "totalFinal": 885000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0002",
@@ -4657,13 +4821,15 @@
       "valdescFmt": "$0",
       "valpag": 218000.0,
       "valpagFmt": "$218.000",
-      "saldoPendiente": "$0",
+      "saldoPendiente": "",
       "cuotaMensual": "$218.000",
       "totalNum": 218000.0,
       "totalPagar": "$218.000",
       "totalFinal": 218000.0,
       "estado": "Al Día",
-      "tipo": "APTO"
+      "tipo": "APTO",
+      "saldoPendienteNum": 0.0,
+      "totalPendienteAcumulado": 0.0
     }
   ],
   "anios": [

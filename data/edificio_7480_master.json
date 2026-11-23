@@ -58,7 +58,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$939.110",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0302",
@@ -84,7 +87,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$224.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0303",
@@ -110,7 +116,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$287.300",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0304",
@@ -136,7 +145,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$279.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0305",
@@ -162,7 +174,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$493.300",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0401",
@@ -188,7 +203,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$692.400",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0402",
@@ -214,7 +232,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$224.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0403",
@@ -240,7 +261,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$142.100",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0404",
@@ -266,7 +290,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$619.030",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0405",
@@ -292,7 +319,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$244.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0501",
@@ -318,7 +348,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$1.032.470",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0502",
@@ -344,7 +377,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$224.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0503",
@@ -370,7 +406,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$0",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0504",
@@ -396,7 +435,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$273.200",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0505",
@@ -422,7 +464,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$244.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0601",
@@ -448,7 +493,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$952.000",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0602",
@@ -474,7 +522,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$224.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0603",
@@ -500,7 +551,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$142.100",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0604",
@@ -526,7 +580,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$852.900",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "U604",
@@ -552,7 +609,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$8.900",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0605",
@@ -578,7 +638,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$244.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0701",
@@ -604,7 +667,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$298.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0702",
@@ -630,7 +696,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$224.500",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0703",
@@ -656,7 +725,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$142.100",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0704",
@@ -682,7 +754,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$287.900",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0705",
@@ -708,7 +783,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$244.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0801",
@@ -734,7 +812,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$16.737.740",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "P801",
@@ -760,7 +841,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$11.403.410",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0802",
@@ -786,7 +870,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$471.400",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0803",
@@ -812,7 +899,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$435.500",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0804",
@@ -838,7 +928,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$346.900",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0805",
@@ -864,7 +957,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$306.800",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0901",
@@ -890,7 +986,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$1.028.736",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0902",
@@ -916,7 +1015,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$231.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0903",
@@ -942,7 +1044,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$142.100",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0904",
@@ -968,7 +1073,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$306.300",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "0905",
@@ -994,7 +1102,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$244.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "1001",
@@ -1020,7 +1131,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$364.800",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "1002",
@@ -1046,7 +1160,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$274.000",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "1003",
@@ -1072,7 +1189,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$1.347.350",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "1004",
@@ -1098,7 +1218,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$273.200",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "1005",
@@ -1124,7 +1247,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$15.803.805",
-      "estado": "En Mora"
+      "estado": "En Mora",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "LC01",
@@ -1150,7 +1276,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$836.200",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     },
     {
       "unidad": "LC02",
@@ -1176,7 +1305,10 @@
       "valpag": "$0",
       "valpagNum": 0.0,
       "totalPagar": "$861.900",
-      "estado": "Al Día"
+      "estado": "Al Día",
+      "saldoPendienteNum": 0.0,
+      "saldoPendiente": "",
+      "totalPendienteAcumulado": 0.0
     }
   ],
   "camposIncluidos": [

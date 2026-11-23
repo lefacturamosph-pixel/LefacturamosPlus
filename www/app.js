@@ -90,19 +90,40 @@ function actualizarPerfilResidente(codigoEdificio, aptoInput) {
 
     AppState.coeficienteFmt = unidadEncontrada.coeficiente || (AppState.coeficiente > 0 ? `${AppState.coeficiente}%` : "0.000%");
 
-    AppState.admon = (unidadEncontrada.admon !== undefined) ? unidadEncontrada.admon : (unidadEncontrada.actual || unidadEncontrada.cuota || 0);
+    const pendPuro = (unidadEncontrada.pend !== undefined) ? parseFloat(unidadEncontrada.pend) : (parseFloat(unidadEncontrada.saldoAnterior) || 0);
+    const intp = parseFloat(unidadEncontrada.intp) || 0;
+    const ndncp = parseFloat(unidadEncontrada.ndncp) || 0;
+    const extrap = parseFloat(unidadEncontrada.extrap) || 0;
+    const otrosp = parseFloat(unidadEncontrada.otrosp) || 0;
+    const multap = parseFloat(unidadEncontrada.multap) || 0;
+    const serpup = parseFloat(unidadEncontrada.serpup) || 0;
+    const servip = parseFloat(unidadEncontrada.servip) || 0;
 
-    AppState.pend = (unidadEncontrada.pend !== undefined) ? unidadEncontrada.pend : (unidadEncontrada.saldoAnterior || 0);
+    // Saldo pendiente total acumulado: capital pendiente + mora anterior + notas + cuotas extra + multas + serv. públicos + serv. especiales
+    const saldoPendienteTotal = (unidadEncontrada.saldoPendienteNum !== undefined && !isNaN(unidadEncontrada.saldoPendienteNum))
+      ? parseFloat(unidadEncontrada.saldoPendienteNum)
+      : (pendPuro + intp + ndncp + extrap + otrosp + multap + serpup + servip);
 
-    AppState.inta = (unidadEncontrada.inta !== undefined) ? unidadEncontrada.inta : (unidadEncontrada.interes || 0);
+    AppState.admon = (unidadEncontrada.admon !== undefined) ? parseFloat(unidadEncontrada.admon) : (parseFloat(unidadEncontrada.actual) || parseFloat(unidadEncontrada.cuota) || 0);
 
-    AppState.intp = (unidadEncontrada.intp !== undefined) ? unidadEncontrada.intp : 0;
+    AppState.pend = saldoPendienteTotal;
+    AppState.pendPuro = pendPuro;
+    AppState.intp = intp;
+    AppState.ndncp = ndncp;
+    AppState.extrap = extrap;
+    AppState.otrosp = otrosp;
+    AppState.multap = multap;
+    AppState.serpup = serpup;
+    AppState.servip = servip;
+    AppState.saldoPendienteTotal = saldoPendienteTotal;
 
-    AppState.saldoTotal = unidadEncontrada.totalNum || (AppState.admon + AppState.pend + AppState.inta);
+    AppState.inta = (unidadEncontrada.inta !== undefined) ? parseFloat(unidadEncontrada.inta) : (parseFloat(unidadEncontrada.interes) || 0);
 
-    AppState.valpag = (unidadEncontrada.valpag !== undefined) ? unidadEncontrada.valpag : 0;
+    AppState.saldoTotal = unidadEncontrada.totalNum !== undefined ? parseFloat(unidadEncontrada.totalNum) : (AppState.admon + saldoPendienteTotal + AppState.inta);
 
-    AppState.estado = unidadEncontrada.estado || (AppState.pend > 0 ? "En Mora" : "Al Dia");
+    AppState.valpag = (unidadEncontrada.valpag !== undefined) ? parseFloat(unidadEncontrada.valpag) : 0;
+
+    AppState.estado = unidadEncontrada.estado || (saldoPendienteTotal > 0 ? "En Mora" : "Al Dia");
 
     AppState.fac = unidadEncontrada.fac || unidadEncontrada.nfac || "";
 
@@ -29446,7 +29467,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$951.610",
+    "saldoPendiente": "$962.210",
     "cuotaMensual": "$451.000",
     "totalNum": 1433200.0,
     "totalPagar": "$1.433.200",
@@ -29502,7 +29523,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$863.430",
+    "saldoPendiente": "$871.450",
     "cuotaMensual": "$485.000",
     "totalNum": 1374590.0,
     "totalPagar": "$1.374.590",
@@ -29670,7 +29691,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$492.200",
+    "saldoPendiente": "$493.220",
     "cuotaMensual": "$444.000",
     "totalNum": 947560.0,
     "totalPagar": "$947.560",
@@ -30062,7 +30083,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$1.289.830",
+    "saldoPendiente": "$1.317.320",
     "cuotaMensual": "$430.000",
     "totalNum": 1774420.0,
     "totalPagar": "$1.774.420",
@@ -32078,7 +32099,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$1.999.943",
+    "saldoPendiente": "$2.027.943",
     "cuotaMensual": "$678.000",
     "totalNum": 2747963.0,
     "totalPagar": "$2.747.963",
@@ -32134,7 +32155,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$2.552.103",
+    "saldoPendiente": "$2.590.903",
     "cuotaMensual": "$720.000",
     "totalNum": 3364523.0,
     "totalPagar": "$3.364.523",
@@ -32750,7 +32771,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$1.458.000",
+    "saldoPendiente": "$1.473.440",
     "cuotaMensual": "$729.000",
     "totalNum": 2233070.0,
     "totalPagar": "$2.233.070",
@@ -33534,7 +33555,7 @@ function getUnidadesRobleAlto4901Master() {
     "valdescFmt": "$0",
     "valpag": 0.0,
     "valpagFmt": "$0",
-    "saldoPendiente": "$497.530",
+    "saldoPendiente": "$498.750",
     "cuotaMensual": "$440.000",
     "totalNum": 949200.0,
     "totalPagar": "$949.200",
@@ -63974,11 +63995,44 @@ function filtrarDocumentosInmueblesDrive() {
 
       if (bEstBox) {
 
-        const esMora = (AppState.estado === "En Mora" || AppState.pend > 0);
+        // Calcular saldo pendiente total considerando todos los conceptos pendientes (mora ant., notas, extras, multas, etc.)
+        let pendTotal = 0;
+        try {
+          const edifCod = AppState.codigoEdificio || AppState.conjuntoId || "4901";
+          const cleanCod = String(edifCod).replace(/^(cj_)+/, "").trim() || "4901";
+          const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cleanCod) : null;
+          const unidades = (cj && cj.unidades) || ((typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : []);
+          const aptoBuscado = String(AppState.aptoNumero || "").trim();
+          const uEncontrada = unidades.find(u => {
+            const uCod = String(u.unidad || u.apto || "").trim();
+            return uCod.toLowerCase() === aptoBuscado.toLowerCase() || parseInt(uCod.replace(/\D/g, ""), 10) === parseInt(aptoBuscado.replace(/\D/g, ""), 10);
+          });
+          if (uEncontrada) {
+            const p_pend = parseFloat(uEncontrada.pend) || 0;
+            const p_intp = parseFloat(uEncontrada.intp) || 0;
+            const p_ndncp = parseFloat(uEncontrada.ndncp) || 0;
+            const p_extrap = parseFloat(uEncontrada.extrap) || 0;
+            const p_otrosp = parseFloat(uEncontrada.otrosp) || 0;
+            const p_multap = parseFloat(uEncontrada.multap) || 0;
+            const p_serpup = parseFloat(uEncontrada.serpup) || 0;
+            const p_servip = parseFloat(uEncontrada.servip) || 0;
+            pendTotal = (uEncontrada.saldoPendienteNum !== undefined && !isNaN(uEncontrada.saldoPendienteNum))
+              ? parseFloat(uEncontrada.saldoPendienteNum)
+              : (p_pend + p_intp + p_ndncp + p_extrap + p_otrosp + p_multap + p_serpup + p_servip);
+          }
+        } catch (eCalc) {
+          console.warn("Aviso calculando saldo pendiente total:", eCalc);
+        }
+
+        if (!pendTotal) {
+          pendTotal = Number(AppState.saldoPendienteTotal !== undefined ? AppState.saldoPendienteTotal : AppState.pend) || 0;
+        }
+
+        const esMora = (AppState.estado === "En Mora" || pendTotal > 0);
 
         bEstBox.innerHTML = esMora
 
-          ? `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-950 text-rose-400 border border-rose-800">En Mora (Pend: $${Number(AppState.pend).toLocaleString('es-CO')})</span>`
+          ? `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-950 text-rose-400 border border-rose-800">En Mora (Pend: $${Number(pendTotal).toLocaleString('es-CO')})</span>`
 
           : `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">Al Dia (Paz y Salvo)</span>`;
 
