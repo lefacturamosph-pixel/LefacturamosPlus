@@ -1570,6 +1570,63 @@ def api_estudio_historico_imprimir(conjunto_id: str, numero_apto: str, tipo: str
         raise HTTPException(status_code=500, detail=f"Error generando visualización: {str(e)}")
 
 
+@app.get("/descarga/{conjunto_id}/{numero_apto}")
+@app.get("/descarga/{conjunto_id}/{numero_apto}/{tipo}")
+def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
+    """
+    Portal web optimizado con Open Graph para previsualización interactiva con icono en WhatsApp.
+    """
+    from fastapi.responses import HTMLResponse
+    cj_clean = re.sub(r'^(cj_)+', '', str(conjunto_id or '4901')).strip() or '4901'
+    es_abogado = str(tipo).lower() == "abogado"
+    titulo_doc = "Certificación de Deuda para Cobro Judicial" if es_abogado else "Estado de Cuenta Histórico"
+    
+    url_pdf = f"/api/estudio-cuenta-historico/{cj_clean}/{numero_apto}/imprimir?tipo={tipo}"
+    url_excel = f"/api/estudio-cuenta-historico/{cj_clean}/{numero_apto}/excel?tipo={tipo}"
+    
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Descarga Oficial - Unidad {numero_apto}</title>
+  <meta property="og:title" content="📥 Descargar Documentos: Unidad {numero_apto}" />
+  <meta property="og:description" content="Haga clic aquí para descargar su {titulo_doc} en formato PDF y Liquidación en Excel." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/337/337946.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+    <div class="w-16 h-16 bg-sky-950 border border-sky-800 text-sky-400 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
+      📥
+    </div>
+    <div>
+      <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-950/60 border border-sky-800/60 px-3 py-1 rounded-full">
+        Portal de Descarga Oficial
+      </span>
+      <h1 class="text-xl sm:text-2xl font-black text-white mt-3">Unidad {numero_apto}</h1>
+      <p class="text-xs text-slate-400 mt-1">{titulo_doc}</p>
+    </div>
+    <div class="space-y-3 pt-2">
+      <a href="{url_pdf}" target="_blank" class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-lg shadow-rose-950/40 transition-all cursor-pointer">
+        <span class="text-xl">📄</span>
+        <span>Descargar Certificado en PDF</span>
+      </a>
+      <a href="{url_excel}" download class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-950/40 transition-all cursor-pointer">
+        <span class="text-xl">📊</span>
+        <span>Descargar Liquidación en Excel (.xlsx)</span>
+      </a>
+    </div>
+    <p class="text-[11px] text-slate-500 border-t border-slate-800/80 pt-4">
+      Expedido legalmente de conformidad con la Ley 675 de 2001.<br/>Plataforma Oficial Lefacturamos PH.
+    </p>
+  </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html, status_code=200)
+
+
 
 
 # ==============================================================================

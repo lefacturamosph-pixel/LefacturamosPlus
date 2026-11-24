@@ -64784,9 +64784,7 @@ function enviarEstudioHistoricoWhatsApp() {
   const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
   const totalInteresesCausados = intMoraInicial + sumInteresMes;
 
-  // URLs oficiales de descarga directa para adjuntos
-  const urlPdf = `${origin}/api/estudio-cuenta-historico/${cleanCod}/${apto}/imprimir?tipo=${tipoFiltro}`;
-  const urlExcel = `${origin}/api/estudio-cuenta-historico/${cleanCod}/${apto}/excel?tipo=${tipoFiltro}`;
+  const urlPortal = `${origin}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
 
   const msg = esAbogado
     ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
@@ -64796,9 +64794,8 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
-      `📎 *DOCUMENTOS ADJUNTOS OFICIALES:*\n` +
-      `📄 [Certificado Oficial de Cobro Judicial en PDF]\n` +
-      `📊 [Liquidación Discriminada de Crédito en Excel .xlsx]\n\n` +
+      `📥 *DESCARGAR CERTIFICADO EN PDF Y EXCEL:*\n` +
+      `${urlPortal}\n\n` +
       `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
@@ -64806,9 +64803,8 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `📎 *DOCUMENTOS ADJUNTOS:*\n` +
-      `📄 [Estado de Cuenta Histórico en PDF]\n` +
-      `📊 [Informe Detallado de Pagos en Excel .xlsx]\n\n` +
+      `📥 *DESCARGAR ESTADO DE CUENTA EN PDF Y EXCEL:*\n` +
+      `${urlPortal}\n\n` +
       `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
 
   // 1. Descarga automática local del archivo Excel para tenerlo en la bandeja de descargas listo para adjuntar
