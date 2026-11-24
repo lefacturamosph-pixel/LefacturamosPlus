@@ -1602,7 +1602,7 @@ def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "
     except Exception:
         pass
         
-    titulo_doc = "Certificación de Deuda para Cobro Judicial" if es_abogado else "Estado de Cuenta Histórico"
+    titulo_doc = "Certificación de Deuda (Ley 675)" if es_abogado else "Estado de Cuenta Histórico"
     sub_doc = "Título Ejecutivo - Art. 48 Ley 675 de 2001" if es_abogado else "Trazabilidad Contable Mes a Mes"
     
     url_pdf = f"/api/estudio-cuenta-historico/{cj_clean}/{numero_apto}/imprimir?tipo={tipo}"

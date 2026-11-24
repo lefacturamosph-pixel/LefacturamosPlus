@@ -59006,7 +59006,7 @@ function aplicarFiltroEstudioHistorico() {
     const nombreEdif = data.edificio?.nombre || "la Administración";
     const msg = esAbogado
       ? encodeURIComponent(
-          `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${data.apto} en ${nombreEdif}:\n\n` +
+          `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda (Art. 48 Ley 675 de 2001)* para la unidad ${data.apto} en ${nombreEdif}:\n\n` +
           `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
           `• Total Capital Causado (Cuotas): ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
           `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
@@ -64842,8 +64842,7 @@ function enviarEstudioHistoricoWhatsApp() {
   const urlPortal = `${baseUrl}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
 
   const msg = esAbogado
-    ? `${urlPortal}\n\n` +
-      `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
+    ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
       `• Total Capital Causado (Cuotas): ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
       `• Total Intereses de Mora: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
@@ -64851,8 +64850,7 @@ function enviarEstudioHistoricoWhatsApp() {
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
       `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
-    : `${urlPortal}\n\n` +
-      `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
+    : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
       `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
@@ -64907,7 +64905,6 @@ function compartirDocumentoWhatsApp(docId) {
   const urlPortal = `${baseUrl}/descarga/${codLimpio}/${apto}`;
 
   const msg =
-    `${urlPortal}\n\n` +
     `*DOCUMENTO OFICIAL DE ADMINISTRACIÓN*\n\n` +
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
     `Le compartimos su notificación de *${tipo}*${valor}.\n\n` +
