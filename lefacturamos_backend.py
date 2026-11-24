@@ -1574,12 +1574,36 @@ def api_estudio_historico_imprimir(conjunto_id: str, numero_apto: str, tipo: str
 @app.get("/descarga/{conjunto_id}/{numero_apto}/{tipo}")
 def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
     """
-    Portal web optimizado con Open Graph para previsualización interactiva con icono en WhatsApp.
+    Portal web interactivo optimizado con Open Graph para previsualización con icono y tarjeta en WhatsApp.
+    Permite descargar directamente el Certificado en PDF y la Liquidación en Excel con un solo toque.
     """
     from fastapi.responses import HTMLResponse
+    import re
     cj_clean = re.sub(r'^(cj_)+', '', str(conjunto_id or '4901')).strip() or '4901'
     es_abogado = str(tipo).lower() == "abogado"
+    
+    nombre_edif = f"EDIFICIO {cj_clean}"
+    propietario = "Copropietario(a)"
+    saldo_str = "$0"
+    periodo_str = "Últimos meses facturados"
+    
+    try:
+        from historico_service import obtener_estudio_cuenta_apto
+        res = obtener_estudio_cuenta_apto(cj_clean, numero_apto)
+        edif = res.get("edificio", {})
+        nombre_edif = edif.get("nombre", f"EDIFICIO {cj_clean}")
+        propietario = res.get("propietario", "Copropietario(a)")
+        meses = res.get("meses", [])
+        if meses:
+            ult = meses[-1]
+            tot = float(ult.get("total", 0) or 0)
+            saldo_str = f"${tot:,.0f}".replace(",", ".")
+            periodo_str = f"{len(meses)} meses ({meses[0].get('periodo', '')} hasta {ult.get('periodo', '')})"
+    except Exception:
+        pass
+        
     titulo_doc = "Certificación de Deuda para Cobro Judicial" if es_abogado else "Estado de Cuenta Histórico"
+    sub_doc = "Título Ejecutivo - Art. 48 Ley 675 de 2001" if es_abogado else "Trazabilidad Contable Mes a Mes"
     
     url_pdf = f"/api/estudio-cuenta-historico/{cj_clean}/{numero_apto}/imprimir?tipo={tipo}"
     url_excel = f"/api/estudio-cuenta-historico/{cj_clean}/{numero_apto}/excel?tipo={tipo}"
@@ -1589,39 +1613,114 @@ def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Descarga Oficial - Unidad {numero_apto}</title>
-  <meta property="og:title" content="📥 Descargar Documentos: Unidad {numero_apto}" />
-  <meta property="og:description" content="Haga clic aquí para descargar su {titulo_doc} en formato PDF y Liquidación en Excel." />
+  <title>📥 Descarga Oficial - Unidad {numero_apto}</title>
+  
+  <!-- Open Graph para Tarjeta Interactiva con Icono de Descarga en WhatsApp -->
+  <meta property="og:title" content="📥 Descargar Certificado y Liquidación: Apto {numero_apto}" />
+  <meta property="og:description" content="{nombre_edif} • {titulo_doc} • Toque aquí para descargar su PDF Oficial y Excel." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/337/337946.png" />
+  <meta property="og:image" content="https://lefacturamosplus.onrender.com/assets/logo_lefacturamos.png" />
+  <meta property="og:site_name" content="Lefacturamos PH" />
+  
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
-  <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
-    <div class="w-16 h-16 bg-sky-950 border border-sky-800 text-sky-400 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
-      📥
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-sky-500 selection:text-white">
+  <div class="max-w-md w-full bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+    
+    <!-- Icono de descarga con animación -->
+    <div class="relative w-20 h-20 mx-auto">
+      <div class="absolute inset-0 bg-sky-500/20 rounded-3xl blur-xl animate-pulse"></div>
+      <div class="relative w-20 h-20 bg-gradient-to-br from-sky-600 to-sky-950 border border-sky-400/40 text-white rounded-3xl flex items-center justify-center text-4xl shadow-xl">
+        📥
+      </div>
     </div>
+    
+    <!-- Información de la Copropiedad y Unidad -->
     <div>
-      <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-950/60 border border-sky-800/60 px-3 py-1 rounded-full">
-        Portal de Descarga Oficial
+      <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-sky-400 bg-sky-950/80 border border-sky-800/80 px-3.5 py-1.5 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+        Documentos Listos para Descarga
       </span>
-      <h1 class="text-xl sm:text-2xl font-black text-white mt-3">Unidad {numero_apto}</h1>
-      <p class="text-xs text-slate-400 mt-1">{titulo_doc}</p>
+      <h1 class="text-2xl sm:text-3xl font-black text-white mt-3.5">Unidad {numero_apto}</h1>
+      <p class="text-sm font-semibold text-slate-300 mt-1">{nombre_edif}</p>
+      <p class="text-xs text-slate-400 mt-0.5">{propietario}</p>
     </div>
-    <div class="space-y-3 pt-2">
-      <a href="{url_pdf}" target="_blank" class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-lg shadow-rose-950/40 transition-all cursor-pointer">
-        <span class="text-xl">📄</span>
-        <span>Descargar Certificado en PDF</span>
-      </a>
-      <a href="{url_excel}" download class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-950/40 transition-all cursor-pointer">
-        <span class="text-xl">📊</span>
-        <span>Descargar Liquidación en Excel (.xlsx)</span>
-      </a>
+
+    <!-- Tarjeta de Saldo a la fecha -->
+    <div class="bg-slate-950/80 border border-slate-800/90 rounded-2xl p-4 flex items-center justify-between text-left">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Saldo Exigible a la Fecha</span>
+        <span class="text-xl font-black text-white font-mono">{saldo_str}</span>
+      </div>
+      <div class="text-right">
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Periodo Liquidado</span>
+        <span class="text-xs font-semibold text-sky-400">{periodo_str}</span>
+      </div>
     </div>
-    <p class="text-[11px] text-slate-500 border-t border-slate-800/80 pt-4">
-      Expedido legalmente de conformidad con la Ley 675 de 2001.<br/>Plataforma Oficial Lefacturamos PH.
-    </p>
+    
+    <!-- Botones de Acción de Descarga Directa -->
+    <div class="space-y-3.5 pt-1">
+      <!-- Botón 1: Descargar PDF Oficial -->
+      <a href="{url_pdf}" target="_blank" class="w-full group flex items-center justify-between py-4 px-5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-extrabold text-sm shadow-xl shadow-rose-950/50 hover:shadow-rose-900/60 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-lg">
+            📄
+          </div>
+          <div class="text-left">
+            <span class="block text-xs uppercase tracking-wider text-rose-200">Formato Oficial</span>
+            <span class="text-sm font-black">Descargar Certificado (PDF)</span>
+          </div>
+        </div>
+        <span class="text-lg text-rose-200 group-hover:translate-x-1 transition-transform">➔</span>
+      </a>
+      
+      <!-- Botón 2: Descargar Liquidación en Excel -->
+      <a href="{url_excel}" download class="w-full group flex items-center justify-between py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-sm shadow-xl shadow-emerald-950/50 hover:shadow-emerald-900/60 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-lg">
+            📊
+          </div>
+          <div class="text-left">
+            <span class="block text-xs uppercase tracking-wider text-emerald-200">Hoja de Cálculo</span>
+            <span class="text-sm font-black">Descargar Liquidación (Excel .xlsx)</span>
+          </div>
+        </div>
+        <span class="text-lg text-emerald-200 group-hover:translate-x-1 transition-transform">➔</span>
+      </a>
+
+      <!-- Botón 3: Descargar Ambos -->
+      <button onclick="descargarAmbos()" type="button" class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 border border-slate-700/80 transition-colors cursor-pointer">
+        <span>⚡</span>
+        <span>Descargar Ambos Archivos a la vez</span>
+      </button>
+    </div>
+    
+    <!-- Pie Legal -->
+    <div class="pt-3 border-t border-slate-800/80 text-[11px] text-slate-500 space-y-1">
+      <p class="font-medium text-slate-400">{titulo_doc} • {sub_doc}</p>
+      <p>Expedido oficialmente por la Administración y Representación Legal de la copropiedad conforme a la Ley 675 de 2001.</p>
+    </div>
   </div>
+
+  <script>
+    function descargarAmbos() {{
+      const aPdf = document.createElement('a');
+      aPdf.href = '{url_pdf}';
+      aPdf.target = '_blank';
+      document.body.appendChild(aPdf);
+      aPdf.click();
+      document.body.removeChild(aPdf);
+
+      setTimeout(() => {{
+        const aXls = document.createElement('a');
+        aXls.href = '{url_excel}';
+        aXls.download = '';
+        document.body.appendChild(aXls);
+        aXls.click();
+        document.body.removeChild(aXls);
+      }}, 600);
+    }}
+  </script>
 </body>
 </html>"""
     return HTMLResponse(content=html, status_code=200)
