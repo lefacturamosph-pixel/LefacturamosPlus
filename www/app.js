@@ -64784,8 +64784,6 @@ function enviarEstudioHistoricoWhatsApp() {
   const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
   const totalInteresesCausados = intMoraInicial + sumInteresMes;
 
-  const urlPortal = `${origin}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
-
   const msg = esAbogado
     ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
@@ -64794,8 +64792,6 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
-      `📥 *DESCARGAR CERTIFICADO EN PDF Y EXCEL:*\n` +
-      `${urlPortal}\n\n` +
       `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
@@ -64803,18 +64799,9 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `📥 *DESCARGAR ESTADO DE CUENTA EN PDF Y EXCEL:*\n` +
-      `${urlPortal}\n\n` +
       `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
 
-  // 1. Descarga automática local del archivo Excel para tenerlo en la bandeja de descargas listo para adjuntar
-  try {
-    if (typeof descargarExcelEstudioHistorico === "function") {
-      descargarExcelEstudioHistorico(tipoFiltro);
-    }
-  } catch(e) {}
-
-  // 2. Despachar a WhatsApp
+  // Despachar a WhatsApp directamente sin descargas automáticas ni enlaces
   despacharWhatsAppDirecto({
     telefono: tel,
     mensaje: msg,
@@ -64853,25 +64840,12 @@ function compartirDocumentoWhatsApp(docId) {
   // Buscar teléfono únicamente a través de la fuente centralizada del inmueble
   const tel = typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(apto) : "";
 
-  const linkDescarga = `${window.location.origin}${doc.url_descarga || doc.url_ver || `/api/drive/archivo?edificio=${encodeURIComponent(cod)}&archivo=${encodeURIComponent(doc.nombre_archivo || doc.nombre || doc.titulo)}&descargar=true`}`;
-
   const msg =
-    `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*\n\n` +
+    `*DOCUMENTO OFICIAL DE ADMINISTRACIÓN*\n\n` +
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
-    `Le compartimos su *${tipo}*${valor}.\n\n` +
-    `📥 *PULSE LA SIGUIENTE TARJETA PARA DESCARGAR:*\n` +
-    `${linkDescarga}\n\n` +
-    `_Plataforma Oficial LEFACTURAMOS PH_`;
-
-  // Descarga local automática del archivo para facilitar arrastrar o adjuntar
-  try {
-    const a = document.createElement("a");
-    a.href = linkDescarga;
-    a.download = doc.nombre_archivo || `${tipo}_${apto}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } catch(e) {}
+    `Le compartimos su notificación de *${tipo}*${valor}.\n\n` +
+    `Documento disponible en la Administración para la unidad ${apto}.\n\n` +
+    `_Administración de la Copropiedad_`;
 
   despacharWhatsAppDirecto({
     telefono: tel,
