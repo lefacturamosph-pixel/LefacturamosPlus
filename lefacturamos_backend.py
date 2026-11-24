@@ -1570,6 +1570,8 @@ def api_estudio_historico_imprimir(conjunto_id: str, numero_apto: str, tipo: str
         raise HTTPException(status_code=500, detail=f"Error generando visualización: {str(e)}")
 
 
+@app.get("/d/{conjunto_id}/{numero_apto}")
+@app.get("/d/{conjunto_id}/{numero_apto}/{tipo}")
 @app.get("/descarga/{conjunto_id}/{numero_apto}")
 @app.get("/descarga/{conjunto_id}/{numero_apto}/{tipo}")
 def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
@@ -1619,7 +1621,8 @@ def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "
   <meta property="og:title" content="📥 Descargar Certificado y Liquidación: Apto {numero_apto}" />
   <meta property="og:description" content="{nombre_edif} • {titulo_doc} • Toque aquí para descargar su PDF Oficial y Excel." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://lefacturamosplus.onrender.com/assets/descarga_card.png" />
+  <meta property="og:image" content="https://lefacturamosplus.onrender.com/assets/descarga_card.png?v=arrow4" />
+  <meta property="og:image:secure_url" content="https://lefacturamosplus.onrender.com/assets/descarga_card.png?v=arrow4" />
   <meta property="og:image:width" content="600" />
   <meta property="og:image:height" content="600" />
   <meta property="og:image:type" content="image/png" />

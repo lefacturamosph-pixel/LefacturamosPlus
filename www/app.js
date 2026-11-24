@@ -64839,7 +64839,8 @@ function enviarEstudioHistoricoWhatsApp() {
   const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
   const totalInteresesCausados = intMoraInicial + sumInteresMes;
 
-  const urlPortal = `${baseUrl}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
+  const urlPortal = `${baseUrl}/d/${cleanCod}/${apto}?v=arrow4`;
+  const refDescargaDisimulada = `\n\n⠀\n⠀\n🔍 _Ref. Descarga:_ ${urlPortal}`;
 
   const msg = esAbogado
     ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
@@ -64849,16 +64850,16 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
-      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._\n\n` +
-      `${urlPortal}`
+      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._` +
+      `${refDescargaDisimulada}`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
       `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.\n\n` +
-      `${urlPortal}`;
+      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.` +
+      `${refDescargaDisimulada}`;
 
   // Despachar a WhatsApp directamente sin descargas automáticas ni enlaces
   despacharWhatsAppDirecto({
@@ -64904,15 +64905,16 @@ function compartirDocumentoWhatsApp(docId) {
   const baseUrl = (origin && !origin.includes("localhost") && !origin.includes("127.0.0.1") && !origin.includes("capacitor") && !origin.startsWith("file:"))
     ? origin
     : "https://lefacturamosplus.onrender.com";
-  const urlPortal = `${baseUrl}/descarga/${codLimpio}/${apto}`;
+  const urlPortal = `${baseUrl}/d/${codLimpio}/${apto}?v=arrow4`;
+  const refDescargaDisimulada = `\n\n⠀\n⠀\n🔍 _Ref. Descarga:_ ${urlPortal}`;
 
   const msg =
     `*DOCUMENTO OFICIAL DE ADMINISTRACIÓN*\n\n` +
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
     `Le compartimos su notificación de *${tipo}*${valor}.\n\n` +
     `Documento disponible en la Administración para la unidad ${apto}.\n\n` +
-    `_Administración de la Copropiedad_\n\n` +
-    `${urlPortal}`;
+    `_Administración de la Copropiedad_` +
+    `${refDescargaDisimulada}`;
 
   despacharWhatsAppDirecto({
     telefono: tel,
