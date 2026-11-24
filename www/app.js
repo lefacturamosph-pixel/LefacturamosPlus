@@ -4755,6 +4755,25 @@ const AppState = {
 
 const CATALOGO_OFICIAL_DBPLUS = {
 
+  "0950": {
+    "id": "cj_0950",
+    "codigo": "0950",
+    "nombre": "EDIFICIO LA FORTALEZA",
+    "nit": "900428879",
+    "direccion": "Calle 47 Nro 82-26",
+    "ciudad": "Medellín • Antioquia",
+    "telefono": "3207045217",
+    "email": "edificiolafortaleza@gmail.com",
+    "banco": "Bancolombia",
+    "tipoCuenta": "Cuenta de Ahorros",
+    "cuenta": "61300060942",
+    "administrador": "Yeferson",
+    "interesMora": "2.16%",
+    "tipo": "Propiedad Horizontal",
+    "coeficienteTotal": "0.000%",
+    "inmueblesCount": 16
+  },
+
   "0127": {
 
     "id": "cj_0127",
@@ -13841,6 +13860,44 @@ let listaCopropiedadesSuperadmin = [
   },
 
   {
+    id: "cj_0950",
+    nombre: "EDIFICIO LA FORTALEZA",
+    codigo: "0950",
+    nit: "900428879",
+    direccion: "Calle 47 Nro 82-26",
+    ciudad: "Medellín • Antioquia",
+    tipo: "Propiedad Horizontal",
+    banco: "Bancolombia",
+    tipoCuenta: "Cuenta de Ahorros",
+    cuenta: "61300060942",
+    breb: "BREB-BAN-0950",
+    pasarela: "Wompi (pub_prod_0950)",
+    codigoAdmin: "ADM-0950",
+    passwordAdmin: "Admin123*",
+    administrador: "Yeferson",
+    telefono: "3207045217",
+    email: "edificiolafortaleza@gmail.com",
+    interesMora: "2.16%",
+    inmueblesCount: 16,
+    inmueblesOcupados: 16,
+    censoCount: 16,
+    vehiculosAuditoria: 10,
+    reservasConfirmadas: 2,
+    pqrAtencion: 0,
+    coeficienteTotal: "0.000%",
+    recaudoTotal: "$2.914.000",
+    recaudoPagos: "16 cuotas facturadas",
+    carteraPendiente: "$528.000",
+    totalFinalEdificio: "$3.442.000",
+    carteraInmuebles: "2 inmuebles en mora",
+    carteraVencida: "$528.000",
+    carteraJuridica: "0 cuentas en mora jurídica",
+    estado: "A Paz y Salvo",
+    bloqueadoMora: false,
+    unidades: []
+  },
+
+  {
 
     id: "cj_5304",
 
@@ -19285,12 +19342,11 @@ const MENUS_POR_ROL = {
     ],
     items: [
       { id: "superadmin", label: "Superadministrador Global", icono: "globe" },
-      { id: "cargamasiva", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud" },
+      { id: "cargamasiva", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
       { id: "apartamentos", label: "Apartamentos", icono: "home" },
       { id: "residentes", label: "Residentes", icono: "users" },
       { id: "saldos", label: "Base de Saldos", icono: "wallet" },
-      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
       { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
       { id: "documentos", label: "Documentos", icono: "folder" },
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
@@ -19404,7 +19460,29 @@ const MENUS_POR_ROL = {
 
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
 
-      { id: "apartamentos", label: "Apartamentos", icono: "home" },
+      // UN SOLO ICONO PARA CREAR EDIFICIO (Carga uno a uno de archivos Excel, CSV, TXT o PDF)
+      { id: "crear-edificio", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
+      { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" },
+      { id: "config-edificio", label: "Configurar Edificio", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
+      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
+
+      // SUBMENÚ 2: FACTURACIÓN (Orden Cronológico de Facturación Condominal)
+      {
+        id: "facturacion-menu",
+        label: "Facturación",
+        icono: "receipt",
+        badge: "Ley 675",
+        subitems: [
+          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
+          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
+          { id: "facturacion", label: "3. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
+          { id: "documentos", label: "4. Listados y Facturas Oficiales", icono: "folder" },
+          { id: "devolver-saldos", label: "5. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
+        ]
+      },
+
+      // PAGOS ADMINISTRACIÓN (Egresos y Proveedores - Directo ENCIMA de Residentes)
+      { id: "pagosadmin", label: "Pagos Administración", icono: "credit-card" },
 
       { id: "residentes", label: "Residentes", icono: "users" },
 
@@ -19413,14 +19491,6 @@ const MENUS_POR_ROL = {
       { id: "visitantes", label: "Visitas", icono: "car" },
 
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
-
-      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
-
-      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
-
-      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
-
-      { id: "documentos", label: "Documentos", icono: "folder" },
 
       { id: "pqr", label: "PQR", icono: "message-square", badge: "2" },
 
@@ -19539,6 +19609,9 @@ function obtenerDatosCopropiedad(codigoOId) {
     if (cop) {
       if (cop.unidades && cop.unidades.length > 0 && cop.unidades[0].actual !== undefined) {
         // Preservar unidades actualizadas en memoria
+      } else if (limpioSinCj === "0950") {
+        cop.unidades = (typeof getUnidadesFortaleza0950Master === "function") ? getUnidadesFortaleza0950Master() : [];
+        cop.coeficienteTotal = "0.000%";
       } else if (limpioSinCj === "4160") {
         cop.unidades = (typeof getUnidadesRiachuelo4160Master === "function") ? getUnidadesRiachuelo4160Master() : [];
       } else if (limpioSinCj === "4901") {
@@ -19569,13 +19642,13 @@ function obtenerDatosCopropiedad(codigoOId) {
 
     if (dbpEdif) {
 
-      const unidadesReales = (typeof obtenerUnidadesRealesParaFusion === "function") 
+      const unidadesReales = (dbpEdif.codigo === "0950" && typeof getUnidadesFortaleza0950Master === "function")
+        ? getUnidadesFortaleza0950Master()
+        : ((typeof obtenerUnidadesRealesParaFusion === "function") 
+          ? obtenerUnidadesRealesParaFusion(dbpEdif.codigo, dbpEdif.nombre) 
+          : []);
 
-        ? obtenerUnidadesRealesParaFusion(dbpEdif.codigo, dbpEdif.nombre) 
-
-        : [];
-
-      const numU = (unidadesReales && unidadesReales.length > 0) ? unidadesReales.length : (dbpEdif.codigo === "4901" ? 83 : 30);
+      const numU = (unidadesReales && unidadesReales.length > 0) ? unidadesReales.length : (dbpEdif.codigo === "4901" ? 83 : (dbpEdif.codigo === "0950" ? 16 : 30));
 
       const nuevo = {
 
@@ -19627,7 +19700,7 @@ function obtenerDatosCopropiedad(codigoOId) {
 
         pqrAtencion: 1,
 
-        coeficienteTotal: "100.000%",
+        coeficienteTotal: (dbpEdif.codigo === "0950" || dbpEdif.coeficienteTotal === "0.000%") ? "0.000%" : (dbpEdif.coeficienteTotal || "100.000%"),
 
         recaudoTotal: "$36.000.000",
 
@@ -19711,7 +19784,7 @@ function obtenerDatosCopropiedad(codigoOId) {
 
         pqrAtencion: 1,
 
-        coeficienteTotal: "100.000%",
+        coeficienteTotal: (dbpEdif.codigo === "0950" || dbpEdif.coeficienteTotal === "0.000%") ? "0.000%" : (dbpEdif.coeficienteTotal || "100.000%"),
 
         recaudoTotal: "$12.000.000",
 
@@ -20222,7 +20295,7 @@ const DIRECTORIO_ADMINISTRADORES = {
     edificios: ["4160", "0127", "0202"],
     password: "Admin123*"
   },
-    "42772924": {
+  "42772924": {
     nombre: "Sofía Jiménez Rangel",
     cedula: "42.772.924",
     codigoEdificio: "4901",
@@ -23124,6 +23197,10 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 
     if (adminNit) adminNit.innerText = `NIT: ${encontrado.nit}`;
 
+    const topNombreHdr = document.getElementById("top-header-edificio-nombre");
+
+    if (topNombreHdr) topNombreHdr.innerText = `${encontrado.codigo} ${encontrado.nombre.toUpperCase()}`;
+
 
 
     // Actualizar Sidebar de Navegación (Solo el código sin • HC)
@@ -23203,6 +23280,10 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
     const topCiudad = document.getElementById("top-header-ciudad");
 
     if (topCiudad) topCiudad.innerText = encontrado.ciudad || "Medellín • Antioquia";
+
+    const topNombre = document.getElementById("top-header-edificio-nombre");
+
+    if (topNombre && encontrado) topNombre.innerText = `${encontrado.codigo} ${encontrado.nombre.toUpperCase()}`;
 
 
 
@@ -23346,7 +23427,7 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
 
         ? `${coefTotalCalculado.toFixed(3)}%` 
 
-        : (encontrado.coeficienteTotal || (totalU > 0 ? "100.000%" : "0.000%"));
+        : (encontrado.coeficienteTotal !== undefined ? encontrado.coeficienteTotal : "0.000%");
 
     }
 
@@ -26908,7 +26989,7 @@ async function guardarNuevaCopropiedadSuperadmin() {
 
     pqrAtencion: 0,
 
-    coeficienteTotal: "100.000%",
+    coeficienteTotal: (unidadesReales.reduce((acc, u) => acc + (parseFloat(u.coefNum || String(u.coeficiente || "").replace("%", "")) || 0), 0) > 0) ? `${unidadesReales.reduce((acc, u) => acc + (parseFloat(u.coefNum || String(u.coeficiente || "").replace("%", "")) || 0), 0).toFixed(3)}%` : "0.000%",
 
     recaudoTotal: "$0",
 
@@ -27768,6 +27849,27 @@ function getUnidadesClass480127Master() {
 }
 
 
+
+function getUnidadesFortaleza0950Master() {
+  return [
+    { "unidad": "0101", "apto": "0101", "bloque": "01", "bloq": "01", "propietario": "Maria Eugenia Suarez Isaza", "nombre": "Maria Eugenia Suarez Isaza", "cc": "", "fac": 290, "nfac": 290, "actual": 132000, "admon": 132000, "pago_ant": 132000, "valpag": 132000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0102", "apto": "0102", "bloque": "01", "bloq": "01", "propietario": "Margarita Maria Builes Gil", "nombre": "Margarita Maria Builes Gil", "cc": "", "fac": 291, "nfac": 291, "actual": 183000, "admon": 183000, "pago_ant": 0, "valpag": 0, "pend": 0, "total": 183000, "totalNum": 183000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0103", "apto": "0103", "bloque": "01", "bloq": "01", "propietario": "Natalia Marcela Rojas", "nombre": "Natalia Marcela Rojas", "cc": "", "fac": 292, "nfac": 292, "actual": 301000, "admon": 301000, "pago_ant": 301000, "valpag": 301000, "pend": 0, "total": 301000, "totalNum": 301000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0104", "apto": "0104", "bloque": "01", "bloq": "01", "propietario": "Flor Cifuentes R.", "nombre": "Flor Cifuentes R.", "cc": "", "fac": 293, "nfac": 293, "actual": 137000, "admon": 137000, "pago_ant": 137000, "valpag": 137000, "pend": -137000, "total": 0, "totalNum": 0, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0201", "apto": "0201", "bloque": "01", "bloq": "01", "propietario": "Martha Estella Lopez", "nombre": "Martha Estella Lopez", "cc": "", "fac": 294, "nfac": 294, "actual": 132000, "admon": 132000, "pago_ant": 132000, "valpag": 132000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0202", "apto": "0202", "bloque": "01", "bloq": "01", "propietario": "German Antonio Giraldo M", "nombre": "German Antonio Giraldo M", "cc": "", "fac": 295, "nfac": 295, "actual": 132000, "admon": 132000, "pago_ant": 0, "valpag": 0, "pend": -264000, "total": -132000, "totalNum": -132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0203", "apto": "0203", "bloque": "01", "bloq": "01", "propietario": "David Tobon Orozco", "nombre": "David Tobon Orozco", "cc": "", "fac": 296, "nfac": 296, "actual": 256000, "admon": 256000, "pago_ant": 256000, "valpag": 256000, "pend": 0, "total": 256000, "totalNum": 256000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0204", "apto": "0204", "bloque": "01", "bloq": "01", "propietario": "Maria Nelly Gonzalez", "nombre": "Maria Nelly Gonzalez", "cc": "", "fac": 297, "nfac": 297, "actual": 132000, "admon": 132000, "pago_ant": 132000, "valpag": 132000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0301", "apto": "0301", "bloque": "01", "bloq": "01", "propietario": "Piedad Zuleta", "nombre": "Piedad Zuleta", "cc": "", "fac": 298, "nfac": 298, "actual": 132000, "admon": 132000, "pago_ant": 132000, "valpag": 132000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0302", "apto": "0302", "bloque": "01", "bloq": "01", "propietario": "Manuel Jimenez Mejia", "nombre": "Manuel Jimenez Mejia", "cc": "", "fac": 299, "nfac": 299, "actual": 132000, "admon": 132000, "pago_ant": 264000, "valpag": 264000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0303", "apto": "0303", "bloque": "01", "bloq": "01", "propietario": "Maria Cristina Henao", "nombre": "Maria Cristina Henao", "cc": "", "fac": 300, "nfac": 300, "actual": 256000, "admon": 256000, "pago_ant": 256000, "valpag": 256000, "pend": 256000, "total": 512000, "totalNum": 512000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "En Mora" },
+    { "unidad": "0304", "apto": "0304", "bloque": "01", "bloq": "01", "propietario": "Teresita Gomez", "nombre": "Teresita Gomez", "cc": "", "fac": 301, "nfac": 301, "actual": 132000, "admon": 132000, "pago_ant": 132000, "valpag": 132000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0401", "apto": "0401", "bloque": "01", "bloq": "01", "propietario": "Karolina Gomez", "nombre": "Karolina Gomez", "cc": "", "fac": 302, "nfac": 302, "actual": 132000, "admon": 132000, "pago_ant": 132000, "valpag": 132000, "pend": 0, "total": 132000, "totalNum": 132000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0402", "apto": "0402", "bloque": "01", "bloq": "01", "propietario": "Jorge A. Lopez", "nombre": "Jorge A. Lopez", "cc": "", "fac": 303, "nfac": 303, "actual": 132000, "admon": 132000, "pago_ant": 0, "valpag": 0, "pend": 264000, "total": 396000, "totalNum": 396000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "En Mora" },
+    { "unidad": "0403", "apto": "0403", "bloque": "01", "bloq": "01", "propietario": "Luz Marina Romero M.", "nombre": "Luz Marina Romero M.", "cc": "", "fac": 304, "nfac": 304, "actual": 256000, "admon": 256000, "pago_ant": 512000, "valpag": 512000, "pend": 0, "total": 256000, "totalNum": 256000, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" },
+    { "unidad": "0404", "apto": "0404", "bloque": "01", "bloq": "01", "propietario": "Luz Amparo Botero", "nombre": "Luz Amparo Botero", "cc": "", "fac": 305, "nfac": 305, "actual": 132000, "admon": 132000, "pago_ant": 396000, "valpag": 396000, "pend": -396800, "total": -264800, "totalNum": -264800, "coefNum": 0, "coeficiente": "0.000%", "tipo": "APTO", "estado": "Al Día" }
+  ];
+}
 
 
 
@@ -40967,7 +41069,7 @@ function renderizarTablaFusion3en1() {
 
   if (sQuorum) {
 
-    const qStr = totQuorum > 0 ? totQuorum.toFixed(3) + "%" : "100.000%";
+    const qStr = totQuorum > 0 ? totQuorum.toFixed(3) + "%" : "0.000%";
 
     sQuorum.innerText = qStr;
 
@@ -41055,7 +41157,7 @@ async function ejecutarCreacionEdificioFusion3en1() {
 
     pqrAtencion: 2,
 
-    coeficienteTotal: "100.000%",
+    coeficienteTotal: totQuorum > 0 ? `${totQuorum.toFixed(3)}%` : "0.000%",
 
     recaudoTotal: selCampos.cart_cuota_mes ? "$12.310.800" : "$0",
 
@@ -41103,7 +41205,7 @@ async function ejecutarCreacionEdificioFusion3en1() {
         email: u.email || "",
         fac: u.fac || "",
         coefNum: (u.coefNum !== undefined) ? u.coefNum : (parseFloat(String(u.coeficiente || "").replace("%", "")) || 0),
-        coeficiente: u.coeficiente || `${u.coefNum || 0}%`,
+        coeficiente: (u.coeficiente && u.coeficiente !== "0%") ? u.coeficiente : ((u.coefNum && u.coefNum > 0) ? `${u.coefNum}%` : "0.000%"),
         actual: actualVal,
         pend: pendVal,
         inta: intaVal,
@@ -59510,9 +59612,6 @@ window.filtrarSelectorHistoricoCopropietarios = function(query) {
   safeCreateIcons();
 };
 
-
-
-
 function enviarCobroWhatsApp(apto) {
   const cj = (typeof obtenerDatosCopropiedad === "function")
     ? obtenerDatosCopropiedad(AppState.codigoEdificio || AppState.conjuntoId || "4901")
@@ -60075,7 +60174,14 @@ function renderizarInventarioInmuebles(datos = null) {
 
   const coefTotal = document.getElementById("inventario-coef-total");
 
-  if (coefTotal) coefTotal.innerText = cj ? (cj.coeficienteTotal || "100.000%") : "100.000%";
+  if (coefTotal) {
+    let sumC = 0;
+    unidadesBase.forEach(u => {
+      const c = parseFloat(u.coefNum || String(u.coeficiente || "").replace("%", "") || 0);
+      if (c > 0) sumC += c;
+    });
+    coefTotal.innerText = sumC > 0 ? `${sumC.toFixed(3)}%` : (cj && cj.coeficienteTotal ? cj.coeficienteTotal : "0.000%");
+  }
 
 
 
@@ -60123,7 +60229,7 @@ function renderizarInventarioInmuebles(datos = null) {
 
     const area = (item.area && String(item.area) !== "75 m²" && String(item.area) !== "0") ? String(item.area) : "";
 
-    const coef = item.coeficiente || (item.coefNum ? `${item.coefNum}%` : "--");
+    const coef = (item.coefNum && item.coefNum > 0) ? `${item.coefNum}%` : ((item.coeficiente && item.coeficiente !== "0.000%" && item.coeficiente !== "0%") ? item.coeficiente : "--");
 
     const prop = item.propietario || "Copropietario";
 
@@ -60383,39 +60489,22 @@ function editarInmuebleInventario(unidad) {
   safeCreateIcons();
 }
 
-
-
 function cerrarModalEditarInmueble() {
-
   document.getElementById("modal-editar-inmueble")?.classList.add("hidden");
-
 }
-
-
 
 function toggleInquilinoInput(habita) {
-
+  const seccionInq = document.getElementById("seccion-datos-inquilino");
   const inputRes = document.getElementById("edit-inmueble-residente");
-
   if (!inputRes) return;
-
   if (habita === "arrendatario") {
-
+    if (seccionInq) seccionInq.classList.remove("opacity-50");
     inputRes.placeholder = "Nombre completo del arrendatario";
-
-    inputRes.focus();
-
   } else {
-
+    if (seccionInq) seccionInq.classList.add("opacity-50");
     inputRes.placeholder = "Opcional si habita propietario";
-
-    inputRes.value = "";
-
   }
-
 }
-
-
 
 function guardarEdicionInmueble(e) {
   if (e) e.preventDefault();
@@ -60549,130 +60638,80 @@ function verDetalleInmueble(unidad) {
 
 
 
-  const telLimpio = ((typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(uCode) : "") || item.telefono || "3147593118").replace(/\s/g, "");
-
+  const telLimpio = (item.telefono || item.tel || "3147593118").replace(/\s/g, "");
+  const telDisplay = item.telefono || item.tel || "314 759 3118";
+  const emailDisplay = item.email || item.correo || `propietario.${uCode}@gmail.com`;
+  const dirDisplay = item.direccionCorrespondencia || item.direccion || "En el edificio";
   const nombreEdif = cj ? cj.nombre : "la Copropiedad";
-
   const carteraTxt = item.totalNum !== undefined ? (item.totalNum > 0 ? formatoCOP(item.totalNum) : "Al día") : (item.cartera || "Al día");
-
   const doc = item.documento || (item.cc ? `CC: ${item.cc}` : "CC: 43.562.219");
 
-
-
   cont.innerHTML = `
-
     <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-
         <div class="flex items-center gap-2">
-
           <span class="w-9 h-9 rounded-xl bg-blue-950/80 border border-blue-800 text-blue-400 flex items-center justify-center font-black font-mono">
-
             ${uCode}
-
           </span>
-
           <div>
-
             <span class="font-extrabold text-white text-sm">${item.tipo || 'Apartamento'} ${uCode}</span>
-
             <span class="text-[11px] text-slate-400 block">${item.bloq !== undefined ? item.bloq : '00'} • ${item.area || '75 m²'}</span>
-
           </div>
-
         </div>
-
         <div class="text-right font-mono">
-
           <span class="text-[10px] text-slate-400 block uppercase">Coeficiente</span>
-
           <span class="text-xs font-bold text-emerald-400">${item.coeficiente || '0.000%'}</span>
-
         </div>
-
       </div>
-
-
 
       <div class="grid grid-cols-2 gap-3 text-xs pt-1">
-
         <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-
           <span class="text-[10px] text-slate-400 uppercase font-bold block">Copropietario</span>
-
           <span class="font-bold text-white block mt-0.5">${item.propietario || 'Copropietario'}</span>
-
           <span class="text-[11px] text-slate-400 font-mono">${doc}</span>
-
         </div>
-
         <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-
           <span class="text-[10px] text-slate-400 uppercase font-bold block">Ocupación / Habitación</span>
-
           <span class="font-bold text-white block mt-0.5">${item.esInquilino ? 'Arrendatario' : 'Propietario habita'}</span>
-
           <span class="text-[11px] text-emerald-400 font-medium">${item.residente || 'Propietario habita'}</span>
-
         </div>
-
       </div>
 
-
+      <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs space-y-1">
+        <div class="flex items-center justify-between text-slate-400">
+          <span class="text-[10px] uppercase font-bold">Contacto Copropietario</span>
+          <span class="text-[11px] font-mono text-emerald-400 font-bold">${telDisplay}</span>
+        </div>
+        <div class="text-[11px] text-slate-300 truncate">✉ ${emailDisplay}</div>
+        <div class="text-[11px] text-slate-400 truncate">📍 ${dirDisplay}</div>
+      </div>
 
       <div class="grid grid-cols-3 gap-2 text-xs">
-
         <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
-
           <span class="text-[10px] text-slate-400 block">Parqueadero</span>
-
           <span class="font-bold ${(esDatoRealInmueble(item.parqueadero, 'PK-')) ? 'text-white' : 'text-slate-500'}">${esDatoRealInmueble(item.parqueadero, 'PK-') ? item.parqueadero : 'No tiene'}</span>
-
         </div>
-
         <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
-
           <span class="text-[10px] text-slate-400 block">Cuarto Útil</span>
-
           <span class="font-bold ${(esDatoRealInmueble(item.cuartoUtil, 'CU-')) ? 'text-white' : 'text-slate-500'}">${esDatoRealInmueble(item.cuartoUtil, 'CU-') ? item.cuartoUtil : 'No tiene'}</span>
-
         </div>
-
         <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
-
           <span class="text-[10px] text-slate-400 block">Clave Digital</span>
-
           <span class="font-bold text-amber-300 font-mono">🔑 ${item.clave || '--'}</span>
-
         </div>
-
       </div>
-
-
 
       <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-
         <div>
-
           <span class="text-[10px] text-slate-400 uppercase font-bold block">Estado de Cartera</span>
-
           <span class="text-sm font-black ${carteraTxt === 'Al día' ? 'text-emerald-400' : 'text-rose-400'}">${carteraTxt}</span>
-
         </div>
-
         <button type="button" onclick="despacharWhatsAppDirecto({ telefono: '${telLimpio}', mensaje: 'Estimado(a) ' + (item.propietario || 'Copropietario') + ', le saludamos de la Administración ' + nombreEdif + ' respecto al inmueble ' + uCode, contexto: 'detalle_inmueble', unidad: uCode, destinatario: item.propietario || '' })" class="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-600/40 font-bold flex items-center gap-1.5 transition-colors cursor-pointer">
-
           <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
-
           <span>WhatsApp</span>
-
-        </button>
-
+        </a>
       </div>
-
     </div>
-
   `;
 
 
@@ -62172,6 +62211,19 @@ const LISTA_MESES_DRIVE = [
 
 
 const EDIFICIOS_CATALOGO_DRIVE = {
+
+  "0950": {
+    codigo: "0950",
+    nombre: "EDIFICIO LA FORTALEZA",
+    administrador: "Yeferson",
+    nit: "900428879",
+    banco: "Bancolombia",
+    cuenta: "61300060942",
+    direccion: "Calle 47 Nro 82-26",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024],
+    meses: LISTA_MESES_DRIVE
+  },
 
   "4160": {
     codigo: "4160",
@@ -66738,12 +66790,27 @@ window.cargarNovedadesFacturacion = function() {
   const kNov = obtenerKeyNovedades();
   const kRec = obtenerKeyRecibosAdicionales();
   const kMeta = obtenerKeyMetadatosPlanilla();
+  const codActivo = obtenerCodLimpioActivo();
 
   try {
     const rawNov = localStorage.getItem(kNov);
     window._novedadesFacturacionCache = rawNov ? JSON.parse(rawNov) : {};
   } catch(e) {
     window._novedadesFacturacionCache = {};
+  }
+
+  // Saneamiento automático para copropiedades sin coeficientes (como 0950):
+  // Si en la caché del navegador quedaron coeficientes inventados (como 6.25%) o valores facturados en 0 / negativos, sanearlos
+  if (codActivo === "0950" && window._novedadesFacturacionCache) {
+    Object.keys(window._novedadesFacturacionCache).forEach(apto => {
+      const item = window._novedadesFacturacionCache[apto];
+      if (item) {
+        if (item.coef && item.coef > 0) item.coef = 0;
+        if (item.valorFacturado !== undefined && item.valorFacturado <= 0) {
+          delete item.valorFacturado;
+        }
+      }
+    });
   }
 
   try {
@@ -66779,7 +66846,9 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
   const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(codLimpio) : null;
 
   let unidades = [];
-  if (cj && cj.unidades && cj.unidades.length > 0) {
+  if (codLimpio === "0950" && typeof getUnidadesFortaleza0950Master === "function") {
+    unidades = getUnidadesFortaleza0950Master();
+  } else if (cj && cj.unidades && cj.unidades.length > 0) {
     unidades = cj.unidades;
   } else if (typeof getUnidadesRobleAlto4901Master === "function") {
     unidades = getUnidadesRobleAlto4901Master();
@@ -66828,11 +66897,24 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
       const apto = String(u.apto || idx + 1);
       const bloque = String(u.bloque || u.torre || "AP");
       const prop = u.nombre || u.propietario || `Copropietario ${apto}`;
-      const coef = Number(u.coef !== undefined ? u.coef : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0)) || 0;
+      const coef = Number(u.coef !== undefined ? u.coef : (u.coefNum !== undefined ? u.coefNum : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0))) || 0;
       const nfac = String(u.nfac || u.factura || u.fac || "");
 
-      // Valor facturado (saldo anterior a cancelar o cuota actual si viene en blanco)
-      const valorFacturado = Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : (u.cuota || 0))) || 0;
+      // Valor facturado: total completo de todas las casillas (administración + mora/saldo anterior + intereses + cuotas extras + otros conceptos)
+      const valorFacturado = Number(
+        (u.totalNum !== undefined && u.totalNum !== null) ? u.totalNum :
+        (u.total !== undefined && u.total !== null) ? u.total :
+        (u.totalFinal !== undefined && u.totalFinal !== null) ? u.totalFinal :
+        (u.totalPagar !== undefined && u.totalPagar !== null && typeof parseValorCOP === "function") ? parseValorCOP(u.totalPagar) :
+        (
+          (Number(u.actual !== undefined ? u.actual : (u.admon !== undefined ? u.admon : (u.cuota || 0))) || 0) +
+          (Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : 0)) || 0) +
+          (Number(u.intp !== undefined ? u.intp : (u.inta !== undefined ? u.inta : (u.interes || 0))) || 0) +
+          (Number(u.otrosa !== undefined ? u.otrosa : (u.otrosp !== undefined ? u.otrosp : (u.otros || 0))) || 0) +
+          (Number(u.extraa !== undefined ? u.extraa : (u.extrap !== undefined ? u.extrap : (u.extra || 0))) || 0) +
+          (Number(u.multaa !== undefined ? u.multaa : (u.multap !== undefined ? u.multap : (u.multa || 0))) || 0)
+        )
+      ) || 0;
 
       // Obtener o inicializar fila en cache
       if (!window._novedadesFacturacionCache[apto]) {
@@ -66842,7 +66924,7 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
           nfac: nfac,
           coef: coef,
           valorFacturado: valorFacturado,
-          pago1: Number(u.valpag) || 0,
+          pago1: Number(u.valpag !== undefined ? u.valpag : (u.pago_ant || 0)) || 0,
           dia1: 30,
           pago2: 0,
           dia2: 30,
@@ -66854,11 +66936,15 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
       }
 
       const item = window._novedadesFacturacionCache[apto];
-      // Mantener sincronizado valorFacturado si no fue forzado
-      if (item.valorFacturado === undefined || item.valorFacturado === null) item.valorFacturado = valorFacturado;
+      // Mantener sincronizado valorFacturado con el total completo de todas las casillas
+      item.valorFacturado = valorFacturado;
       if (!item.bloque) item.bloque = bloque;
-      if (!item.nfac) item.nfac = nfac;
-      if (!item.coef) item.coef = coef;
+      if (!item.nfac || item.nfac === "") item.nfac = nfac;
+      if (coef === 0) {
+        item.coef = 0;
+      } else if (!item.coef) {
+        item.coef = coef;
+      }
 
       const p1 = Number(item.pago1) || 0;
       const d1 = Number(item.dia1) || 30;
@@ -66902,7 +66988,7 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
           </td>
           <!-- Coeficiente -->
           <td class="py-2 px-2 text-right text-slate-300 text-xs border-r border-slate-800/60 font-mono">
-            ${coef.toFixed(2)}%
+            ${coef > 0 ? coef.toFixed(2) + '%' : '0.00%'}
           </td>
           <!-- Valor Facturado -->
           <td class="py-2 px-3 text-right font-black text-slate-200 text-xs border-r border-slate-800/60 bg-slate-950/40">
@@ -66979,7 +67065,7 @@ window.renderizarPlanillaNovedades = function(filtroQuery = "") {
           TOTALES GENERALES:
         </td>
         <td class="py-3 px-2 text-right font-mono font-bold text-slate-300">
-          ${totCoef.toFixed(2)}%
+          ${totCoef > 0 ? totCoef.toFixed(2) + '%' : '0.00%'}
         </td>
         <td class="py-3 px-3 text-right font-mono font-black text-white" id="pie-tot-facturado">
           $${totFacturado.toLocaleString('es-CO')}
@@ -67512,7 +67598,9 @@ window.descargarPlanillaExcelOficial = function() {
   const anio = fechaActual.getFullYear();
 
   let unidades = [];
-  if (cj && cj.unidades && cj.unidades.length > 0) {
+  if (codLimpio === "0950" && typeof getUnidadesFortaleza0950Master === "function") {
+    unidades = getUnidadesFortaleza0950Master();
+  } else if (cj && cj.unidades && cj.unidades.length > 0) {
     unidades = cj.unidades;
   } else if (typeof getUnidadesRobleAlto4901Master === "function") {
     unidades = getUnidadesRobleAlto4901Master();
@@ -67560,15 +67648,29 @@ window.descargarPlanillaExcelOficial = function() {
   // Filas 6..N: Filas de inmuebles con fórmulas exactas
   unidades.forEach((u, idx) => {
     const apto = String(u.apto);
-    const numCoef = Number(u.coef !== undefined ? u.coef : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0)) || 0;
+    const numCoef = Number(u.coef !== undefined ? u.coef : (u.coefNum !== undefined ? u.coefNum : (u.coeficiente !== undefined ? parseFloat(String(u.coeficiente).replace('%', '')) : 0))) || 0;
     const numFac = u.nfac || u.factura || u.fac || "";
+    const valFacturado = Number(
+      (u.totalNum !== undefined && u.totalNum !== null) ? u.totalNum :
+      (u.total !== undefined && u.total !== null) ? u.total :
+      (u.totalFinal !== undefined && u.totalFinal !== null) ? u.totalFinal :
+      (u.totalPagar !== undefined && u.totalPagar !== null && typeof parseValorCOP === "function") ? parseValorCOP(u.totalPagar) :
+      (
+        (Number(u.actual !== undefined ? u.actual : (u.admon !== undefined ? u.admon : (u.cuota || 0))) || 0) +
+        (Number(u.pend !== undefined ? u.pend : (u.saldoAnterior !== undefined ? u.saldoAnterior : 0)) || 0) +
+        (Number(u.intp !== undefined ? u.intp : (u.inta !== undefined ? u.inta : (u.interes || 0))) || 0) +
+        (Number(u.otrosa !== undefined ? u.otrosa : (u.otrosp !== undefined ? u.otrosp : (u.otros || 0))) || 0) +
+        (Number(u.extraa !== undefined ? u.extraa : (u.extrap !== undefined ? u.extrap : (u.extra || 0))) || 0) +
+        (Number(u.multaa !== undefined ? u.multaa : (u.multap !== undefined ? u.multap : (u.multa || 0))) || 0)
+      )
+    ) || 0;
     const item = window._novedadesFacturacionCache[apto] || {
-      bloque: u.bloque || "AP",
+      bloque: u.bloque || "01",
       apto: apto,
       nfac: numFac,
       coef: numCoef,
-      valorFacturado: Number(u.pend || u.saldoAnterior || 0),
-      pago1: 0,
+      valorFacturado: valFacturado,
+      pago1: Number(u.valpag !== undefined ? u.valpag : (u.pago_ant || 0)) || 0,
       dia1: 30,
       pago2: 0,
       dia2: 30,
@@ -67578,10 +67680,13 @@ window.descargarPlanillaExcelOficial = function() {
       novedad: ""
     };
 
+    if (numCoef === 0) item.coef = 0;
+    item.valorFacturado = valFacturado;
+
     const rowNum = aoa.length + 1; // 1-indexed para formulas Excel
 
     const rRow = new Array(26).fill("");
-    rRow[0] = item.bloque || "AP";
+    rRow[0] = item.bloque || "01";
     rRow[1] = item.apto;
     rRow[2] = item.nfac || numFac;
     rRow[3] = Number(item.coef || 0);
