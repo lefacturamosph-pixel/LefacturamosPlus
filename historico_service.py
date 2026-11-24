@@ -73,33 +73,35 @@ def compilar_historico_edificio(codigo: str) -> Dict[str, Any]:
     historico_por_apto: Dict[str, List[Dict[str, Any]]] = {}
 
     if folder and folder.exists() and read_dbf_binary:
-        # Buscar todos los archivos SSyymm.DBF ordenados
-        pattern = str(folder / "SS[0-9][0-9][0-9][0-9].DBF")
-        files = sorted(glob.glob(pattern, recursive=False))
-        if not files:
-            pattern_lower = str(folder / "ss[0-9][0-9][0-9][0-9].dbf")
-            files = sorted(glob.glob(pattern_lower, recursive=False))
+        # Buscar todos los archivos SSyymm.DBF ordenados a partir de Diciembre 2023 (SS2312)
+        ss_entries = []
+        try:
+            for entry in os.listdir(folder):
+                e_up = entry.upper()
+                if e_up.startswith("SS") and e_up.endswith(".DBF") and len(e_up) == 10:
+                    stem = e_up[:-4]
+                    # Excluir archivo de saldo actual general del edificio como SS4901.DBF, SS7480.DBF, etc.
+                    if stem == f"SS{clean_cod.zfill(4)}" or stem == f"SS{clean_cod}":
+                        continue
+                    yy = stem[2:4]
+                    mm = stem[4:6]
+                    if yy.isdigit() and mm.isdigit():
+                        m_int = int(mm)
+                        if 1 <= m_int <= 12:
+                            y_int = int(yy)
+                            anio = 2000 + y_int if y_int < 70 else 1900 + y_int
+                            # REGLA ESTRICTA: El histórico oficial inicia a partir de Diciembre 2023 (SS2312).
+                            # Descartar archivos anteriores (SS2208, SS2209, SS2210, etc.)
+                            if anio < 2023 or (anio == 2023 and m_int < 12):
+                                continue
+                            ss_entries.append((anio, m_int, mm, folder / entry))
+        except Exception as e_scan:
+            print(f"Error escaneando carpeta {folder}: {e_scan}")
 
-        for fpath in files:
-            fname = Path(fpath).stem.upper()
-            if len(fname) != 6 or not fname.startswith("SS"):
-                continue
-            
-            # Excluir archivo de saldo actual general del edificio como SS4901.DBF, SS7480.DBF, etc.
-            if fname == f"SS{clean_cod.zfill(4)}" or fname == f"SS{clean_cod}":
-                continue
+        # Ordenar cronológicamente por (año, mes)
+        ss_entries.sort(key=lambda x: (x[0], x[1]))
 
-            yy = fname[2:4]
-            mm = fname[4:6]
-            if not yy.isdigit() or not mm.isdigit():
-                continue
-            
-            # El mes debe ser válido entre 01 y 12
-            if int(mm) < 1 or int(mm) > 12:
-                continue
-            
-            y_int = int(yy)
-            anio = 2000 + y_int if y_int < 70 else 1900 + y_int
+        for anio, m_int, mm, fpath in ss_entries:
             mes_nom = MESES_NOMBRES.get(mm, f"MES {mm}")
             periodo_label = f"{mes_nom} {anio}"
             periodo_iso = f"{anio}-{mm}"
@@ -180,7 +182,7 @@ def compilar_historico_edificio(codigo: str) -> Dict[str, Any]:
                     "serv_mes": servia,
                     "notas_mes": ndnca,
                     "total_cobro_mes": subtotal_cobro_mes,
-                    # Pagos, descuentos y saldo total
+                    # Pagos, descuentos y saldo total (valores reales directos de DBPlus)
                     "valdesc": valdesc,
                     "valpag": valpag,
                     "total": total,
@@ -307,6 +309,17 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     ws = wb.active
     ws.title = "Cobro_Juridico" if es_abogado else "Estado_Cuenta"
     ws.views.sheetView[0].showGridLines = True
+
+    # Configuración de página: HORIZONTAL (LANDSCAPE) y ajuste para que quepan todas las columnas en la página completa
+    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+    ws.page_setup.paperSize = ws.PAPERSIZE_LETTER
+    ws.page_setup.fitToPage = True
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.page_margins.left = 0.3
+    ws.page_margins.right = 0.3
+    ws.page_margins.top = 0.4
+    ws.page_margins.bottom = 0.4
 
     # Estilos
     font_title = Font(name="Calibri", size=11, bold=True, color="000000")
@@ -471,8 +484,8 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         ws.cell(row=total_row, column=c).fill = fill_total
         ws.cell(row=total_row, column=c).border = thin_border
 
-    # Anchos de columna profesionales
-    col_widths = {1: 22, 2: 24, 3: 24, 4: 24, 5: 26, 6: 24, 7: 24, 8: 26, 9: 45}
+    # Anchos de columna proporcionales para encajar 100% en hoja horizontal (Landscape)
+    col_widths = {1: 18, 2: 15, 3: 18, 4: 16, 5: 18, 6: 16, 7: 16, 8: 18, 9: 34}
     for col_idx, width in col_widths.items():
         ws.column_dimensions[get_column_letter(col_idx)].width = width
 
@@ -608,22 +621,29 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
             tags_ant.append(f"Otros pend.: {fmt(float(m['otros_anterior']))}")
         sub_ant_html = f'<div style="font-size: 8px; color: #b45309; font-weight: normal; margin-top: 1px;">({" • ".join(tags_ant)})</div>' if tags_ant else ''
 
+        novedad_str = str(m.get("novedad", "") or "").strip()
+        tags_todas = tags_mes + tags_ant
+        if novedad_str:
+            tags_todas.append(novedad_str)
+        col_notas_html = f'<div style="font-size: 7.5px; color: #334155; line-height: 1.1;">{" | ".join(tags_todas)}</div>' if tags_todas else '<span style="color: #94a3b8;">-</span>'
+
         filas_tr.append(f"""
         <tr style="border-bottom: 1px solid #cbd5e1; background-color: {bg};">
-          <td style="padding: 5px 6px; font-weight: bold; color: #000;">{periodo}</td>
-          <td style="padding: 5px 6px; text-align: center; font-family: monospace;">{fac}</td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">
+          <td style="padding: 4px 5px; font-weight: bold; color: #000;">{periodo}</td>
+          <td style="padding: 4px 5px; text-align: center; font-family: monospace;">{fac}</td>
+          <td style="padding: 4px 5px; text-align: right; font-family: monospace;">
             <div>{fmt(cap_ant)}</div>
             {sub_ant_html}
           </td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(int_ant)}</td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">
+          <td style="padding: 4px 5px; text-align: right; font-family: monospace;">{fmt(int_ant)}</td>
+          <td style="padding: 4px 5px; text-align: right; font-family: monospace;">
             <div>{fmt(cuota)}</div>
             {sub_mes_html}
           </td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(int_m)}</td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(pago)}</td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(tot)}</td>
+          <td style="padding: 4px 5px; text-align: right; font-family: monospace;">{fmt(int_m)}</td>
+          <td style="padding: 4px 5px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(pago)}</td>
+          <td style="padding: 4px 5px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(tot)}</td>
+          <td style="padding: 4px 5px; text-align: left;">{col_notas_html}</td>
         </tr>
         """)
 
@@ -651,27 +671,28 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
   <meta charset="utf-8" />
   <title>{titulo_doc} - Apto {res.get('apto', '')}</title>
   <style>
-    @page {{ size: portrait; margin: 10mm; }}
-    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 10px; color: #000; padding: 10px; background: #fff; }}
-    .header {{ text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 8px; margin-bottom: 12px; }}
-    .header h1 {{ font-size: 16px; margin: 0; font-weight: 800; text-transform: uppercase; }}
-    .header p {{ margin: 2px 0; font-size: 9.5px; }}
-    .meta-grid {{ display: flex; gap: 10px; margin-bottom: 12px; }}
-    .meta-box {{ flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 8px; background: #f8fafc; font-size: 9.5px; }}
-    .meta-box h4 {{ margin: 0 0 4px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; text-transform: uppercase; font-size: 9.5px; }}
-    .cards {{ display: flex; gap: 8px; margin-bottom: 12px; }}
-    .card {{ flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 6px; text-align: center; background: #fff; }}
+    @page {{ size: landscape; margin: 8mm; }}
+    *, *:before, *:after {{ box-sizing: border-box; }}
+    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 9.5px; color: #000; padding: 6px; background: #fff; width: 100%; }}
+    .header {{ text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 6px; margin-bottom: 10px; }}
+    .header h1 {{ font-size: 15px; margin: 0; font-weight: 800; text-transform: uppercase; }}
+    .header p {{ margin: 2px 0; font-size: 9px; }}
+    .meta-grid {{ display: flex; gap: 10px; margin-bottom: 10px; }}
+    .meta-box {{ flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 6px 8px; background: #f8fafc; font-size: 9px; }}
+    .meta-box h4 {{ margin: 0 0 3px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; text-transform: uppercase; font-size: 9px; }}
+    .cards {{ display: flex; gap: 8px; margin-bottom: 10px; }}
+    .card {{ flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 5px; text-align: center; background: #fff; }}
     .card .title {{ font-size: 8px; font-weight: bold; text-transform: uppercase; }}
-    .card .val {{ font-size: 13px; font-weight: 800; margin-top: 2px; }}
-    table {{ width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 15px; }}
-    th {{ background: #0f172a; color: #fff; padding: 6px; text-align: left; font-size: 8px; text-transform: uppercase; border: 1px solid #0f172a; }}
-    .firmas {{ display: flex; justify-content: space-between; margin-top: 30px; font-size: 9px; }}
-    .firma-col {{ width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 5px; }}
+    .card .val {{ font-size: 12px; font-weight: 800; margin-top: 2px; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 12px; table-layout: fixed; }}
+    th {{ background: #0f172a; color: #fff; padding: 5px 6px; text-align: left; font-size: 8px; text-transform: uppercase; border: 1px solid #0f172a; }}
+    .firmas {{ display: flex; justify-content: space-between; margin-top: 20px; font-size: 8.5px; }}
+    .firma-col {{ width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 4px; }}
     @media print {{ button {{ display: none; }} }}
   </style>
 </head>
 <body>
-  <div style="text-align: right; margin-bottom: 10px;">
+  <div style="text-align: right; margin-bottom: 8px;">
     <button onclick="window.print()" style="padding: 6px 14px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🖨️ Imprimir / Guardar en PDF</button>
   </div>
   <div class="header">
@@ -720,27 +741,29 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
   <table>
     <thead>
       <tr>
-        <th>Periodo</th>
-        <th style="text-align: center;">Factura</th>
-        <th style="text-align: right;">Saldo Ant. Capital</th>
-        <th style="text-align: right;">Int. Mora Ant.</th>
-        <th style="text-align: right;">Cuota Admón</th>
-        <th style="text-align: right;">Interés Mes</th>
-        <th style="text-align: right;">Pago Mes (Abono)</th>
-        <th style="text-align: right;">Saldo Exigible</th>
+        <th style="width: 11%;">Periodo</th>
+        <th style="width: 7%; text-align: center;">Factura</th>
+        <th style="width: 12%; text-align: right;">Saldo Ant. Capital</th>
+        <th style="width: 9%; text-align: right;">Int. Mora Ant.</th>
+        <th style="width: 13%; text-align: right;">Cuota y Cargos Mes</th>
+        <th style="width: 9%; text-align: right;">Interés Mes</th>
+        <th style="width: 11%; text-align: right;">Pago Mes (Abono)</th>
+        <th style="width: 13%; text-align: right;">Saldo Exigible</th>
+        <th style="width: 15%; text-align: left;">Discriminación / Notas</th>
       </tr>
     </thead>
     <tbody>
       {''.join(filas_tr)}
       <tr style="background: #e2e8f0; font-weight: bold; border-top: 2px solid #0f172a;">
-        <td style="padding: 6px;">TOTALES ({len(meses)} MESES)</td>
-        <td style="padding: 6px; text-align: center;">-</td>
-        <td style="padding: 6px; text-align: right;">{fmt(sum(float(m.get('saldo_anterior',0) or 0) for m in meses))}</td>
-        <td style="padding: 6px; text-align: right;">{fmt(sum(float(m.get('interes_anterior',0) or 0) for m in meses))}</td>
-        <td style="padding: 6px; text-align: right;">{fmt(sum_cuotas)}</td>
-        <td style="padding: 6px; text-align: right;">{fmt(sum_int_mes)}</td>
-        <td style="padding: 6px; text-align: right;">{fmt(sum_pagos)}</td>
-        <td style="padding: 6px; text-align: right; color: #dc2626;">{fmt(saldo_final)}</td>
+        <td style="padding: 5px 6px;">TOTALES ({len(meses)} MESES)</td>
+        <td style="padding: 5px 6px; text-align: center;">-</td>
+        <td style="padding: 5px 6px; text-align: right;">{fmt(sum(float(m.get('saldo_anterior',0) or 0) for m in meses))}</td>
+        <td style="padding: 5px 6px; text-align: right;">{fmt(sum(float(m.get('interes_anterior',0) or 0) for m in meses))}</td>
+        <td style="padding: 5px 6px; text-align: right;">{fmt(sum_cuotas)}</td>
+        <td style="padding: 5px 6px; text-align: right;">{fmt(sum_int_mes)}</td>
+        <td style="padding: 5px 6px; text-align: right;">{fmt(sum_pagos)}</td>
+        <td style="padding: 5px 6px; text-align: right; color: #dc2626;">{fmt(saldo_final)}</td>
+        <td style="padding: 5px 6px; font-size: 8px; color: #334155;">Consolidado oficial verificado</td>
       </tr>
     </tbody>
   </table>

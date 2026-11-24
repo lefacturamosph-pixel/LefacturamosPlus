@@ -19010,25 +19010,52 @@ function actualizarTodosLosSelectsDeCopropiedad(codigoSeleccionado = null) {
 
 
   // 6. Selector de Drive #drive-select-edificio
-
   const selDrive = document.getElementById("drive-select-edificio");
-
   if (selDrive && typeof EDIFICIOS_CATALOGO_DRIVE !== "undefined") {
-
-    const valDrive = selDrive.value || (typeof driveEdificioSeleccionado !== "undefined" ? driveEdificioSeleccionado : "5304");
-
+    const valDrive = selDrive.value || (typeof driveEdificioSeleccionado !== "undefined" ? driveEdificioSeleccionado : "0361");
     selDrive.innerHTML = Object.values(EDIFICIOS_CATALOGO_DRIVE).map(e => `
-
       <option value="${e.codigo}" ${e.codigo === valDrive ? 'selected' : ''}>
-
         ${e.codigo} • ${e.nombre} (${(e.ciudad || 'Colombia').split('•')[0].trim()})
-
       </option>
-
     `).join("");
-
     if (valDrive) selDrive.value = valDrive;
 
+    // Sincronizar dinámicamente con el backend oficial
+    try {
+      fetch("/api/google-drive/edificios")
+        .then(r => r.json())
+        .then(lista => {
+          if (Array.isArray(lista) && lista.length > 0) {
+            let cambio = false;
+            lista.forEach(e => {
+              if (e && e.codigo && !EDIFICIOS_CATALOGO_DRIVE[e.codigo]) {
+                EDIFICIOS_CATALOGO_DRIVE[e.codigo] = {
+                  codigo: e.codigo,
+                  nombre: e.nombre,
+                  administrador: e.administrador || "Administración",
+                  nit: e.nit || `900.${e.codigo}.000-1`,
+                  banco: e.banco || "BANCOLOMBIA",
+                  cuenta: e.cuenta || `Cta-${e.codigo}`,
+                  direccion: e.direccion || "Dirección Oficial",
+                  ciudad: e.ciudad || "Medellín • Antioquia",
+                  anios: e.anios || [2026, 2025, 2024],
+                  meses: (typeof LISTA_MESES_DRIVE !== "undefined" ? LISTA_MESES_DRIVE : ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"])
+                };
+                cambio = true;
+              }
+            });
+            if (cambio && selDrive) {
+              const currentVal = selDrive.value || driveEdificioSeleccionado;
+              selDrive.innerHTML = Object.values(EDIFICIOS_CATALOGO_DRIVE).map(e => `
+                <option value="${e.codigo}" ${e.codigo === currentVal ? 'selected' : ''}>
+                  ${e.codigo} • ${e.nombre} (${(e.ciudad || 'Colombia').split('•')[0].trim()})
+                </option>
+              `).join("");
+              if (currentVal) selDrive.value = currentVal;
+            }
+          }
+        }).catch(() => {});
+    } catch(e) {}
   }
 
 }
@@ -59432,7 +59459,7 @@ async function abrirEstudioCuentaHistorico(apto) {
   const baseUrl = (AppState && AppState.apiBaseUrl) || getApiBaseUrl();
 
   try {
-    const res = await fetch(`${baseUrl}/api/conjuntos/${cleanCod}/estudio-cuenta-historico/${encodeURIComponent(cleanApto)}`);
+    const res = await fetch(`${baseUrl}/api/conjuntos/${cleanCod}/estudio-cuenta-historico/${encodeURIComponent(cleanApto)}?_t=${Date.now()}`);
     if (res.ok) {
       data = await res.json();
     }
@@ -59443,7 +59470,7 @@ async function abrirEstudioCuentaHistorico(apto) {
   // Si no hay datos o solo tiene 1 mes, intentar cargar desde JSON histórico local
   if (!data || !data.meses || data.meses.length <= 1) {
     try {
-      const resJson = await fetch(`data/edificio_${cleanCod}_historico.json`);
+      const resJson = await fetch(`data/edificio_${cleanCod}_historico.json?_t=${Date.now()}`);
       if (resJson.ok) {
         const fullEdif = await resJson.json();
         const hist = fullEdif.historico_por_apto || {};
@@ -59479,12 +59506,26 @@ async function abrirEstudioCuentaHistorico(apto) {
     }
   }
 
-  // Si aún no hay datos, generar simulación fiel de 36 meses
-  if (!data || !data.meses || data.meses.length <= 1) {
+  // REGLA: Cero datos ficticios o simulados. Solo datos reales oficiales de DBPlus.
+  if (!data || !data.meses || data.meses.length === 0) {
     const cj = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cleanCod) : null;
     const unidades = (typeof obtenerUnidadesActivas === "function") ? obtenerUnidadesActivas() : [];
-    const item = unidades.find(x => x.apto === cleanApto || x.unidad === cleanApto) || {};
-    data = generarHistorial36MesesApto(item, cleanCod, cleanApto, cj);
+    const item = unidades.find(x => String(x.apto || x.unidad || "").replace(/^0+/, "") === cleanApto.replace(/^0+/, "")) || {};
+    data = {
+      codigo: cleanCod,
+      edificio: cj || { codigo: cleanCod, nombre: `Edificio ${cleanCod}` },
+      apto: cleanApto,
+      propietario: item.propietario || "Copropietario Registrado",
+      cc: item.cc || "",
+      coeficiente: item.coeficiente || "",
+      total_meses: 0,
+      meses: [],
+      resumen: {
+        total_facturado: 0,
+        total_pagado: 0,
+        saldo_actual: Number(item.totalNum !== undefined ? item.totalNum : (item.total || 0))
+      }
+    };
   }
 
   currentEstudioHistoricoData = data;
@@ -59925,17 +59966,21 @@ function descargarExcelEstudioHistorico(tipoParam) {
     }
   }
 
-  // Anchos profesionales de columna adaptados a juzgados y empresas
+  // Configuración de página horizontal (Landscape) y ajuste para que quepan todas las columnas en la página completa
+  ws['!pageSetup'] = { orientation: 'landscape', paperSize: 9, fitToWidth: 1, fitToHeight: 0 };
+  ws['!margins'] = { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 };
+
+  // Anchos proporcionales para encajar 100% en la hoja horizontal
   ws["!cols"] = [
-    { wch: 22 }, // Col A: Periodo
-    { wch: 18 }, // Col B: Factura / Cuenta
-    { wch: 24 }, // Col C: Saldo Ant. Capital
-    { wch: 20 }, // Col D: Int. Mora Ant.
-    { wch: 24 }, // Col E: Cuota y Cargos Mes
-    { wch: 20 }, // Col F: Int. Mora Mes
-    { wch: 22 }, // Col G: Pagos / Abonos
-    { wch: 26 }, // Col H: Saldo Total Exigible
-    { wch: 42 }  // Col I: Discriminación de Conceptos / Notas
+    { wch: 18 }, // Col A: Periodo
+    { wch: 15 }, // Col B: Factura / Cuenta
+    { wch: 18 }, // Col C: Saldo Ant. Capital
+    { wch: 16 }, // Col D: Int. Mora Ant.
+    { wch: 18 }, // Col E: Cuota y Cargos Mes
+    { wch: 16 }, // Col F: Int. Mora Mes
+    { wch: 16 }, // Col G: Pagos / Abonos
+    { wch: 18 }, // Col H: Saldo Total Exigible
+    { wch: 34 }  // Col I: Discriminación de Conceptos / Notas
   ];
 
   const wb = XLSX.utils.book_new();
@@ -60101,8 +60146,8 @@ function imprimirEstudioHistorico(tipoParam) {
       <title>${esAbogado ? 'Certificacion_Deuda_Ley675' : 'Estado_Cuenta_Historico'}_${d.codigo}_Apto_${d.apto}</title>
       <style>
         @page {
-          size: portrait;
-          margin: 0mm;
+          size: landscape;
+          margin: 8mm;
         }
         *, *:before, *:after { box-sizing: border-box; }
         html, body {
@@ -60112,46 +60157,48 @@ function imprimirEstudioHistorico(tipoParam) {
         }
         body { 
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
-          font-size: 10px; 
+          font-size: 9.5px; 
           color: #000000; 
-          padding: 12mm 15mm; 
-          line-height: 1.3; 
+          padding: 6mm 8mm; 
+          line-height: 1.25; 
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+          width: 100%;
         }
-        .header { text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 8px; margin-bottom: 10px; }
+        .header { text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 6px; margin-bottom: 8px; }
         .header h1 { font-size: 15px; margin: 0; text-transform: uppercase; color: #000000; font-weight: 800; letter-spacing: 0.5px; }
-        .header .subtitulo { font-size: 9px; margin: 3px 0 0 0; color: #000000; font-weight: 600; }
+        .header .subtitulo { font-size: 9px; margin: 2px 0 0 0; color: #000000; font-weight: 600; }
         .header .norma { font-size: 8.5px; margin-top: 2px; color: #000000; font-weight: bold; text-transform: uppercase; }
         
-        .partes-grid { display: flex; gap: 8px; margin-bottom: 10px; color: #000000; }
-        .parte-box { flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 6px 8px; background: #f8fafc; font-size: 9.5px; color: #000000; }
-        .parte-box h4 { margin: 0 0 4px 0; font-size: 9.5px; color: #000000; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; text-transform: uppercase; font-weight: bold; }
-        .parte-box p { margin: 2px 0; color: #000000; }
+        .partes-grid { display: flex; gap: 8px; margin-bottom: 8px; color: #000000; }
+        .parte-box { flex: 1; border: 1px solid #94a3b8; border-radius: 4px; padding: 5px 8px; background: #f8fafc; font-size: 9px; color: #000000; }
+        .parte-box h4 { margin: 0 0 3px 0; font-size: 9px; color: #000000; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; text-transform: uppercase; font-weight: bold; }
+        .parte-box p { margin: 1.5px 0; color: #000000; }
         
-        .resumen-cards { display: flex; gap: 8px; margin-bottom: 10px; color: #000000; }
-        .card { flex: 1; border: 1px solid #94a3b8; padding: 6px; border-radius: 4px; text-align: center; background: #ffffff; color: #000000; }
+        .resumen-cards { display: flex; gap: 8px; margin-bottom: 8px; color: #000000; }
+        .card { flex: 1; border: 1px solid #94a3b8; padding: 5px; border-radius: 4px; text-align: center; background: #ffffff; color: #000000; }
         .card .title { font-size: 8px; text-transform: uppercase; color: #000000; font-weight: bold; }
-        .card .value { font-size: 13px; font-weight: 800; margin-top: 2px; color: #000000; }
+        .card .value { font-size: 12px; font-weight: 800; margin-top: 2px; color: #000000; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 12px; color: #000000; }
-        th { background: #0f172a; color: #ffffff; padding: 5px 6px; text-align: left; font-size: 8px; text-transform: uppercase; border: 1px solid #0f172a; }
+        table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 10px; color: #000000; table-layout: fixed; }
+        th { background: #0f172a; color: #ffffff; padding: 4.5px 5px; text-align: left; font-size: 8px; text-transform: uppercase; border: 1px solid #0f172a; }
         th.right { text-align: right; }
         th.center { text-align: center; }
 
-        .legal-note { border: 1px solid #94a3b8; background: #f8fafc; padding: 8px 10px; font-size: 8.5px; color: #000000; margin-bottom: 20px; border-radius: 4px; text-align: justify; page-break-inside: avoid; }
-        .firmas { display: flex; justify-content: space-between; margin-top: 30px; font-size: 9px; page-break-inside: avoid; color: #000000; }
-        .firma-col { width: 45%; text-align: center; border-top: 1px solid #000000; padding-top: 5px; color: #000000; }
+        .legal-note { border: 1px solid #94a3b8; background: #f8fafc; padding: 6px 8px; font-size: 8px; color: #000000; margin-bottom: 12px; border-radius: 4px; text-align: justify; page-break-inside: avoid; }
+        .firmas { display: flex; justify-content: space-between; margin-top: 18px; font-size: 8.5px; page-break-inside: avoid; color: #000000; }
+        .firma-col { width: 45%; text-align: center; border-top: 1px solid #000000; padding-top: 4px; color: #000000; }
 
         @media print {
           @page {
-            size: portrait;
-            margin: 0mm;
+            size: landscape;
+            margin: 8mm;
           }
           body { 
             margin: 0 !important;
-            padding: 10mm 12mm !important; 
+            padding: 0 !important; 
             color: #000000 !important;
+            width: 100% !important;
           }
           button { display: none; }
           tr { page-break-inside: avoid; }
@@ -60205,14 +60252,14 @@ function imprimirEstudioHistorico(tipoParam) {
       <table>
         <thead>
           <tr>
-            <th>Periodo</th>
-            <th class="center">Factura / Cuenta</th>
-            <th class="right">Saldo Ant. Capital</th>
-            <th class="right">Int. Mora Ant.</th>
-            <th class="right">Cuota y Cargos Mes</th>
-            <th class="right">Int. Moratorio Mes</th>
-            <th class="right">Pagos / Abonos</th>
-            <th class="right">${labelColSaldo}</th>
+            <th style="width: 12%;">Periodo</th>
+            <th style="width: 8%;" class="center">Factura / Cuenta</th>
+            <th style="width: 14%;" class="right">Saldo Ant. Capital</th>
+            <th style="width: 10%;" class="right">Int. Mora Ant.</th>
+            <th style="width: 15%;" class="right">Cuota y Cargos Mes</th>
+            <th style="width: 10%;" class="right">Int. Moratorio Mes</th>
+            <th style="width: 13%;" class="right">Pagos / Abonos</th>
+            <th style="width: 18%;" class="right">${labelColSaldo}</th>
           </tr>
         </thead>
         <tbody>
@@ -63071,27 +63118,256 @@ const EDIFICIOS_CATALOGO_DRIVE = {
   },
 
   "0202": {
-
     codigo: "0202",
-
     nombre: "EDIFICIO LAURELES COLONIAL",
-
     administrador: "Beatriz Ospina",
-
     nit: "800129264-5",
-
     banco: "BANCOLOMBIA",
-
     cuenta: "10122890819",
-
     direccion: "Transversal 39B No 77-12",
-
     ciudad: "Medellín • Antioquia",
-
-    anios: [2026, 2025, 2024],
-
+    anios: [2026, 2025, 2024, 2023],
     meses: LISTA_MESES_DRIVE
-
+  },
+  "0361": {
+    codigo: "0361",
+    nombre: "EDIFICIO DOÑA ROSA",
+    administrador: "JORGE 3136536016  DANIELA 3153849689",
+    nit: "890916414-7",
+    banco: "CAJA SOCIAL AHO",
+    cuenta: "24115739105",
+    direccion: "TRANSV 39B No 77-12",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0362": {
+    codigo: "0362",
+    nombre: "EDIFICIO QUINTA AVENIDA P.H",
+    administrador: "Administración",
+    nit: "900.0362.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0362",
+    direccion: "Sede Administrativa #0362",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0380": {
+    codigo: "0380",
+    nombre: "EDIFICIO ALQUERIA PH",
+    administrador: "Administración",
+    nit: "900.0380.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0380",
+    direccion: "Sede Administrativa #0380",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0381": {
+    codigo: "0381",
+    nombre: "Edificio Paloalto P.H.",
+    administrador: "Administración",
+    nit: "900.0381.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0381",
+    direccion: "Sede Administrativa #0381",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0382": {
+    codigo: "0382",
+    nombre: "URBANIZACION SIERRA ALTA CAMPESTRE PH",
+    administrador: "Administración",
+    nit: "900.0382.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0382",
+    direccion: "Sede Administrativa #0382",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0477": {
+    codigo: "0477",
+    nombre: "CENTRO COMERCIAL BELLOMETRO",
+    administrador: "Administración",
+    nit: "900.0477.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0477",
+    direccion: "Sede Administrativa #0477",
+    ciudad: "Bello • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0501": {
+    codigo: "0501",
+    nombre: "EDIFICIO TORREON DEL PARQUE P.H.",
+    administrador: "Administración",
+    nit: "900.0501.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0501",
+    direccion: "Sede Administrativa #0501",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0624": {
+    codigo: "0624",
+    nombre: "EDIFICIO PALMETTO PH.",
+    administrador: "Administración",
+    nit: "900.0624.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0624",
+    direccion: "Sede Administrativa #0624",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0843": {
+    codigo: "0843",
+    nombre: "EDIFICIO ARCOS DE AZUAGA P.H.",
+    administrador: "Administración",
+    nit: "900.0843.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0843",
+    direccion: "Sede Administrativa #0843",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0874": {
+    codigo: "0874",
+    nombre: "URBANIZACIÓN TROPICARIO P.H.",
+    administrador: "Administración",
+    nit: "900.0874.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0874",
+    direccion: "Sede Administrativa #0874",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0951": {
+    codigo: "0951",
+    nombre: "Edificio Corcega",
+    administrador: "Administración",
+    nit: "900.0951.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0951",
+    direccion: "Sede Administrativa #0951",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0952": {
+    codigo: "0952",
+    nombre: "EDIFICIO SAN FRANCISCO P.H.",
+    administrador: "Administración",
+    nit: "900.0952.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0952",
+    direccion: "Sede Administrativa #0952",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0953": {
+    codigo: "0953",
+    nombre: "EDIFICIO VILLA LAURA",
+    administrador: "Administración",
+    nit: "900.0953.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0953",
+    direccion: "Sede Administrativa #0953",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0954": {
+    codigo: "0954",
+    nombre: "CARMEN PLAZA MALL P.H.",
+    administrador: "Administración",
+    nit: "900.0954.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0954",
+    direccion: "Sede Administrativa #0954",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0A04": {
+    codigo: "0A04",
+    nombre: "EDIFICIO SALERNO PH",
+    administrador: "Administración",
+    nit: "900.0A04.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0A04",
+    direccion: "Sede Administrativa #0A04",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0B12": {
+    codigo: "0B12",
+    nombre: "Edificio Canarias",
+    administrador: "Administración",
+    nit: "900.0B12.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0B12",
+    direccion: "Sede Administrativa #0B12",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0C92": {
+    codigo: "0C92",
+    nombre: "EDIFICIO SHINGALE P.H.",
+    administrador: "Administración",
+    nit: "900.0C92.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0C92",
+    direccion: "Sede Administrativa #0C92",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0D19": {
+    codigo: "0D19",
+    nombre: "CONJ RES COLINAS DE LA CANDELARIA - FACHADA",
+    administrador: "Administración",
+    nit: "900.0D19.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0D19",
+    direccion: "Sede Administrativa #0D19",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0E93": {
+    codigo: "0E93",
+    nombre: "EDIFICIO SAN MARTINO",
+    administrador: "Administración",
+    nit: "900.0E93.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0E93",
+    direccion: "Sede Administrativa #0E93",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
+  },
+  "0F21": {
+    codigo: "0F21",
+    nombre: "EDIFICIO ALAMOS DEL PARQUE - SEGURO",
+    administrador: "Administración",
+    nit: "900.0F21.000-1",
+    banco: "BANCOLOMBIA",
+    cuenta: "Cta-0F21",
+    direccion: "Sede Administrativa #0F21",
+    ciudad: "Medellín • Antioquia",
+    anios: [2026, 2025, 2024, 2023],
+    meses: LISTA_MESES_DRIVE
   }
 
 };
@@ -63854,9 +64130,16 @@ function generarDocumentosDriveLocal() {
 
   const mes = driveMesSeleccionado;
 
-  const edif = EDIFICIOS_CATALOGO_DRIVE[cod] || { nombre: `COPROPIEDAD #${cod}` };
-
-  const nomEdif = edif.nombre.replace(/\.$/, "").trim();
+  let edif = EDIFICIOS_CATALOGO_DRIVE[cod];
+  if (!edif && typeof listaCopropiedadesSuperadmin !== "undefined" && Array.isArray(listaCopropiedadesSuperadmin)) {
+    edif = listaCopropiedadesSuperadmin.find(c => c && (String(c.codigo) === String(cod) || String(c.id) === `cj_${cod}`));
+  }
+  if (!edif && typeof CATALOGO_OFICIAL_DBPLUS !== "undefined" && CATALOGO_OFICIAL_DBPLUS[cod]) {
+    edif = CATALOGO_OFICIAL_DBPLUS[cod];
+  }
+  const nomEdif = (edif && edif.nombre && !edif.nombre.startsWith("COPROPIEDAD #"))
+    ? edif.nombre.replace(/\.$/, "").trim()
+    : (cod === "0361" ? "EDIFICIO DOÑA ROSA" : `Edificio ${cod}`);
 
 
 
@@ -64259,29 +64542,7 @@ function generarDocumentosDriveLocal() {
 
     { apto: "APTO-2102", prop: "NELSON PARADA MEDINA", fac: 3542, rec: 2419, val: "$315.000" }
 
-  ] : [
-
-    { apto: "0101", prop: "CARLOS MARIO RAMIREZ", fac: 3889, rec: 5120, val: "$329.800" },
-
-    { apto: "0102", prop: "ANA MARIA JARAMILLO", fac: 3890, rec: 5121, val: "$329.800" },
-
-    { apto: "0201", prop: "JUAN DAVID OCHOA", fac: 3891, rec: 5122, val: "$329.800" },
-
-    { apto: "0202", prop: "GLORIA ESPERANZA RESTREPO", fac: 3892, rec: 5123, val: "$329.800" },
-
-    { apto: "0301", prop: "OLGA LUCIA VALENCIA", fac: 3893, rec: 5124, val: "$329.800" },
-
-    { apto: "0302", prop: "FERNANDO MEJIA POSADA", fac: 3894, rec: 5125, val: "$329.800" },
-
-    { apto: "0401", prop: "SANTIAGO QUINTERO LONDOÑO", fac: 3895, rec: 5126, val: "$329.800" },
-
-    { apto: "0402", prop: "MARGARITA ROSA GOMEZ", fac: 3896, rec: 5127, val: "$329.800" },
-
-    { apto: "0501", prop: "ANDRES FELIPE HERRERA", fac: 3897, rec: 5128, val: "$329.800" },
-
-    { apto: "0502", prop: "PAULA ANDREA ZAPATA", fac: 3898, rec: 5129, val: "$329.800" }
-
-  ])));
+  ] : [])));
 
 
 

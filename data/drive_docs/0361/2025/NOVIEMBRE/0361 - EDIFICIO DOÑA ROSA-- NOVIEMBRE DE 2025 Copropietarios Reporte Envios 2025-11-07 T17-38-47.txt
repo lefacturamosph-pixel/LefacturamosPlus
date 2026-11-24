@@ -1,0 +1,2 @@
+Fecha_Hora,Email,Estado,Mensaje_Error,BLOQ,APTO,NOM			
+2025-11-07T17:38:47,ocupar@une.net.co			,Enviado,,00,0501,INVERSIONES DUQUE BOTERO S.A.S

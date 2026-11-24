@@ -491,13 +491,9 @@ def generar_pdf_informe(c, width, height, edif_info: Dict[str, Any], datos: Dict
         except Exception:
             pass
 
-    # Si no hay master, buscar en edificio_4160_master.json como referencia oficial
-    if not unidades and Path("data/edificio_4160_master.json").exists():
-        try:
-            with open("data/edificio_4160_master.json", "r", encoding="utf-8") as f:
-                unidades = json.load(f).get("unidades", [])
-        except Exception:
-            pass
+    # Si no hay master de este edificio, prohibido usar datos de otro edificio
+    if not unidades:
+        unidades = []
 
     fmt_num = lambda v: f"{int(v):,}".replace(",", ".") if v else "0"
 

@@ -4202,36 +4202,24 @@ def drive_archivos_locales(copropiedad: Optional[str] = None):
 
 
 
+@app.get("/api/drive/edificios")
 @app.get("/api/google-drive/edificios")
-
 def drive_listar_edificios():
-
     """Retorna la lista de edificios disponibles en Google Drive y el sistema"""
-
     from lefacturamos_drive_service import obtener_edificios_disponibles
-
     return {
-
         "status": "success",
-
         "cuenta_drive": "LefacturamosPH@lefacturamos.com",
-
         "drive_url": DRIVE_URL,
-
         "edificios": obtener_edificios_disponibles()
-
     }
 
-
-
+@app.get("/api/drive/arbol/{codigo}")
+@app.get("/api/drive/edificio/{codigo}/arbol")
 @app.get("/api/google-drive/arbol/{codigo}")
-
 def drive_arbol_edificio(codigo: str):
-
     """Retorna el árbol de años y meses que el edificio está con nosotros"""
-
     from lefacturamos_drive_service import obtener_arbol_edificio
-
     return obtener_arbol_edificio(codigo)
 
 
@@ -4245,32 +4233,9 @@ def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: s
     """
     from lefacturamos_drive_service import buscar_archivo_disco
     path_encontrado = buscar_archivo_disco(edificio, anio, mes, archivo)
-    if not path_encontrado or not path_encontrado.exists():
-        if archivo.lower().endswith(".pdf"):
-            try:
-                from lefacturamos_pdf_generator import generar_pdf_documento
-                cache_dir = Path("data/cache_pdf")
-                cache_dir.mkdir(parents=True, exist_ok=True)
-                cache_p = cache_dir / f"{edificio}_{anio}_{mes}_{archivo}"
-                generar_pdf_documento(edificio, anio, mes, archivo, cache_p)
-                if cache_p.exists():
-                    path_encontrado = cache_p
-            except Exception as e:
-                print("Error en fallback PDF de backend:", e)
-        elif archivo.lower().endswith(".xlsx"):
-            try:
-                from lefacturamos_excel_generator import generar_excel_documento
-                cache_dir = Path("data/cache_xlsx")
-                cache_dir.mkdir(parents=True, exist_ok=True)
-                cache_p = cache_dir / f"{edificio}_{anio}_{mes}_{archivo}"
-                generar_excel_documento(edificio, anio, mes, archivo, cache_p)
-                if cache_p.exists():
-                    path_encontrado = cache_p
-            except Exception as e:
-                print("Error en fallback XLSX de backend:", e)
 
     if not path_encontrado or not path_encontrado.exists():
-        raise HTTPException(status_code=404, detail=f"Archivo no encontrado en Google Drive o disco local: {archivo}")
+        raise HTTPException(status_code=404, detail=f"El archivo original '{archivo}' no se encuentra en Google Drive ni en el almacenamiento oficial.")
     
     media_type = "application/pdf"
     if archivo.lower().endswith(".xlsx"):
@@ -4289,14 +4254,11 @@ def servir_archivo_drive(edificio: str, archivo: str, anio: str = "2026", mes: s
     return FileResponse(path=str(path_encontrado), media_type=media_type, headers=headers)
 
 
+@app.get("/api/drive/documentos/{codigo}/{anio}/{mes}")
 @app.get("/api/google-drive/documentos/{codigo}/{anio}/{mes}")
-
 def drive_documentos_mes(codigo: str, anio: int, mes: str):
-
     """Retorna todos los informes oficiales en PDF y EXCEL y facturas/recibos individuales del mes"""
-
     from lefacturamos_drive_service import obtener_documentos_mes
-
     return obtener_documentos_mes(codigo, anio, mes)
 
 

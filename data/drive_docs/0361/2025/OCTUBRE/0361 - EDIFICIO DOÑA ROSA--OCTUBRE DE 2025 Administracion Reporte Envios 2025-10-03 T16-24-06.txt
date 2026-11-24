@@ -1,0 +1,2 @@
+Fecha_Hora,Email,Estado,Mensaje_Error,NOM
+2025-10-03T16:24:06,vital@vitalsas.co,Enviado,,EDIFICIO DO¥A ROSA
