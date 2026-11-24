@@ -1619,8 +1619,11 @@ def pagina_descarga_documentos(conjunto_id: str, numero_apto: str, tipo: str = "
   <meta property="og:title" content="📥 Descargar Certificado y Liquidación: Apto {numero_apto}" />
   <meta property="og:description" content="{nombre_edif} • {titulo_doc} • Toque aquí para descargar su PDF Oficial y Excel." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://lefacturamosplus.onrender.com/assets/logo_lefacturamos.png" />
-  <meta property="og:site_name" content="Lefacturamos PH" />
+  <meta property="og:image" content="https://lefacturamosplus.onrender.com/assets/descarga_card.png" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="600" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:site_name" content="Portal de Descarga Oficial" />
   
   <script src="https://cdn.tailwindcss.com"></script>
 </head>

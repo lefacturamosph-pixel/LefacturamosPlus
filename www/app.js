@@ -64784,6 +64784,8 @@ function enviarEstudioHistoricoWhatsApp() {
   const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
   const totalInteresesCausados = intMoraInicial + sumInteresMes;
 
+  const urlPortal = `${origin}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
+
   const msg = esAbogado
     ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Liquidado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
@@ -64792,14 +64794,16 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
-      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
+      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._\n\n` +
+      `${urlPortal}`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
       `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
+      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.\n\n` +
+      `${urlPortal}`;
 
   // Despachar a WhatsApp directamente sin descargas automáticas ni enlaces
   despacharWhatsAppDirecto({
