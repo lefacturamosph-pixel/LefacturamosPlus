@@ -64849,14 +64849,16 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Pagos Imputados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
-      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
+      `_Expedido por la Administración y Representación Legal de ${nombreEdif}._\n\n` +
+      `${urlPortal}`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
       `• Total Cuotas Facturadas: ${formatoMonedaSaldos(totalCapitalCausado)}\n` +
       `• Total Intereses: ${formatoMonedaSaldos(totalInteresesCausados)}\n` +
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
-      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
+      `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.\n\n` +
+      `${urlPortal}`;
 
   // Despachar a WhatsApp directamente sin descargas automáticas ni enlaces
   despacharWhatsAppDirecto({
@@ -64909,7 +64911,8 @@ function compartirDocumentoWhatsApp(docId) {
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
     `Le compartimos su notificación de *${tipo}*${valor}.\n\n` +
     `Documento disponible en la Administración para la unidad ${apto}.\n\n` +
-    `_Administración de la Copropiedad_`;
+    `_Administración de la Copropiedad_\n\n` +
+    `${urlPortal}`;
 
   despacharWhatsAppDirecto({
     telefono: tel,
