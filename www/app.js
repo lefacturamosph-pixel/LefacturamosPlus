@@ -64771,6 +64771,9 @@ function enviarEstudioHistoricoWhatsApp() {
   const codEdif = (typeof AppState !== "undefined" && (AppState.codigoEdificio || AppState.conjuntoId)) || data.codigo || "4901";
   const cleanCod = String(codEdif).replace(/^cj_/, "").trim();
   const origin = window.location.origin;
+  const baseUrl = (origin && !origin.includes("localhost") && !origin.includes("127.0.0.1") && !origin.includes("capacitor") && !origin.startsWith("file:"))
+    ? origin
+    : "https://lefacturamosplus.onrender.com";
 
   // Calcular acumulados con las propiedades reales de la base contable
   const saldoInicialCap = Number(primerMes.saldo_anterior) || 0;
@@ -64784,7 +64787,7 @@ function enviarEstudioHistoricoWhatsApp() {
   const totalCapitalCausado = saldoInicialCap + sumCuotaAdmon;
   const totalInteresesCausados = intMoraInicial + sumInteresMes;
 
-  const urlPortal = `${origin}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
+  const urlPortal = `${baseUrl}/descarga/${cleanCod}/${apto}/${tipoFiltro}`;
 
   const msg = esAbogado
     ? `Estimado(a) ${data.propietario}, le notificamos la *Certificación de Deuda para Cobro Judicial (Art. 48 Ley 675 de 2001)* para la unidad ${apto} en ${nombreEdif}:\n\n` +
@@ -64844,12 +64847,20 @@ function compartirDocumentoWhatsApp(docId) {
   // Buscar teléfono únicamente a través de la fuente centralizada del inmueble
   const tel = typeof obtenerTelefonoUnidad === "function" ? obtenerTelefonoUnidad(apto) : "";
 
+  const codLimpio = String(cod).replace(/^cj_/, "").trim();
+  const origin = window.location.origin;
+  const baseUrl = (origin && !origin.includes("localhost") && !origin.includes("127.0.0.1") && !origin.includes("capacitor") && !origin.startsWith("file:"))
+    ? origin
+    : "https://lefacturamosplus.onrender.com";
+  const urlPortal = `${baseUrl}/descarga/${codLimpio}/${apto}`;
+
   const msg =
     `*DOCUMENTO OFICIAL DE ADMINISTRACIÓN*\n\n` +
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
     `Le compartimos su notificación de *${tipo}*${valor}.\n\n` +
     `Documento disponible en la Administración para la unidad ${apto}.\n\n` +
-    `_Administración de la Copropiedad_`;
+    `_Administración de la Copropiedad_\n\n` +
+    `${urlPortal}`;
 
   despacharWhatsAppDirecto({
     telefono: tel,
