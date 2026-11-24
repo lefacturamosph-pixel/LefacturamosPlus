@@ -64797,8 +64797,8 @@ function enviarEstudioHistoricoWhatsApp() {
       `• *SALDO TOTAL EXIGIBLE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `La presente certificación presta mérito ejecutivo en los términos de ley.\n\n` +
       `📎 *DOCUMENTOS ADJUNTOS OFICIALES:*\n` +
-      `📄 *Certificado en PDF (Descargar):* ${urlPdf}\n` +
-      `📊 *Liquidación en Excel (Descargar):* ${urlExcel}\n\n` +
+      `📄 [Certificado Oficial de Cobro Judicial en PDF]\n` +
+      `📊 [Liquidación Discriminada de Crédito en Excel .xlsx]\n\n` +
       `_Expedido por la Administración y Representación Legal de ${nombreEdif}._`
     : `Estimado(a) ${data.propietario}, le compartimos su *Estado de Cuenta Histórico y Trazabilidad de Pagos* para la unidad ${apto} en ${nombreEdif}:\n\n` +
       `• Periodo Consultado: ${mesesFiltrados.length} meses (${primerMes.periodo || ''} hasta ${ultMesFiltrado.periodo || ''}).\n` +
@@ -64807,8 +64807,8 @@ function enviarEstudioHistoricoWhatsApp() {
       `• Total Pagos y Abonos Realizados: ${formatoMonedaSaldos(sumPagos)}\n` +
       `• *SALDO PENDIENTE A LA FECHA: ${formatoMonedaSaldos(saldoFinalPeriodo)}*\n\n` +
       `📎 *DOCUMENTOS ADJUNTOS:*\n` +
-      `📄 *Estado de Cuenta en PDF:* ${urlPdf}\n` +
-      `📊 *Informe Detallado en Excel:* ${urlExcel}\n\n` +
+      `📄 [Estado de Cuenta Histórico en PDF]\n` +
+      `📊 [Informe Detallado de Pagos en Excel .xlsx]\n\n` +
       `Para cualquier duda o conciliación de pagos, favor comunicarse con la Administración.`;
 
   // 1. Descarga automática local del archivo Excel para tenerlo en la bandeja de descargas listo para adjuntar
@@ -64863,9 +64863,7 @@ function compartirDocumentoWhatsApp(docId) {
     `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*\n\n` +
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
     `Le compartimos su *${tipo}*${valor}.\n\n` +
-    `📄 *Archivo Adjunto:* ${doc.nombre_archivo || doc.nombre || doc.titulo}\n` +
-    `📥 *Descargar PDF Oficial:* ${linkDescarga}\n\n` +
-    `💳 *Pago en Línea PSE / Bre-B:* ${window.location.origin}/pagar?apto=${apto}\n\n` +
+    `📎 *Documento Adjunto:* 📄 [${doc.nombre_archivo || doc.nombre || doc.titulo}]\n\n` +
     `_Plataforma Oficial LEFACTURAMOS PH_`;
 
   // Descarga local automática del archivo para facilitar arrastrar o adjuntar
