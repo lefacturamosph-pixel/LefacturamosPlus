@@ -23296,7 +23296,8 @@ function cambiarConjuntoActivo(nuevoConjuntoId) {
       const admon = parseValorCOP(u.admon !== undefined ? u.admon : (u.actual !== undefined ? u.actual : u.cuotaMensual));
       const pend = parseValorCOP(u.pend !== undefined ? u.pend : (u.saldoPendiente !== undefined ? u.saldoPendiente : 0));
       const intp = parseValorCOP(u.intp !== undefined ? u.intp : (u.interesPendiente !== undefined ? u.interesPendiente : 0));
-      const totUni = parseValorCOP(u.totalNum !== undefined ? u.totalNum : (u.totalPagar !== undefined ? u.totalPagar : (u.saldoTotal || (admon + pend + intp))));
+      const inta = parseValorCOP(u.inta !== undefined ? u.inta : (u.interesActual !== undefined ? u.interesActual : 0));
+      const totUni = parseValorCOP(u.totalNum !== undefined ? u.totalNum : (u.totalPagar !== undefined ? u.totalPagar : (u.saldoTotal || (admon + pend + intp + inta))));
       const coef = parseFloat(u.coefNum || String(u.coeficiente || "").replace("%", "") || 0);
 
       if (coef > 0) coefTotalCalculado += coef;

@@ -296,6 +296,7 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    from openpyxl.comments import Comment
 
     res = obtener_estudio_cuenta_apto(codigo, apto)
     edif = res.get("edificio", {})
@@ -313,6 +314,7 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     font_header = Font(name="Calibri", size=9, bold=True, color="FFFFFF")
     font_bold = Font(name="Calibri", size=9, bold=True)
     font_regular = Font(name="Calibri", size=9)
+    font_notas = Font(name="Calibri", size=8.5, color="1E293B")
     fill_header = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
     fill_total = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
     fill_meta = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
@@ -349,7 +351,7 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         ws.cell(row=idx, column=4, value=row_vals[3]).font = font_regular
         ws.cell(row=idx, column=5, value=row_vals[4]).font = font_bold
         ws.cell(row=idx, column=6, value=row_vals[5]).font = font_regular
-        for c in range(1, 7):
+        for c in range(1, 10):
             ws.cell(row=idx, column=c).fill = fill_meta
 
     # 3. Encabezados de tabla
@@ -358,17 +360,18 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         "FACTURA / CUENTA COBRO NO.",
         "SALDO ANTERIOR CAPITAL",
         "INTERÉS MORA ANTERIOR",
-        "CUOTA ADMÓN MES (CAPITAL)",
+        "CUOTA Y CARGOS MES",
         "INTERÉS MORATORIO MES",
         "PAGO MES (ABONO)",
-        "SALDO TOTAL EXIGIBLE"
+        "SALDO TOTAL EXIGIBLE" if es_abogado else "SALDO FINAL",
+        "DISCRIMINACIÓN DE CONCEPTOS / NOTAS"
     ]
     header_row = 9
     for col_idx, h in enumerate(headers, start=1):
         cell = ws.cell(row=header_row, column=col_idx, value=h)
         cell.font = font_header
         cell.fill = fill_header
-        cell.alignment = Alignment(horizontal="center" if col_idx <= 2 else "right", vertical="center", wrap_text=True)
+        cell.alignment = Alignment(horizontal="center" if col_idx <= 2 else ("left" if col_idx == 9 else "right"), vertical="center", wrap_text=True)
 
     # 4. Datos mes a mes
     curr_row = 10
@@ -383,6 +386,33 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         pago_m = float(m.get("valpag", 0) or 0)
         saldo_tot = float(m.get("total", 0) or 0)
 
+        # Desglose de notas y conceptos extraordinarios
+        notas_list = []
+        if float(m.get("notas_mes", 0) or 0) != 0:
+            notas_list.append(f"Nota D/C Mes: ${int(m['notas_mes']):,}".replace(",", "."))
+        if float(m.get("notas_anterior", 0) or 0) != 0:
+            notas_list.append(f"Nota D/C Pendiente: ${int(m['notas_anterior']):,}".replace(",", "."))
+        if float(m.get("multa_mes", 0) or 0) != 0:
+            notas_list.append(f"Multa Mes: ${int(m['multa_mes']):,}".replace(",", "."))
+        if float(m.get("multa_anterior", 0) or 0) != 0:
+            notas_list.append(f"Multa Pendiente: ${int(m['multa_anterior']):,}".replace(",", "."))
+        if float(m.get("extra_mes", 0) or 0) != 0:
+            notas_list.append(f"Cuota Extra Mes: ${int(m['extra_mes']):,}".replace(",", "."))
+        if float(m.get("extra_anterior", 0) or 0) != 0:
+            notas_list.append(f"Cuota Extra Pendiente: ${int(m['extra_anterior']):,}".replace(",", "."))
+        if float(m.get("otros_mes", 0) or 0) != 0:
+            notas_list.append(f"Otros Mes: ${int(m['otros_mes']):,}".replace(",", "."))
+        if float(m.get("otros_anterior", 0) or 0) != 0:
+            notas_list.append(f"Otros Pendiente: ${int(m['otros_anterior']):,}".replace(",", "."))
+        if float(m.get("serpub_mes", 0) or 0) != 0:
+            notas_list.append(f"Serv. Públicos Mes: ${int(m['serpub_mes']):,}".replace(",", "."))
+        if float(m.get("serpub_anterior", 0) or 0) != 0:
+            notas_list.append(f"Serv. Públicos Pendiente: ${int(m['serpub_anterior']):,}".replace(",", "."))
+        if m.get("novedad"):
+            notas_list.append(f"Novedad: {m['novedad']}")
+
+        texto_notas = " | ".join(notas_list) if notas_list else "-"
+
         ws.cell(row=curr_row, column=1, value=periodo_label).font = font_bold
         ws.cell(row=curr_row, column=2, value=fac_num).alignment = Alignment(horizontal="center")
         
@@ -392,13 +422,24 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         c6 = ws.cell(row=curr_row, column=6, value=int_m)
         c7 = ws.cell(row=curr_row, column=7, value=pago_m)
         c8 = ws.cell(row=curr_row, column=8, value=saldo_tot)
+        c9 = ws.cell(row=curr_row, column=9, value=texto_notas)
+
+        # Comentario explicativo en celdas relevantes (ej. Nota D/C de $9.000)
+        if float(m.get("notas_mes", 0) or 0) != 0:
+            val_nd = int(m['notas_mes'])
+            c5.comment = Comment(f"Nota D/C Mes: ${val_nd:,}".replace(",", ".") + f"\n(Cuota Base: ${int(m.get('actual_puro', cuota_m - val_nd)):,}".replace(",", ".") + f" + Nota D/C: ${val_nd:,}".replace(",", ".") + f" = Total: ${int(cuota_m):,})".replace(",", "."), "Administración")
+        if float(m.get("notas_anterior", 0) or 0) != 0:
+            c3.comment = Comment(f"Saldo anterior incluye Nota D/C Pendiente: ${int(m['notas_anterior']):,}".replace(",", "."), "Administración")
 
         for col_idx, cell in enumerate([c3, c4, c5, c6, c7, c8], start=3):
             cell.number_format = num_fmt
             cell.alignment = Alignment(horizontal="right")
             cell.font = font_bold if col_idx in (7, 8) else font_regular
 
-        for c in range(1, 9):
+        c9.font = font_notas
+        c9.alignment = Alignment(horizontal="left", vertical="center")
+
+        for c in range(1, 10):
             ws.cell(row=curr_row, column=c).border = thin_border
 
         curr_row += 1
@@ -422,14 +463,81 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     cell_final.number_format = num_fmt
     cell_final.alignment = Alignment(horizontal="right")
 
-    for c in range(1, 9):
+    c9_tot = ws.cell(row=total_row, column=9, value="Consolidado multianual verificado")
+    c9_tot.font = font_bold
+    c9_tot.alignment = Alignment(horizontal="left", vertical="center")
+
+    for c in range(1, 10):
         ws.cell(row=total_row, column=c).fill = fill_total
         ws.cell(row=total_row, column=c).border = thin_border
 
-    # Anchos de columna
-    col_widths = {1: 22, 2: 24, 3: 24, 4: 24, 5: 26, 6: 24, 7: 24, 8: 24}
+    # Anchos de columna profesionales
+    col_widths = {1: 22, 2: 24, 3: 24, 4: 24, 5: 26, 6: 24, 7: 24, 8: 26, 9: 45}
     for col_idx, width in col_widths.items():
         ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    # Resumen Ejecutivo de Liquidación y Conceptos Adicionales (para Juzgado / Abogado)
+    curr_row += 2
+    ws.cell(row=curr_row, column=1, value="DISCRIMINACIÓN DE CONCEPTOS / NOTAS Y NOVEDADES:").font = font_bold
+    curr_row += 1
+    
+    hay_notas = False
+    for m in meses:
+        per = m.get("periodo") or f"{m.get('anio')}-{m.get('mes')}"
+        items_m = []
+        if float(m.get("notas_mes", 0) or 0) != 0:
+            items_m.append(f"Nota D/C Mes: ${int(m['notas_mes']):,}".replace(",", ".") + f" (Cuota Admon Base: ${int(m.get('actual_puro', 0)):,}".replace(",", ".") + f" + Nota D/C: ${int(m['notas_mes']):,}".replace(",", ".") + f" = Total Cuota: ${int(m.get('cuota_admon', 0)):,})".replace(",", "."))
+        if float(m.get("notas_anterior", 0) or 0) != 0:
+            items_m.append(f"Nota D/C Pendiente: ${int(m['notas_anterior']):,}".replace(",", "."))
+        if float(m.get("multa_mes", 0) or 0) != 0:
+            items_m.append(f"Multa Mes: ${int(m['multa_mes']):,}".replace(",", "."))
+        if float(m.get("extra_mes", 0) or 0) != 0:
+            items_m.append(f"Cuota Extra: ${int(m['extra_mes']):,}".replace(",", "."))
+        if items_m:
+            hay_notas = True
+            ws.cell(row=curr_row, column=1, value=f"• Periodo {per}:").font = font_bold
+            ws.cell(row=curr_row, column=2, value=" | ".join(items_m)).font = font_regular
+            curr_row += 1
+    if not hay_notas:
+        ws.cell(row=curr_row, column=1, value="No se registran notas ni novedades adicionales en el periodo liquidado.").font = font_regular
+        curr_row += 1
+
+    # Resumen Legal
+    curr_row += 1
+    ws.cell(row=curr_row, column=1, value="LIQUIDACIÓN DE CRÉDITO Y SALDO NETO EXIGIBLE (ART. 48 LEY 675 DE 2001):" if es_abogado else "RESUMEN DE LIQUIDACIÓN Y ESTADO DE CUENTA:").font = font_bold
+    
+    saldo_inicial_cap = float(meses[0].get("saldo_anterior", 0) or 0) if meses else 0
+    int_mora_inicial = float(meses[0].get("interes_anterior", 0) or 0) if meses else 0
+    sum_cuotas = sum(float(m.get("cuota_admon", 0) or 0) for m in meses)
+    sum_int_mes = sum(float(m.get("interes_mes", 0) or 0) for m in meses)
+    sum_pagos = sum(float(m.get("valpag", 0) or 0) for m in meses)
+    saldo_final_val = float(meses[-1].get("total", 0) or 0) if meses else 0
+    total_cap = saldo_inicial_cap + sum_cuotas
+    total_int = int_mora_inicial + sum_int_mes
+
+    curr_row += 1
+    ws.cell(row=curr_row, column=1, value="1. TOTAL CAPITAL CAUSADO (EXPENSAS COMUNES ORDINARIAS):").font = font_regular
+    c_cap = ws.cell(row=curr_row, column=4, value=total_cap)
+    c_cap.number_format = num_fmt
+    c_cap.font = font_bold
+
+    curr_row += 1
+    ws.cell(row=curr_row, column=1, value="2. TOTAL INTERESES MORATORIOS LIQUIDADOS (TASA M.V.):").font = font_regular
+    c_int = ws.cell(row=curr_row, column=4, value=total_int)
+    c_int.number_format = num_fmt
+    c_int.font = font_bold
+
+    curr_row += 1
+    ws.cell(row=curr_row, column=1, value="3. MENOS: TOTAL ABONOS Y PAGOS APLICADOS:").font = font_regular
+    c_pag = ws.cell(row=curr_row, column=4, value=sum_pagos)
+    c_pag.number_format = num_fmt
+    c_pag.font = font_bold
+
+    curr_row += 1
+    ws.cell(row=curr_row, column=1, value="4. SALDO NETO LÍQUIDO Y EXIGIBLE (TÍTULO EJECUTIVO):" if es_abogado else "4. SALDO TOTAL A LA FECHA:").font = font_bold
+    c_fin = ws.cell(row=curr_row, column=4, value=saldo_final_val)
+    c_fin.number_format = num_fmt
+    c_fin.font = font_bold
 
     out_dir = Path("data/drive_docs") / str(codigo) / "historicos"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -478,13 +586,41 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
         pago = float(m.get("valpag", 0) or 0)
         tot = float(m.get("total", 0) or 0)
 
+        tags_mes = []
+        if float(m.get("notas_mes", 0) or 0) != 0:
+            tags_mes.append(f"Nota D/C: {fmt(float(m['notas_mes']))}")
+        if float(m.get("multa_mes", 0) or 0) != 0:
+            tags_mes.append(f"Multa: {fmt(float(m['multa_mes']))}")
+        if float(m.get("extra_mes", 0) or 0) != 0:
+            tags_mes.append(f"Extra: {fmt(float(m['extra_mes']))}")
+        if float(m.get("otros_mes", 0) or 0) != 0:
+            tags_mes.append(f"Otros: {fmt(float(m['otros_mes']))}")
+        sub_mes_html = f'<div style="font-size: 8px; color: #0284c7; font-weight: normal; margin-top: 1px;">({" • ".join(tags_mes)})</div>' if tags_mes else ''
+
+        tags_ant = []
+        if float(m.get("notas_anterior", 0) or 0) != 0:
+            tags_ant.append(f"Nota D/C pend.: {fmt(float(m['notas_anterior']))}")
+        if float(m.get("multa_anterior", 0) or 0) != 0:
+            tags_ant.append(f"Multa pend.: {fmt(float(m['multa_anterior']))}")
+        if float(m.get("extra_anterior", 0) or 0) != 0:
+            tags_ant.append(f"Extra pend.: {fmt(float(m['extra_anterior']))}")
+        if float(m.get("otros_anterior", 0) or 0) != 0:
+            tags_ant.append(f"Otros pend.: {fmt(float(m['otros_anterior']))}")
+        sub_ant_html = f'<div style="font-size: 8px; color: #b45309; font-weight: normal; margin-top: 1px;">({" • ".join(tags_ant)})</div>' if tags_ant else ''
+
         filas_tr.append(f"""
         <tr style="border-bottom: 1px solid #cbd5e1; background-color: {bg};">
           <td style="padding: 5px 6px; font-weight: bold; color: #000;">{periodo}</td>
           <td style="padding: 5px 6px; text-align: center; font-family: monospace;">{fac}</td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(cap_ant)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">
+            <div>{fmt(cap_ant)}</div>
+            {sub_ant_html}
+          </td>
           <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(int_ant)}</td>
-          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(cuota)}</td>
+          <td style="padding: 5px 6px; text-align: right; font-family: monospace;">
+            <div>{fmt(cuota)}</div>
+            {sub_mes_html}
+          </td>
           <td style="padding: 5px 6px; text-align: right; font-family: monospace;">{fmt(int_m)}</td>
           <td style="padding: 5px 6px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(pago)}</td>
           <td style="padding: 5px 6px; text-align: right; font-family: monospace; font-weight: bold;">{fmt(tot)}</td>
