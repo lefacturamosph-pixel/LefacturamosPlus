@@ -64859,7 +64859,8 @@ function compartirDocumentoWhatsApp(docId) {
     `*LEFACTURAMOS PH - DOCUMENTO OFICIAL*\n\n` +
     `Estimado(a) *${prop}*${apto ? ` (Unidad ${apto})` : ''}:\n` +
     `Le compartimos su *${tipo}*${valor}.\n\n` +
-    `📎 *Documento Adjunto:* 📄 [${doc.nombre_archivo || doc.nombre || doc.titulo}]\n\n` +
+    `📥 *PULSE LA SIGUIENTE TARJETA PARA DESCARGAR:*\n` +
+    `${linkDescarga}\n\n` +
     `_Plataforma Oficial LEFACTURAMOS PH_`;
 
   // Descarga local automática del archivo para facilitar arrastrar o adjuntar
