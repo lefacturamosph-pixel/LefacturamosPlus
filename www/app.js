@@ -13727,20 +13727,20 @@ let listaCopropiedadesSuperadmin = [
     telefono: "4165309",
     email: "vital@vitalsas.co;administrativa@vitalsas.co",
     interesMora: "2.16%",
-    inmueblesCount: 15,
-    inmueblesOcupados: 15,
-    censoCount: 15,
+    inmueblesCount: 12,
+    inmueblesOcupados: 12,
+    censoCount: 12,
     vehiculosAuditoria: 12,
     reservasConfirmadas: 1,
     pqrAtencion: 0,
     coeficienteTotal: "100.000%",
-    recaudoTotal: "$3.850.000",
-    recaudoPagos: "15 pagos procesados",
-    carteraPendiente: "$0",
-    totalFinalEdificio: "$3.850.000",
-    carteraInmuebles: "0 inmuebles con saldo",
-    carteraVencida: "$0",
-    carteraJuridica: "0 cuentas en mora jurídica",
+    recaudoTotal: "$9.324.700",
+    recaudoPagos: "12 cuotas facturadas",
+    carteraPendiente: "$78.293.978",
+    totalFinalEdificio: "$87.618.678",
+    carteraInmuebles: "3 inmuebles con saldo en mora",
+    carteraVencida: "$78.293.978",
+    carteraJuridica: "1 cuenta en cobro jurídico",
     estado: "A Paz y Salvo",
     bloqueadoMora: false,
     unidades: []
@@ -19457,59 +19457,25 @@ const MENUS_POR_ROL = {
     // Módulos completos con acceso a Asamblea y Ley 675
 
     items: [
-
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
-
-      // UN SOLO ICONO PARA CREAR EDIFICIO (Carga uno a uno de archivos Excel, CSV, TXT o PDF)
-      { id: "crear-edificio", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
       { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" },
-      { id: "config-edificio", label: "Configurar Edificio", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
-      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
-
-      // SUBMENÚ 2: FACTURACIÓN (Orden Cronológico de Facturación Condominal)
-      {
-        id: "facturacion-menu",
-        label: "Facturación",
-        icono: "receipt",
-        badge: "Ley 675",
-        subitems: [
-          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
-          { id: "saldos", label: "2. Base de Saldos & Cartera", icono: "wallet" },
-          { id: "facturacion", label: "3. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
-          { id: "documentos", label: "4. Listados y Facturas Oficiales", icono: "folder" },
-          { id: "devolver-saldos", label: "5. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
-        ]
-      },
-
-      // PAGOS ADMINISTRACIÓN (Egresos y Proveedores - Directo ENCIMA de Residentes)
-      { id: "pagosadmin", label: "Pagos Administración", icono: "credit-card" },
-
       { id: "residentes", label: "Residentes", icono: "users" },
-
       { id: "reservas", label: "Reservas", icono: "calendar" },
-
       { id: "visitantes", label: "Visitas", icono: "car" },
-
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
-
+      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
+      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
+      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
+      { id: "documentos", label: "Documentos", icono: "folder" },
       { id: "pqr", label: "PQR", icono: "message-square", badge: "2" },
-
       { id: "comunicados", label: "Comunicados", icono: "megaphone" },
-
       { id: "votaciones", label: "Asamblea Ley 675", icono: "file-check-2", badge: "2" },
-
       { id: "ley675", label: "Consultar Ley 675", icono: "search" },
-
       { id: "zonas", label: "Zonas Comunes", icono: "trees" },
-
       { id: "manual-admin", label: "Manual de Lefacturamos para el Administrador", icono: "book-open-check", action: "abrirManualRol('admin')" },
-
       { id: "manual", label: "Reglamento Interno PH (Edificio)", icono: "file-text" },
-
       { id: "mascotas", label: "Mascotas", icono: "paw-print" },
-
       { id: "vista-copropietario", label: "Vista Copropietario (Apto)", icono: "user-check", action: "abrirModalSeleccionarAptoVistaCopropietario()" }
-
     ]
 
   },
@@ -19609,6 +19575,12 @@ function obtenerDatosCopropiedad(codigoOId) {
     if (cop) {
       if (cop.unidades && cop.unidades.length > 0 && cop.unidades[0].actual !== undefined) {
         // Preservar unidades actualizadas en memoria
+      } else if (limpioSinCj === "0361") {
+        cop.unidades = (typeof getUnidadesDonaRosa0361Master === "function") ? getUnidadesDonaRosa0361Master() : [];
+        cop.inmueblesCount = 12;
+        cop.inmueblesOcupados = 12;
+        cop.censoCount = 12;
+        cop.coeficienteTotal = "100.000%";
       } else if (limpioSinCj === "0950") {
         cop.unidades = (typeof getUnidadesFortaleza0950Master === "function") ? getUnidadesFortaleza0950Master() : [];
         cop.coeficienteTotal = "0.000%";
@@ -22841,6 +22813,22 @@ function obtenerUnidadesActivas() {
 
   const codLimpio = String(activeCode).replace(/^cj_/, "").trim();
 
+  if (codLimpio === "0361" && typeof getUnidadesDonaRosa0361Master === "function") {
+    return getUnidadesDonaRosa0361Master();
+  }
+  if (codLimpio === "0950" && typeof getUnidadesFortaleza0950Master === "function") {
+    return getUnidadesFortaleza0950Master();
+  }
+  if (codLimpio === "4160" && typeof getUnidadesRiachuelo4160Master === "function") {
+    return getUnidadesRiachuelo4160Master();
+  }
+  if (codLimpio === "4901" && typeof getUnidadesRobleAlto4901Master === "function") {
+    return getUnidadesRobleAlto4901Master();
+  }
+  if (codLimpio === "7480" && typeof getUnidadesManchester7480Master === "function") {
+    return getUnidadesManchester7480Master();
+  }
+
   const cj = (typeof obtenerDatosCopropiedad === "function")
 
     ? obtenerDatosCopropiedad(codLimpio)
@@ -22861,12 +22849,8 @@ function obtenerUnidadesActivas() {
 
   }
 
-  const cjDef = listaCopropiedadesSuperadmin.find(c => c.id === "cj_4901" || c.codigo === "4901" || c.id === "cj_7480" || c.codigo === "7480");
-
-  if (cjDef && cjDef.unidades && cjDef.unidades.length > 0) {
-
-    return cjDef.unidades;
-
+  if (codLimpio === "4901") {
+    return (typeof getUnidadesRobleAlto4901Master === "function") ? getUnidadesRobleAlto4901Master() : [];
   }
 
   return [];
@@ -33951,6 +33935,716 @@ function getUnidadesRobleAlto4901Master() {
 ];
 }
 
+function getUnidadesDonaRosa0361Master() {
+  let cj = null;
+  try {
+    if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) {
+      cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '0361');
+    }
+  } catch(e) {}
+  if (cj && cj.unidades && cj.unidades.length > 5 && cj.unidades[0].actual !== undefined) {
+    return JSON.parse(JSON.stringify(cj.unidades));
+  }
+  return [
+    {
+      "unidad": "0101",
+      "apto": "0101",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "RICARDO ANDRES DIOSA OSORIO",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 8.332,
+      "coeficiente": "8.332%",
+      "fac": 111849,
+      "actual": 681400.0,
+      "pend": 33489552.0,
+      "inta": 750240.0,
+      "intp": 17045540.0,
+      "otrosa": 0.0,
+      "otrosp": 45700.0,
+      "extraa": 0.0,
+      "extrap": 2022504.0,
+      "multaa": 0.0,
+      "multap": 8006060.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 272778.0,
+      "servip": 2173457.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 681400.0,
+      "admonFmt": "$681.400",
+      "interes": 17795780.0,
+      "interesFmt": "$17.795.780",
+      "otros": 45700.0,
+      "otrosFmt": "$45.700",
+      "extra": 2022504.0,
+      "extraFmt": "$2.022.504",
+      "multa": 8006060.0,
+      "multaFmt": "$8.006.060",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 2446235.0,
+      "serServFmt": "$2.446.235",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 0.0,
+      "valpagFmt": "$0",
+      "saldoPendiente": "$33.489.552",
+      "cuotaMensual": "$681.400",
+      "totalNum": 64487231.0,
+      "totalPagar": "$64.487.231",
+      "totalFinal": 64487231.0,
+      "estado": "En Mora",
+      "tipo": "APTO",
+      "cartera": "En Mora",
+      "estadoCartera": "$64.487.231"
+    },
+    {
+      "unidad": "0102",
+      "apto": "0102",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "EREIDA RUIZ",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 7.903,
+      "coeficiente": "7.903%",
+      "fac": 111850,
+      "actual": 646500.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 287600.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 646500.0,
+      "admonFmt": "$646.500",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 287600.0,
+      "serServFmt": "$287.600",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 934100.0,
+      "valpagFmt": "$934.100",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$646.500",
+      "totalNum": 934100.0,
+      "totalPagar": "$934.100",
+      "totalFinal": 934100.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0201",
+      "apto": "0201",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "RAFAEL SALAZAR",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 7.697,
+      "coeficiente": "7.697%",
+      "fac": 111851,
+      "actual": 629300.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 265661.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 629300.0,
+      "admonFmt": "$629.300",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 265661.0,
+      "serServFmt": "$265.661",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 1160622.0,
+      "valpagFmt": "$1.160.622",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$629.300",
+      "totalNum": 894961.0,
+      "totalPagar": "$894.961",
+      "totalFinal": 894961.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0202",
+      "apto": "0202",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "CONSUELO CALLE",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 7.984,
+      "coeficiente": "7.984%",
+      "fac": 111852,
+      "actual": 653000.0,
+      "pend": 212895.0,
+      "inta": 4470.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 275595.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 653000.0,
+      "admonFmt": "$653.000",
+      "interes": 4470.0,
+      "interesFmt": "$4.470",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 275595.0,
+      "serServFmt": "$275.595",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 928595.0,
+      "valpagFmt": "$928.595",
+      "saldoPendiente": "$212.895",
+      "cuotaMensual": "$653.000",
+      "totalNum": 1145960.0,
+      "totalPagar": "$1.145.960",
+      "totalFinal": 1145960.0,
+      "estado": "En Mora",
+      "tipo": "APTO",
+      "cartera": "En Mora",
+      "estadoCartera": "$212.895"
+    },
+    {
+      "unidad": "0301",
+      "apto": "0301",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "FRANCISCO ACEVEDO",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 7.749,
+      "coeficiente": "7.749%",
+      "fac": 111853,
+      "actual": 633800.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 267440.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 633800.0,
+      "admonFmt": "$633.800",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 267440.0,
+      "serServFmt": "$267.440",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 901240.0,
+      "valpagFmt": "$901.240",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$633.800",
+      "totalNum": 901240.0,
+      "totalPagar": "$901.240",
+      "totalFinal": 901240.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0302",
+      "apto": "0302",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "FEDERICO GARCES OCHOA        Y",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 7.754,
+      "coeficiente": "7.754%",
+      "fac": 111854,
+      "actual": 634200.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 267660.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 634200.0,
+      "admonFmt": "$634.200",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 267660.0,
+      "serServFmt": "$267.660",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 901860.0,
+      "valpagFmt": "$901.860",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$634.200",
+      "totalNum": 901860.0,
+      "totalPagar": "$901.860",
+      "totalFinal": 901860.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0401",
+      "apto": "0401",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "LUZ ELENA VELASQUEZ",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 8.027,
+      "coeficiente": "8.027%",
+      "fac": 111855,
+      "actual": 656400.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 277028.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 656400.0,
+      "admonFmt": "$656.400",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 277028.0,
+      "serServFmt": "$277.028",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 933428.0,
+      "valpagFmt": "$933.428",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$656.400",
+      "totalNum": 933428.0,
+      "totalPagar": "$933.428",
+      "totalFinal": 933428.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0402",
+      "apto": "0402",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "CELIA GALVIS",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 8.082,
+      "coeficiente": "8.082%",
+      "fac": 111856,
+      "actual": 661000.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 278972.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 661000.0,
+      "admonFmt": "$661.000",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 278972.0,
+      "serServFmt": "$278.972",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 939972.0,
+      "valpagFmt": "$939.972",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$661.000",
+      "totalNum": 939972.0,
+      "totalPagar": "$939.972",
+      "totalFinal": 939972.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0501",
+      "apto": "0501",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "INVERSIONES DUQUE BOTERO S.A.S",
+      "cc": "",
+      "email": "ocupar@une.net.co",
+      "telefono": "",
+      "coefNum": 8.006,
+      "coeficiente": "8.006%",
+      "fac": 111857,
+      "actual": 654200.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 276350.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 654200.0,
+      "admonFmt": "$654.200",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 276350.0,
+      "serServFmt": "$276.350",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 930550.0,
+      "valpagFmt": "$930.550",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$654.200",
+      "totalNum": 930550.0,
+      "totalPagar": "$930.550",
+      "totalFinal": 930550.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0502",
+      "apto": "0502",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "JORGE ESTRADA",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 8.685,
+      "coeficiente": "8.685%",
+      "fac": 111858,
+      "actual": 710300.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 299774.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 710300.0,
+      "admonFmt": "$710.300",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 299774.0,
+      "serServFmt": "$299.774",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 1010074.0,
+      "valpagFmt": "$1.010.074",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$710.300",
+      "totalNum": 1010074.0,
+      "totalPagar": "$1.010.074",
+      "totalFinal": 1010074.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0601",
+      "apto": "0601",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "FEDERICO GARCES OCHOA",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 10.021,
+      "coeficiente": "10.021%",
+      "fac": 111859,
+      "actual": 819700.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 345243.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 819700.0,
+      "admonFmt": "$819.700",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 345243.0,
+      "serServFmt": "$345.243",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 1168574.0,
+      "valpagFmt": "$1.168.574",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$819.700",
+      "totalNum": 1164943.0,
+      "totalPagar": "$1.164.943",
+      "totalFinal": 1164943.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    },
+    {
+      "unidad": "0602",
+      "apto": "0602",
+      "bloque": "AP",
+      "bloq": "AP",
+      "propietario": "ANGELICA ROMAN PARRA",
+      "cc": "",
+      "email": "",
+      "telefono": "",
+      "coefNum": 9.760,
+      "coeficiente": "9.760%",
+      "fac": 111860,
+      "actual": 798600.0,
+      "pend": 0.0,
+      "inta": 0.0,
+      "intp": 0.0,
+      "otrosa": 0.0,
+      "otrosp": 0.0,
+      "extraa": 0.0,
+      "extrap": 0.0,
+      "multaa": 0.0,
+      "multap": 0.0,
+      "serpua": 0.0,
+      "serpup": 0.0,
+      "servia": 337542.0,
+      "servip": 0.0,
+      "ndnca": 0.0,
+      "ndncp": 0.0,
+      "admon": 798600.0,
+      "admonFmt": "$798.600",
+      "interes": 0.0,
+      "interesFmt": "$0",
+      "otros": 0.0,
+      "otrosFmt": "$0",
+      "extra": 0.0,
+      "extraFmt": "$0",
+      "multa": 0.0,
+      "multaFmt": "$0",
+      "ser_pub": 0.0,
+      "serPubFmt": "$0",
+      "ser_serv": 337542.0,
+      "serServFmt": "$337.542",
+      "notas_dc": 0.0,
+      "notasDcFmt": "$0",
+      "valdesc": 0.0,
+      "valdescFmt": "$0",
+      "valpag": 1136142.0,
+      "valpagFmt": "$1.136.142",
+      "saldoPendiente": "$0",
+      "cuotaMensual": "$798.600",
+      "totalNum": 1136142.0,
+      "totalPagar": "$1.136.142",
+      "totalFinal": 1136142.0,
+      "estado": "Al día",
+      "tipo": "APTO",
+      "cartera": "Al día",
+      "estadoCartera": "$0"
+    }
+  ];
+}
+
 function getUnidadesManchester7480Master() {
 
   let cj = null; try { if (typeof listaCopropiedadesSuperadmin !== 'undefined' && Array.isArray(listaCopropiedadesSuperadmin)) { cj = listaCopropiedadesSuperadmin.find(c => c && c.codigo === '7480'); } } catch(e) {}
@@ -39010,6 +39704,45 @@ async function cargarDirectoDesdeDbplus(codigoParam = null) {
   } catch (err) {
 
     console.warn("Aviso cargando DBPLUS:", err);
+
+    if (cod === "0361") {
+      const unidades = (typeof getUnidadesDonaRosa0361Master === "function") ? getUnidadesDonaRosa0361Master() : [];
+      const edif = {
+        codigo: "0361",
+        nombre: "EDIFICIO DOÑA ROSA",
+        nit: "890916414-7",
+        direccion: "TRANSV 39B No 77-12",
+        ciudad: "Medellín • Antioquia",
+        banco: "CAJA SOCIAL AHO",
+        tipoCuenta: "Ahorros",
+        cuenta: "24115733105",
+        administrador: "JORGE - DANIELA",
+        telefono: "4165309",
+        email: "vital@vitalsas.co;administrativa@vitalsas.co",
+        interesMora: "2.16%",
+        tipo: "Propiedad Horizontal"
+      };
+      codigoEdificioActivoFusion = "0361";
+      codigoNuevoEdificioEnCreacion = "0361";
+      nombreNuevoEdificioEnCreacion = edif.nombre;
+      estadoFusion3en1.edificio = edif;
+      estadoFusion3en1.unidades = unidades;
+      estadoFusion3en1.rawInmuebles = unidades;
+      estadoFusion3en1.archivosCargados = { edificio: true, inmuebles: true, cartera: true };
+      estadoFusion3en1.archivosNombres = {
+        edificio: "EDIFICIO.DBF (EDIFICIO DOÑA ROSA)",
+        inmuebles: `BASEFAC.DBF (${unidades.length} Unidades y Propietarios)`,
+        cartera: "SS2611.DBF (Cartera y Saldos Iniciales Ley 675)"
+      };
+      actualizarBadgesArchivosFusion();
+      actualizarChecklistFusion();
+      actualizarEstadisticasFusion(edif.nombre, "0361");
+      actualizarBotonCargarDatosRealesFusion(edif.nombre, "0361");
+      renderizarTablaFusion3en1();
+      safeCreateIcons();
+      mostrarToast(`🎉 ¡${unidades.length} unidades de 'EDIFICIO DOÑA ROSA' (#0361) cargadas exitosamente!`);
+      return;
+    }
 
     if (cod === "4160") {
 
@@ -56884,6 +57617,9 @@ function renderizarBaseSaldosMatriz(datos = null) {
   let unidadesBase = [];
   if (cj && cj.unidades && cj.unidades.length > 0 && cj.unidades[0].actual !== undefined) {
     unidadesBase = cj.unidades;
+  } else if (codLimpio === "0361") {
+    unidadesBase = (typeof getUnidadesDonaRosa0361Master === "function") ? getUnidadesDonaRosa0361Master() : [];
+    if (cj) cj.unidades = unidadesBase;
   } else if (codLimpio === "4160") {
     unidadesBase = (typeof getUnidadesRiachuelo4160Master === "function") ? getUnidadesRiachuelo4160Master() : [];
     if (cj) cj.unidades = unidadesBase;
@@ -63497,7 +64233,9 @@ function generarDocumentosDriveLocal() {
 
     { apto: "PARC-2110-02", prop: "GABRIEL AUGUSTO LUZ CONCEICAO", fac: 94127, rec: 5859, val: "$420.000" }
 
-  ] : (cod === "4160" ? (typeof getUnidadesRiachuelo4160Master === "function" ? getUnidadesRiachuelo4160Master().map(u => ({
+  ] : (cod === "0361" ? (typeof getUnidadesDonaRosa0361Master === "function" ? getUnidadesDonaRosa0361Master().map(u => ({
+    apto: u.apto, prop: u.propietario, fac: u.fac, rec: (u.fac - 100000 + 2400), val: u.totalPagar || u.admonFmt
+  })) : []) : (cod === "4160" ? (typeof getUnidadesRiachuelo4160Master === "function" ? getUnidadesRiachuelo4160Master().map(u => ({
     apto: u.apto, prop: u.propietario, fac: u.fac, rec: (u.fac - 100000 + 2400), val: u.totalPagar || u.admonFmt
   })) : []) : (cod === "0127" ? [
 
@@ -63543,7 +64281,7 @@ function generarDocumentosDriveLocal() {
 
     { apto: "0502", prop: "PAULA ANDREA ZAPATA", fac: 3898, rec: 5129, val: "$329.800" }
 
-  ]));
+  ])));
 
 
 
