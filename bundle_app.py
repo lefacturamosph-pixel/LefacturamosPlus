@@ -2,19 +2,21 @@ import os
 import zipfile
 import subprocess
 import shutil
-
-with open('www/index.html', 'r', encoding='utf-8') as f:
-    html = f.read()
-
-with open('www/app.js', 'r', encoding='utf-8') as f:
-    js = f.read()
-
 import re
 
-pattern = r'<script src="/?app\.js[^"]*"></script>'
-m = re.search(pattern, html)
-if m:
-    bundle = html[:m.start()] + f'<script>\n{js}\n</script>' + html[m.end():]
+def bundle():
+    with open('www/index.html', 'r', encoding='utf-8') as f:
+        html = f.read()
+    with open('www/app.js', 'r', encoding='utf-8') as f:
+        js = f.read()
+
+    pattern = r'<script src="/?app\.js[^"]*"></script>'
+    m = re.search(pattern, html)
+    if not m:
+        print('Target <script src="app.js"></script> not found!')
+        return
+
+    bundle_content = html[:m.start()] + f'<script>\n{js}\n</script>' + html[m.end():]
     paths = [
         'lefacturamos_aistudio.html',
         'www/lefacturamos_aistudio.html',
@@ -23,8 +25,8 @@ if m:
     for p in paths:
         if os.path.exists(os.path.dirname(p) or '.'):
             with open(p, 'w', encoding='utf-8') as out:
-                out.write(bundle)
-            print(f'Successfully bundled {p} ({len(bundle)} bytes)')
+                out.write(bundle_content)
+            print(f'Successfully bundled {p} ({len(bundle_content)} bytes)')
 
     # Also copy index.html and app.js to android assets
     android_public = 'android/app/src/main/assets/public'
@@ -41,15 +43,11 @@ if m:
     aligned_apk = 'LEFACTURAMOS_aligned.apk'
 
     if os.path.exists(apk_path):
-        with open('www/index.html', 'rb') as f:
-            idx_bytes = f.read()
-        with open('www/app.js', 'rb') as f:
-            js_bytes = f.read()
-        bundle_bytes = bundle.encode('utf-8')
+        idx_bytes = html.encode('utf-8')
+        js_bytes = js.encode('utf-8')
+        bundle_bytes = bundle_content.encode('utf-8')
 
         with zipfile.ZipFile(apk_path, 'r') as zin, zipfile.ZipFile(temp_apk, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
-            has_xlsx = False
-            has_qr = False
             for item in zin.infolist():
                 fname_upper = item.filename.upper()
                 if fname_upper.startswith('META-INF/') and (
@@ -65,28 +63,14 @@ if m:
                     zout.writestr(item, js_bytes)
                 elif item.filename == 'assets/public/lefacturamos_aistudio.html':
                     zout.writestr(item, bundle_bytes)
-                elif item.filename == 'assets/public/assets/xlsx.full.min.js':
-                    has_xlsx = True
-                    if os.path.exists('www/assets/xlsx.full.min.js'):
-                        with open('www/assets/xlsx.full.min.js', 'rb') as xf:
-                            zout.writestr(item, xf.read())
-                    else:
-                        zout.writestr(item, zin.read(item.filename))
-                elif item.filename == 'assets/public/assets/html5-qrcode.min.js':
-                    has_qr = True
-                    if os.path.exists('www/assets/html5-qrcode.min.js'):
-                        with open('www/assets/html5-qrcode.min.js', 'rb') as qrf:
-                            zout.writestr(item, qrf.read())
-                    else:
-                        zout.writestr(item, zin.read(item.filename))
+                elif item.filename == 'assets/public/assets/xlsx.full.min.js' and os.path.exists('www/assets/xlsx.full.min.js'):
+                    with open('www/assets/xlsx.full.min.js', 'rb') as xf:
+                        zout.writestr(item, xf.read())
+                elif item.filename == 'assets/public/assets/html5-qrcode.min.js' and os.path.exists('www/assets/html5-qrcode.min.js'):
+                    with open('www/assets/html5-qrcode.min.js', 'rb') as qrf:
+                        zout.writestr(item, qrf.read())
                 else:
                     zout.writestr(item, zin.read(item.filename))
-            if not has_xlsx and os.path.exists('www/assets/xlsx.full.min.js'):
-                with open('www/assets/xlsx.full.min.js', 'rb') as xf:
-                    zout.writestr('assets/public/assets/xlsx.full.min.js', xf.read())
-            if not has_qr and os.path.exists('www/assets/html5-qrcode.min.js'):
-                with open('www/assets/html5-qrcode.min.js', 'rb') as qrf:
-                    zout.writestr('assets/public/assets/html5-qrcode.min.js', qrf.read())
 
         zipalign = r'C:\Users\CARLOS\AppData\Local\Android\Sdk\build-tools\34.0.0\zipalign.exe'
         apksigner = r'C:\Users\CARLOS\AppData\Local\Android\Sdk\build-tools\34.0.0\apksigner.bat'
@@ -102,7 +86,6 @@ if m:
                 if os.path.exists(temp_apk):
                     os.remove(temp_apk)
             else:
-                print('zipalign warning:', zres.stderr)
                 os.replace(temp_apk, aligned_apk)
         else:
             os.replace(temp_apk, aligned_apk)
@@ -127,11 +110,17 @@ if m:
             if res.returncode == 0:
                 os.replace(aligned_apk, apk_path)
                 print('LEFACTURAMOS_Android_v4.apk successfully updated, aligned, and signed (v1, v2, v3)!')
-                debug_apk = 'android/app/build/outputs/apk/debug/app-debug.apk'
-                if os.path.exists(os.path.dirname(debug_apk)):
-                    shutil.copyfile(apk_path, debug_apk)
-                    print(f'Successfully mirrored signed APK to {debug_apk}')
+                for mirror in [
+                    'LEFACTURAMOS.apk',
+                    'www/Lefacturamos.apk',
+                    'android/app/build/outputs/apk/debug/app-debug.apk',
+                    'android/app/src/main/assets/public/Lefacturamos.apk'
+                ]:
+                    if os.path.exists(os.path.dirname(mirror)):
+                        shutil.copyfile(apk_path, mirror)
+                        print(f'Mirrored signed APK to {mirror}')
             else:
                 print('apksigner error:', res.stderr)
-else:
-    print('Target <script src="app.js"></script> not found!')
+
+if __name__ == '__main__':
+    bundle()
