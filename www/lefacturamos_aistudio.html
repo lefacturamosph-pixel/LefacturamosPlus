@@ -39353,11 +39353,11 @@ const MENUS_POR_ROL = {
 
     items: [
 
-      { id: "porteria", label: "Minuta Digital & Puesto 24/7", icono: "book-open", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('minuta');" },
+      { id: "porteria", label: "Minuta Digital & Puesto 24/7", icono: "book-open", action: "cambiarPestana('porteria', this); cambiarSubtabPorteria('minuta');" },
 
-      { id: "accesos-porteria", label: "Control de Visitantes & QR", icono: "scan-line", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('accesos');" },
+      { id: "accesos-porteria", label: "Control de Visitantes & QR", icono: "scan-line", action: "cambiarPestana('porteria', this); cambiarSubtabPorteria('accesos');" },
 
-      { id: "reservas-porteria", label: "Reservas Zonas Comunes", icono: "calendar", action: "cambiarPestana('porteria'); cambiarSubtabPorteria('reservas');" },
+      { id: "reservas-porteria", label: "Reservas Zonas Comunes", icono: "calendar", action: "cambiarPestana('porteria', this); cambiarSubtabPorteria('reservas');" },
 
       { id: "comunicados", label: "Alertas y Novedades", icono: "megaphone" },
 
@@ -42531,11 +42531,17 @@ if (tabId && tabId.startsWith("manual-")) {
 
   if (!targetBtn) {
 
-    targetBtn = document.querySelector(`#sidebar-menu-items button[data-tab='${tabId}']`) ||
+    if (tabId === "porteria") {
+      const targetSideId = (typeof subtabPorteriaActiva !== "undefined" && subtabPorteriaActiva === "accesos") ? "accesos-porteria" :
+                           (typeof subtabPorteriaActiva !== "undefined" && subtabPorteriaActiva === "reservas") ? "reservas-porteria" : "porteria";
+      targetBtn = document.querySelector(`#sidebar-menu-items button[data-tab='${targetSideId}']`);
+    } else {
+      targetBtn = document.querySelector(`#sidebar-menu-items button[data-tab='${tabId}']`) ||
 
-                document.querySelector(`#sidebar-menu-items button[id^='btn-side-${tabId}']`) ||
+                  document.querySelector(`#sidebar-menu-items button[id^='btn-side-${tabId}']`) ||
 
-                document.querySelector(`#sidebar-menu-items button[onclick*="'${tabId}'"]`);
+                  document.querySelector(`#sidebar-menu-items button[onclick*="'${tabId}'"]`);
+    }
 
   }
 
@@ -67514,6 +67520,26 @@ function cambiarSubtabPorteria(subtab) {
   });
 
 
+
+  // Sincronizar resaltado en el menú lateral (Sidebar) para Portería
+  const mapSubtabsPorteria = {
+    'minuta': 'porteria',
+    'accesos': 'accesos-porteria',
+    'reservas': 'reservas-porteria'
+  };
+  const targetSideId = mapSubtabsPorteria[subtab] || 'porteria';
+  document.querySelectorAll("#sidebar-menu-items button[data-tab]").forEach(btn => {
+    const dt = btn.getAttribute("data-tab");
+    if (['porteria', 'accesos-porteria', 'reservas-porteria'].includes(dt)) {
+      if (dt === targetSideId) {
+        btn.classList.add("bg-emerald-600", "text-white", "font-bold", "shadow-md");
+        btn.classList.remove("text-slate-300");
+      } else {
+        btn.classList.remove("bg-emerald-600", "text-white", "font-bold", "shadow-md");
+        btn.classList.add("text-slate-300");
+      }
+    }
+  });
 
   renderizarPorteria();
 
