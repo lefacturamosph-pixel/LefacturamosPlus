@@ -154,7 +154,9 @@ def actualizar_archivos_frontend_y_master(codigo: str):
     print("\n[3/4] 🌐 Sincronizando código frontend en app.js y lefacturamos_aistudio.html...")
     target_func_name = f"getUnidadesRobleAlto4901Master" if clean_cod == "4901" else (
         f"getUnidadesManchester7480Master" if clean_cod == "7480" else (
-            f"getUnidadesRiachuelo4160Master" if clean_cod == "4160" else None
+            f"getUnidadesRiachuelo4160Master" if clean_cod == "4160" else (
+                f"getUnidadesFrontera4159Master" if clean_cod == "4159" else None
+            )
         )
     )
     

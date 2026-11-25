@@ -1409,11 +1409,9 @@ def listar_unidades(conjunto_id: str):
 
     FROM unidades
 
-    WHERE conjunto_id = ?
-
+    WHERE conjunto_id = ? OR conjunto_id = ?
     ORDER BY numero_unidad ASC
-
-    """, (conjunto_id,)).fetchall()
+    """, (conjunto_id, f"cj_{conjunto_id.replace('cj_', '')}")).fetchall()
 
     unidades = [dict(r) for r in rows]
 
