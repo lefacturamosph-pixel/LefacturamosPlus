@@ -19249,6 +19249,24 @@ async function sincronizarCopropiedadesBackend() {
             if (cj.password_admin) listaCopropiedadesSuperadmin[idx].passwordAdmin = cj.password_admin;
             if (cj.administrador) listaCopropiedadesSuperadmin[idx].administrador = cj.administrador;
             if (cj.activo !== undefined) listaCopropiedadesSuperadmin[idx].bloqueadoMora = !cj.activo;
+
+            const cedLimpia = String(listaCopropiedadesSuperadmin[idx].cedulaAdmin || "").replace(/[^0-9a-zA-Z]/g, "");
+            if (cedLimpia && typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+              if (!DIRECTORIO_ADMINISTRADORES[cedLimpia]) {
+                const pref = cod.slice(0, 2);
+                DIRECTORIO_ADMINISTRADORES[cedLimpia] = {
+                  nombre: cj.administrador || listaCopropiedadesSuperadmin[idx].administrador,
+                  cedula: typeof formatearCedulaConPuntos === "function" ? formatearCedulaConPuntos(cedLimpia) : cedLimpia,
+                  codigoEdificio: cod,
+                  nombreEdificio: (listaCopropiedadesSuperadmin[idx].nombre || "").replace(/DO[¥]A/g, "DOÑA"),
+                  password: cj.password_admin || listaCopropiedadesSuperadmin[idx].passwordAdmin || "Admin123*",
+                  edificios: typeof obtenerCodigosEdificiosPorPrefijo === "function" ? obtenerCodigosEdificiosPorPrefijo(pref) : [cod]
+                };
+              } else {
+                if (cj.password_admin) DIRECTORIO_ADMINISTRADORES[cedLimpia].password = cj.password_admin;
+                if (cj.administrador) DIRECTORIO_ADMINISTRADORES[cedLimpia].nombre = cj.administrador;
+              }
+            }
           } else {
 
             const uGen = (typeof obtenerUnidadesRealesParaFusion === "function") 
@@ -19287,11 +19305,11 @@ async function sincronizarCopropiedadesBackend() {
 
               pasarela: `Wompi (pub_${cod})`,
 
-              codigoAdmin: `ADM-${cod}`,
+              codigoAdmin: cj.codigo_admin || `ADM-${cod}`,
 
-              passwordAdmin: "Admin123*",
+              passwordAdmin: cj.password_admin || "Admin123*",
 
-              administrador: cj.titular_cuenta || "Administrador",
+              administrador: cj.administrador || cj.titular_cuenta || "Administrador",
 
               inmueblesCount: uGen.length,
 
@@ -19314,9 +19332,10 @@ async function sincronizarCopropiedadesBackend() {
         });
 
         try {
-
           localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
-
+          if (typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+            localStorage.setItem("lefacturamos_directorio_admins", JSON.stringify(DIRECTORIO_ADMINISTRADORES));
+          }
         } catch (e) {}
 
 
@@ -20978,36 +20997,22 @@ async function sincronizarEdificiosPC() {
 
   if (icon) icon.classList.add("animate-spin");
 
-  
-
   try {
-
-    const res = await fetch(`${(AppState && AppState.apiBaseUrl) || getApiBaseUrl()}/api/conjuntos`);
-
-    if (res.ok) {
-
-      const data = await res.json();
-
-      if (data.conjuntos && data.conjuntos.length > 0) {
-
-        const select = document.getElementById("login-edificio-select");
-
-        if (select) {
-
-          select.innerHTML = '<option value="">-- Seleccione o escriba el código del edificio --</option>' + 
-
-            data.conjuntos.map(c => 
-
-              `<option value="${c.codigo}">${c.codigo} - ${c.nombre}</option>`
-
-            ).join("");
-
+    if (typeof sincronizarCopropiedadesBackend === "function") {
+      await sincronizarCopropiedadesBackend();
+    } else {
+      const res = await fetch(`${(AppState && AppState.apiBaseUrl) || getApiBaseUrl()}/api/conjuntos`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.conjuntos && data.conjuntos.length > 0) {
+          const select = document.getElementById("login-edificio-select");
+          if (select) {
+            select.innerHTML = '<option value="">-- Seleccione o escriba el código del edificio --</option>' + 
+              data.conjuntos.map(c => `<option value="${c.codigo}">${c.codigo} - ${c.nombre}</option>`).join("");
+          }
         }
-
       }
-
     }
-
   } catch (e) {
 
     console.log("Sincronización local fallback", e);
@@ -43704,7 +43709,7 @@ function abrirModalEditarEdificio(id) {
   setVal("edit-cop-admin-nom-login", cop.administrador || "");
 
   const cedSugerida = cop.cedulaAdmin || cop.cedula || (
-    cop.codigo === '4901' ? '43.123.456' :
+    cop.codigo === '4901' ? '42.772.924' :
     cop.codigo === '0950' ? '79.845.120' :
     cop.codigo === '5304' ? '32.456.789' :
     cop.codigo === '7480' ? '43.567.890' :
@@ -66409,9 +66414,10 @@ async function ejecutarCambioEdificioPorCodigo(codigoInput) {
 
 
         try {
-
           localStorage.setItem("lefacturamos_copropiedades_custom", JSON.stringify(listaCopropiedadesSuperadmin));
-
+          if (typeof DIRECTORIO_ADMINISTRADORES !== "undefined") {
+            localStorage.setItem("lefacturamos_directorio_admins", JSON.stringify(DIRECTORIO_ADMINISTRADORES));
+          }
         } catch (e) {}
 
 
