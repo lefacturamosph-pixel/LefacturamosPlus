@@ -47988,21 +47988,21 @@ function renderizarMinutaLista(items, fechaFiltro = "") {
     return `
       <tr class="${zebraCls} hover:bg-slate-800/60 transition-colors border-b border-slate-800/60">
         <td class="py-2.5 px-3 text-center text-[11px] font-mono text-slate-500 font-bold">${index + 1}</td>
-        <td class="py-2.5 px-3 text-amber-300 font-mono text-[11px] font-semibold whitespace-nowrap">
-          <div class="flex items-center gap-1">
+        <td class="py-2.5 px-3 text-amber-300 font-mono text-[11px] font-semibold whitespace-nowrap text-center">
+          <div class="flex items-center justify-center gap-1">
             <i data-lucide="clock" class="w-3 h-3 text-amber-400 shrink-0"></i>
             <span>${item.hora || '--:--'}</span>
           </div>
-          ${item.fecha ? `<span class="block text-[9px] text-slate-500 font-mono">${item.fecha}</span>` : ""}
+          ${item.fecha ? `<span class="block text-[9px] text-slate-500 font-mono text-center">${item.fecha}</span>` : ""}
         </td>
-        <td class="py-2.5 px-3 whitespace-nowrap">
-          <span class="px-2 py-0.5 rounded-full ${badgeCls} border text-[10px] font-bold tracking-wider inline-flex items-center gap-1">
+        <td class="py-2.5 px-3 whitespace-nowrap text-center">
+          <span class="px-2 py-0.5 rounded-full ${badgeCls} border text-[10px] font-bold tracking-wider inline-flex items-center justify-center gap-1">
             <i data-lucide="${badgeIcon}" class="w-2.5 h-2.5"></i>
             <span>${tagLabel}</span>
           </span>
         </td>
-        <td class="py-2.5 px-3 whitespace-nowrap">
-          <span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700/80 text-emerald-400 font-mono font-bold text-[11px]">
+        <td class="py-2.5 px-3 whitespace-nowrap text-center">
+          <span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700/80 text-emerald-400 font-mono font-bold text-[11px] inline-block">
             ${item.inmueble || 'General'}
           </span>
         </td>
@@ -48010,9 +48010,9 @@ function renderizarMinutaLista(items, fechaFiltro = "") {
           <div class="font-bold text-white text-xs">${item.titulo || ''}</div>
           <div class="text-[11px] text-slate-300 leading-snug pt-0.5">${item.descripcion || ''}</div>
         </td>
-        <td class="py-2.5 px-3 text-[11px] text-slate-300 whitespace-nowrap">
+        <td class="py-2.5 px-3 text-[11px] text-slate-300 whitespace-nowrap text-center">
           <div class="font-semibold text-slate-200">${item.portero ? item.portero.split('(')[0].trim() : 'Carlos Mario Gómez'}</div>
-          <span class="text-[9px] text-slate-500 block">Vigilancia 24/7</span>
+          <span class="text-[9px] text-slate-500 block text-center">Vigilancia 24/7</span>
         </td>
         <td class="py-2.5 px-3 text-center whitespace-nowrap">
           <div class="flex items-center justify-center gap-1.5 flex-wrap">
@@ -48027,21 +48027,21 @@ function renderizarMinutaLista(items, fechaFiltro = "") {
   }).join("");
 
   cont.innerHTML = `
-    <!-- Encabezado de la Hoja de Minuta Excel -->
-    <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
-      <div class="flex items-center gap-2 flex-wrap">
+    <!-- Encabezado de la Hoja de Minuta Excel Centrado -->
+    <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center gap-2 shadow-sm">
+      <div class="flex items-center justify-center gap-2 flex-wrap">
         <div class="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-400 flex items-center justify-center shrink-0">
           <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
         </div>
-        <span class="text-xs font-black text-white uppercase tracking-wider">
+        <span class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
           Hoja Oficial de Novedades & Minuta
         </span>
-        <span class="text-xs text-emerald-400 font-semibold">• ${fechaTitulo}</span>
-        <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-mono font-bold">
+        <span class="text-xs sm:text-sm text-emerald-400 font-semibold">• ${fechaTitulo}</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-mono font-bold">
           ${items.length} acontecimiento(s)
         </span>
       </div>
-      <div class="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+      <div class="text-[11px] text-slate-400 font-mono flex items-center justify-center gap-2">
         <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
         <span>Libro Foliado Digital Ley 675 / Supervigilancia</span>
       </div>
@@ -48053,11 +48053,11 @@ function renderizarMinutaLista(items, fechaFiltro = "") {
         <thead>
           <tr class="bg-slate-900/90 text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-800">
             <th class="py-3 px-3 w-10 text-center font-mono">#</th>
-            <th class="py-3 px-3 w-28 font-mono">Hora</th>
-            <th class="py-3 px-3 w-28">Tipo / Evento</th>
-            <th class="py-3 px-3 w-24">Inmueble</th>
+            <th class="py-3 px-3 w-28 font-mono text-center">Hora</th>
+            <th class="py-3 px-3 w-28 text-center">Tipo / Evento</th>
+            <th class="py-3 px-3 w-24 text-center">Inmueble</th>
             <th class="py-3 px-4 min-w-[340px]">Novedad y Acontecimiento Detallado</th>
-            <th class="py-3 px-3 w-36">Guarda en Turno</th>
+            <th class="py-3 px-3 w-36 text-center">Guarda en Turno</th>
             <th class="py-3 px-3 w-36 text-center">Estado / Control</th>
           </tr>
         </thead>
