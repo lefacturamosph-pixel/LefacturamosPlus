@@ -15447,7 +15447,7 @@
 
             <label class="block text-slate-400 font-bold mb-1">Bloque / Torre</label>
 
-            <input type="text" id="edit-inmueble-bloq" oninput="alCambiarBloqueEditarInmueble(this.value)" placeholder="Ej: AP, CA, OF, LC..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500 uppercase" required />
+            <input type="text" id="edit-inmueble-bloq" oninput="alCambiarBloqueEditarInmueble(this.value)" placeholder="Ej: AP, CA, OF, LC, BD..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500 uppercase" required />
 
           </div>
 
@@ -15466,6 +15466,8 @@
               <option value="Consultorio">Consultorio (CO)</option>
 
               <option value="Local">Local (LC)</option>
+
+              <option value="Bodega">Bodega (BD)</option>
 
               <option value="Cuarto Útil">Cuarto Útil (UT)</option>
 
@@ -88549,7 +88551,8 @@ const MAPA_TIPOS_INMUEBLE_ABREV = {
   "LC": "Local",
   "UT": "Cuarto Útil",
   "PQ": "Parqueadero",
-  "BJ": "Burbuja"
+  "BJ": "Burbuja",
+  "BD": "Bodega"
 };
 
 const MAPA_TIPOS_INMUEBLE_EXPANDIDO = {
@@ -88580,7 +88583,10 @@ const MAPA_TIPOS_INMUEBLE_EXPANDIDO = {
   "PARQUEADERO": "Parqueadero",
   "BJ": "Burbuja",
   "BUR": "Burbuja",
-  "BURBUJA": "Burbuja"
+  "BURBUJA": "Burbuja",
+  "BD": "Bodega",
+  "BOD": "Bodega",
+  "BODEGA": "Bodega"
 };
 
 const MAPA_TIPO_A_ABREV = {
@@ -88592,7 +88598,8 @@ const MAPA_TIPO_A_ABREV = {
   "Cuarto Útil": "UT",
   "Util": "UT",
   "Parqueadero": "PQ",
-  "Burbuja": "BJ"
+  "Burbuja": "BJ",
+  "Bodega": "BD"
 };
 
 function normalizarTipoInmuebleCompleto(str) {

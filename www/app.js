@@ -68730,7 +68730,8 @@ const MAPA_TIPOS_INMUEBLE_ABREV = {
   "LC": "Local",
   "UT": "Cuarto Útil",
   "PQ": "Parqueadero",
-  "BJ": "Burbuja"
+  "BJ": "Burbuja",
+  "BD": "Bodega"
 };
 
 const MAPA_TIPOS_INMUEBLE_EXPANDIDO = {
@@ -68761,7 +68762,10 @@ const MAPA_TIPOS_INMUEBLE_EXPANDIDO = {
   "PARQUEADERO": "Parqueadero",
   "BJ": "Burbuja",
   "BUR": "Burbuja",
-  "BURBUJA": "Burbuja"
+  "BURBUJA": "Burbuja",
+  "BD": "Bodega",
+  "BOD": "Bodega",
+  "BODEGA": "Bodega"
 };
 
 const MAPA_TIPO_A_ABREV = {
@@ -68773,7 +68777,8 @@ const MAPA_TIPO_A_ABREV = {
   "Cuarto Útil": "UT",
   "Util": "UT",
   "Parqueadero": "PQ",
-  "Burbuja": "BJ"
+  "Burbuja": "BJ",
+  "Bodega": "BD"
 };
 
 function normalizarTipoInmuebleCompleto(str) {
