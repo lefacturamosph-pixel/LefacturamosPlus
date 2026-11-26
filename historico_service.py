@@ -90,10 +90,6 @@ def compilar_historico_edificio(codigo: str) -> Dict[str, Any]:
                         if 1 <= m_int <= 12:
                             y_int = int(yy)
                             anio = 2000 + y_int if y_int < 70 else 1900 + y_int
-                            # REGLA ESTRICTA: El histórico oficial inicia a partir de Diciembre 2023 (SS2312).
-                            # Descartar archivos anteriores (SS2208, SS2209, SS2210, etc.)
-                            if anio < 2023 or (anio == 2023 and m_int < 12):
-                                continue
                             ss_entries.append((anio, m_int, mm, folder / entry))
         except Exception as e_scan:
             print(f"Error escaneando carpeta {folder}: {e_scan}")
@@ -291,10 +287,200 @@ def obtener_estudio_cuenta_apto(codigo: str, apto_query: str) -> Dict[str, Any]:
             "saldo_actual": saldo_actual
         }
     }
+
+
+def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto: str) -> Path:
+    """
+    Genera un archivo Excel (.xlsx) con el formato histórico tradicional de Estado de Cuenta
+    con los 8 conceptos contables oficiales de DBPlus y 3 filas por mes (Pendiente, Actual, Total).
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    edif = res.get("edificio", {})
+    meses = res.get("meses", [])
+    clean_cod = str(codigo).replace("cj_", "").strip()
+    clean_apto = str(apto).strip()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Estado_de_Cuenta"
+    ws.views.sheetView[0].showGridLines = True
+
+    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+    ws.page_setup.paperSize = ws.PAPERSIZE_LETTER
+    ws.page_setup.fitToPage = True
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.page_margins.left = 0.25
+    ws.page_margins.right = 0.25
+    ws.page_margins.top = 0.35
+    ws.page_margins.bottom = 0.35
+
+    font_title = Font(name="Calibri", size=11, bold=True)
+    font_bold = Font(name="Calibri", size=9, bold=True)
+    font_regular = Font(name="Calibri", size=9)
+    font_header = Font(name="Calibri", size=9, bold=True, color="000000")
+    fill_header = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+
+    thin_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    nombre_edif = edif.get("nombre", f"EDIFICIO {clean_cod} P.H.")
+    propietario = res.get("propietario", "Copropietario(a)")
+    bloque = res.get("bloq", "AP") or "AP"
+    predio_txt = f"{propietario}--Predio {clean_apto} BLO. {bloque}"
+
+    headers = [
+        "Mes / Periodo", "", "Factura", "Concepto", "Admón", "Interés", "Otros",
+        "Extra", "Multa", "Ser. Publ.", "Ser./ Serv.", "Notas D/C", "Valor", "Pagos", "Notas/Desc."
+    ]
+
+    curr_row = 1
+    num_fmt = "#,##0"
+
+    def write_header_block(row_idx, page_num):
+        ws.cell(row=row_idx, column=1, value="Estado de Cuenta").font = font_title
+        ws.cell(row=row_idx+1, column=3, value=nombre_edif).font = font_title
+        cell_pag = ws.cell(row=row_idx+1, column=14, value=f"Página {page_num}")
+        cell_pag.font = font_bold
+        cell_pag.alignment = Alignment(horizontal="right")
+        ws.cell(row=row_idx+2, column=1, value=predio_txt).font = font_bold
+
+        h_row = row_idx + 3
+        for col_idx, h in enumerate(headers, start=1):
+            if not h:
+                continue
+            cell = ws.cell(row=h_row, column=col_idx, value=h)
+            cell.font = font_header
+            cell.fill = fill_header
+            cell.border = thin_border
+            if col_idx in (1, 4):
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+            elif col_idx == 3:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="right", vertical="center")
+        return h_row + 2
+
+    page = 1
+    curr_row = write_header_block(curr_row, page)
+    items_on_page = 0
+
+    for idx, m in enumerate(meses):
+        if items_on_page >= 11:
+            page += 1
+            curr_row += 1
+            curr_row = write_header_block(curr_row, page)
+            items_on_page = 0
+
+        periodo_label = m.get("periodo") or f"{m.get('mes_nombre', '')} de {m.get('anio')}"
+        periodo_label = str(periodo_label).title()
+        fac = m.get("fac") or ""
+
+        # Conceptos Pendientes
+        pend_admon = float(m.get("pend_puro", 0) or 0)
+        pend_int = float(m.get("interes_anterior", 0) or 0)
+        pend_otr = float(m.get("otros_anterior", 0) or 0)
+        pend_ext = float(m.get("extra_anterior", 0) or 0)
+        pend_mul = float(m.get("multa_anterior", 0) or 0)
+        pend_sp = float(m.get("serpub_anterior", 0) or 0)
+        pend_srv = float(m.get("serv_anterior", 0) or 0)
+        pend_nd = float(m.get("notas_anterior", 0) or 0)
+        val_pend = pend_admon + pend_int + pend_otr + pend_ext + pend_mul + pend_sp + pend_srv + pend_nd
+
+        # Conceptos Actuales
+        act_admon = float(m.get("actual_puro", 0) or 0)
+        act_int = float(m.get("interes_mes", 0) or 0)
+        act_otr = float(m.get("otros_mes", 0) or 0)
+        act_ext = float(m.get("extra_mes", 0) or 0)
+        act_mul = float(m.get("multa_mes", 0) or 0)
+        act_sp = float(m.get("serpub_mes", 0) or 0)
+        act_srv = float(m.get("serv_mes", 0) or 0)
+        act_nd = float(m.get("notas_mes", 0) or 0)
+        val_act = act_admon + act_int + act_otr + act_ext + act_mul + act_sp + act_srv + act_nd
+
+        # Totales
+        tot_admon = pend_admon + act_admon
+        tot_int = pend_int + act_int
+        tot_otr = pend_otr + act_otr
+        tot_ext = pend_ext + act_ext
+        tot_mul = pend_mul + act_mul
+        tot_sp = pend_sp + act_sp
+        tot_srv = pend_srv + act_srv
+        tot_nd = pend_nd + act_nd
+        val_tot = float(m.get("total", 0) or (tot_admon + tot_int + tot_otr + tot_ext + tot_mul + tot_sp + tot_srv + tot_nd))
+        pagos = float(m.get("valpag", 0) or 0)
+        desc = float(m.get("valdesc", 0) or 0)
+
+        # 1. Fila Pendiente
+        ws.cell(row=curr_row, column=1, value=periodo_label).font = font_bold
+        if fac:
+            c_fac = ws.cell(row=curr_row, column=3, value=str(fac))
+            c_fac.font = font_regular
+            c_fac.alignment = Alignment(horizontal="center")
+        ws.cell(row=curr_row, column=4, value="Pendiente").font = font_regular
+
+        row_vals_pend = [pend_admon, pend_int, pend_otr, pend_ext, pend_mul, pend_sp, pend_srv, pend_nd, val_pend]
+        for c_idx, val in enumerate(row_vals_pend, start=5):
+            c = ws.cell(row=curr_row, column=c_idx, value=val)
+            c.number_format = num_fmt
+            c.font = font_regular
+            c.alignment = Alignment(horizontal="right")
+
+        # 2. Fila Actual
+        curr_row += 1
+        ws.cell(row=curr_row, column=4, value="Actual").font = font_regular
+        row_vals_act = [act_admon, act_int, act_otr, act_ext, act_mul, act_sp, act_srv, act_nd, val_act]
+        for c_idx, val in enumerate(row_vals_act, start=5):
+            c = ws.cell(row=curr_row, column=c_idx, value=val)
+            c.number_format = num_fmt
+            c.font = font_regular
+            c.alignment = Alignment(horizontal="right")
+
+        # 3. Fila Total
+        curr_row += 1
+        ws.cell(row=curr_row, column=4, value="Total").font = font_bold
+        row_vals_tot = [tot_admon, tot_int, tot_otr, tot_ext, tot_mul, tot_sp, tot_srv, tot_nd, val_tot, pagos, desc]
+        for c_idx, val in enumerate(row_vals_tot, start=5):
+            c = ws.cell(row=curr_row, column=c_idx, value=val)
+            c.number_format = num_fmt
+            c.font = font_bold
+            c.alignment = Alignment(horizontal="right")
+
+        # 4. Fila separadora vacía
+        curr_row += 2
+        items_on_page += 1
+
+    col_widths = {
+        1: 22, 2: 3, 3: 11, 4: 12, 5: 12, 6: 12, 7: 12, 8: 12, 9: 10,
+        10: 12, 11: 12, 12: 12, 13: 14, 14: 14, 15: 12
+    }
+    for col_idx, width in col_widths.items():
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    out_dir = DATA_DIR / "reportes_historicos"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / f"Estado_Cuenta_Tradicional_{clean_cod}_{clean_apto}.xlsx"
+    wb.save(out_file)
+    return out_file
+
+
 def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Path:
     """
     Genera un archivo Excel profesional (.xlsx) con la liquidación detallada del estudio histórico.
+    Soporta formato 'tradicional' (Estado de Cuenta con 8 conceptos) y 'abogado' (Cobro Judicial).
     """
+    res = obtener_estudio_cuenta_apto(codigo, apto)
+    tipo_str = str(tipo or "abogado").lower().strip()
+    if tipo_str in ("tradicional", "estado_cuenta", "kardex", "copropietario_tradicional"):
+        return generar_excel_tradicional_8conceptos(res, codigo, apto)
+
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -560,15 +746,374 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     return out_path
 
 
+def generar_html_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto: str) -> str:
+    """
+    Genera el HTML imprimible / PDF con el formato tradicional de Estado de Cuenta
+    con los 8 conceptos contables oficiales y 3 filas por mes (Pendiente, Actual, Total).
+    """
+    edif = res.get("edificio", {})
+    meses = res.get("meses", [])
+    clean_cod = str(codigo).replace("cj_", "").strip()
+    clean_apto = str(apto).strip()
+
+    nombre_edif = edif.get("nombre", f"EDIFICIO {clean_cod} P.H.")
+    propietario = res.get("propietario", "Copropietario(a)")
+    bloque = res.get("bloq", "AP") or "AP"
+    predio_txt = f"{propietario}--Predio {clean_apto} BLO. {bloque}"
+
+    def fmt_num(v):
+        val = float(v or 0)
+        if val == 0:
+            return "0"
+        return f"{val:,.0f}".replace(",", ".")
+
+    chunks = [meses[i:i + 11] for i in range(0, len(meses), 11)] or [[]]
+    total_pages = len(chunks)
+
+    pages_html = []
+    for page_idx, chunk in enumerate(chunks, start=1):
+        rows_html = []
+        for m in chunk:
+            periodo_label = m.get("periodo") or f"{m.get('mes_nombre', '')} de {m.get('anio')}"
+            periodo_label = str(periodo_label).title()
+            fac = m.get("fac") or ""
+
+            pend_admon = float(m.get("pend_puro", 0) or 0)
+            pend_int = float(m.get("interes_anterior", 0) or 0)
+            pend_otr = float(m.get("otros_anterior", 0) or 0)
+            pend_ext = float(m.get("extra_anterior", 0) or 0)
+            pend_mul = float(m.get("multa_anterior", 0) or 0)
+            pend_sp = float(m.get("serpub_anterior", 0) or 0)
+            pend_srv = float(m.get("serv_anterior", 0) or 0)
+            pend_nd = float(m.get("notas_anterior", 0) or 0)
+            val_pend = pend_admon + pend_int + pend_otr + pend_ext + pend_mul + pend_sp + pend_srv + pend_nd
+
+            act_admon = float(m.get("actual_puro", 0) or 0)
+            act_int = float(m.get("interes_mes", 0) or 0)
+            act_otr = float(m.get("otros_mes", 0) or 0)
+            act_ext = float(m.get("extra_mes", 0) or 0)
+            act_mul = float(m.get("multa_mes", 0) or 0)
+            act_sp = float(m.get("serpub_mes", 0) or 0)
+            act_srv = float(m.get("serv_mes", 0) or 0)
+            act_nd = float(m.get("notas_mes", 0) or 0)
+            val_act = act_admon + act_int + act_otr + act_ext + act_mul + act_sp + act_srv + act_nd
+
+            tot_admon = pend_admon + act_admon
+            tot_int = pend_int + act_int
+            tot_otr = pend_otr + act_otr
+            tot_ext = pend_ext + act_ext
+            tot_mul = pend_mul + act_mul
+            tot_sp = pend_sp + act_sp
+            tot_srv = pend_srv + act_srv
+            tot_nd = pend_nd + act_nd
+            val_tot = float(m.get("total", 0) or (tot_admon + tot_int + tot_otr + tot_ext + tot_mul + tot_sp + tot_srv + tot_nd))
+            pagos = float(m.get("valpag", 0) or 0)
+            desc = float(m.get("valdesc", 0) or 0)
+
+            rows_html.append(f"""
+            <tr class="row-pend">
+              <td class="col-mes">{periodo_label}</td>
+              <td class="col-fac">{fac}</td>
+              <td class="col-tipo">Pendiente</td>
+              <td class="col-num">{fmt_num(pend_admon)}</td>
+              <td class="col-num">{fmt_num(pend_int)}</td>
+              <td class="col-num">{fmt_num(pend_otr)}</td>
+              <td class="col-num">{fmt_num(pend_ext)}</td>
+              <td class="col-num">{fmt_num(pend_mul)}</td>
+              <td class="col-num">{fmt_num(pend_sp)}</td>
+              <td class="col-num">{fmt_num(pend_srv)}</td>
+              <td class="col-num">{fmt_num(pend_nd)}</td>
+              <td class="col-num col-valor">{fmt_num(val_pend)}</td>
+              <td class="col-num"></td>
+              <td class="col-num"></td>
+            </tr>
+            <tr class="row-act">
+              <td></td>
+              <td></td>
+              <td class="col-tipo">Actual</td>
+              <td class="col-num">{fmt_num(act_admon)}</td>
+              <td class="col-num">{fmt_num(act_int)}</td>
+              <td class="col-num">{fmt_num(act_otr)}</td>
+              <td class="col-num">{fmt_num(act_ext)}</td>
+              <td class="col-num">{fmt_num(act_mul)}</td>
+              <td class="col-num">{fmt_num(act_sp)}</td>
+              <td class="col-num">{fmt_num(act_srv)}</td>
+              <td class="col-num">{fmt_num(act_nd)}</td>
+              <td class="col-num col-valor">{fmt_num(val_act)}</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr class="row-tot">
+              <td></td>
+              <td></td>
+              <td class="col-tipo col-tot-label">Total</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_admon)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_int)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_otr)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_ext)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_mul)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_sp)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_srv)}</td>
+              <td class="col-num col-tot-val">{fmt_num(tot_nd)}</td>
+              <td class="col-num col-tot-val col-valor">{fmt_num(val_tot)}</td>
+              <td class="col-num col-pago">{fmt_num(pagos)}</td>
+              <td class="col-num">{fmt_num(desc)}</td>
+            </tr>
+            <tr class="row-sep"><td colspan="14"></td></tr>
+            """)
+
+        pages_html.append(f"""
+        <div class="sheet-page">
+          <div class="header-box">
+            <div class="header-top">
+              <div class="h-title">Estado de Cuenta</div>
+              <div class="h-edif">{nombre_edif}</div>
+              <div class="h-page">Página {page_idx} de {total_pages}</div>
+            </div>
+            <div class="h-predio">{predio_txt}</div>
+          </div>
+          <table class="tabla-estado">
+            <thead>
+              <tr>
+                <th style="width: 14%;">Mes</th>
+                <th style="width: 6%;">Factura</th>
+                <th style="width: 7%;">Concepto</th>
+                <th style="width: 7%;">Admón</th>
+                <th style="width: 6%;">Interés</th>
+                <th style="width: 7%;">Otros</th>
+                <th style="width: 6%;">Extra</th>
+                <th style="width: 5%;">Multa</th>
+                <th style="width: 6%;">Ser. Publ.</th>
+                <th style="width: 6%;">Ser./ Serv.</th>
+                <th style="width: 6%;">Notas D/C</th>
+                <th style="width: 8%;">Valor</th>
+                <th style="width: 8%;">Pagos</th>
+                <th style="width: 7%;">Notas/Desc.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(rows_html)}
+            </tbody>
+          </table>
+        </div>
+        """)
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estado de Cuenta - {nombre_edif} - Apto {clean_apto}</title>
+  <style>
+    @page {{
+      size: letter landscape;
+      margin: 8mm 6mm;
+    }}
+    * {{
+      box-sizing: border-box;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    }}
+    body {{
+      background: #0f172a;
+      color: #000;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }}
+    .no-print-bar {{
+      position: sticky;
+      top: 10px;
+      z-index: 100;
+      background: #1e293b;
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }}
+    .btn-act {{
+      background: #059669;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }}
+    .btn-act:hover {{ background: #10b981; }}
+    .btn-sec {{
+      background: #334155;
+      color: #e2e8f0;
+      border: 1px solid #475569;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }}
+    .btn-sec:hover {{ background: #475569; }}
+    .sheet-page {{
+      background: #ffffff;
+      width: 100%;
+      max-width: 1100px;
+      padding: 15px 20px;
+      margin-bottom: 25px;
+      border-radius: 4px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      page-break-after: always;
+    }}
+    .sheet-page:last-child {{
+      page-break-after: auto;
+      margin-bottom: 0;
+    }}
+    .header-box {{
+      border-bottom: 2px solid #000;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }}
+    .header-top {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }}
+    .h-title {{
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }}
+    .h-edif {{
+      font-size: 15px;
+      font-weight: 800;
+      text-align: center;
+      flex: 1;
+    }}
+    .h-page {{
+      font-size: 11px;
+      font-weight: bold;
+      text-align: right;
+    }}
+    .h-predio {{
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 4px;
+      color: #1e293b;
+    }}
+    .tabla-estado {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5px;
+    }}
+    .tabla-estado thead th {{
+      border-top: 1px solid #000;
+      border-bottom: 1.5px solid #000;
+      padding: 4px 3px;
+      text-align: right;
+      font-weight: 800;
+      background: #f8fafc;
+    }}
+    .tabla-estado thead th:nth-child(1) {{ text-align: left; }}
+    .tabla-estado thead th:nth-child(2) {{ text-align: center; }}
+    .tabla-estado thead th:nth-child(3) {{ text-align: left; }}
+    .tabla-estado tbody td {{
+      padding: 1.5px 3px;
+      white-space: nowrap;
+    }}
+    .col-mes {{
+      font-weight: bold;
+      text-align: left;
+    }}
+    .col-fac {{
+      text-align: center;
+      color: #334155;
+    }}
+    .col-tipo {{
+      text-align: left;
+      color: #475569;
+    }}
+    .col-tot-label {{
+      font-weight: 800;
+      color: #000;
+    }}
+    .col-num {{
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }}
+    .col-tot-val {{
+      font-weight: 800;
+      color: #000;
+    }}
+    .col-valor {{
+      background: #f1f5f9;
+      font-weight: 700;
+    }}
+    .col-pago {{
+      color: #047857;
+      font-weight: 700;
+    }}
+    .row-tot td {{
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 2px;
+    }}
+    .row-sep td {{
+      height: 4px;
+      border: none;
+      padding: 0;
+    }}
+    @media print {{
+      body {{
+        background: transparent !important;
+        padding: 0 !important;
+      }}
+      .no-print-bar {{ display: none !important; }}
+      .sheet-page {{
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <div class="no-print-bar">
+    <button class="btn-act" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    <a class="btn-sec" href="/api/conjuntos/{clean_cod}/estudio-cuenta-historico/{clean_apto}/excel?tipo=tradicional" target="_blank">📥 Descargar en Excel (.xlsx)</a>
+    <button class="btn-sec" onclick="window.close()">✖️ Cerrar</button>
+  </div>
+  {''.join(pages_html)}
+</body>
+</html>"""
+    return html
+
+
 def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str:
     """
     Genera el documento HTML completo listo para visualizar o imprimir en PDF oficial.
+    Soporta 'tradicional' (Estado de Cuenta con 8 conceptos) y 'abogado' (Cobro Judicial).
     """
-    import datetime
     res = obtener_estudio_cuenta_apto(codigo, apto)
+    tipo_str = str(tipo or "abogado").lower().strip()
+    if tipo_str in ("tradicional", "estado_cuenta", "kardex", "copropietario_tradicional"):
+        return generar_html_tradicional_8conceptos(res, codigo, apto)
+
+    import datetime
     edif = res.get("edificio", {})
     meses = res.get("meses", [])
-    es_abogado = str(tipo).lower() == "abogado"
+    es_abogado = tipo_str == "abogado"
 
     primer_mes = meses[0] if meses else {}
     ult_mes = meses[-1] if meses else {}

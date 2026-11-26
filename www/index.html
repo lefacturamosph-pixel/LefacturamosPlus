@@ -16460,8 +16460,9 @@
               Formato:
             </span>
             <select id="estudio-hist-filtro-destinatario" onchange="cambiarFiltroEstudioHistorico()" class="bg-slate-900 border border-sky-500/70 text-sky-300 font-bold text-xs rounded-xl px-2.5 py-1.5 focus:border-sky-400 focus:outline-none cursor-pointer">
-              <option value="abogado" selected>⚖️ Para Abogado (Cobro Jurídico / Art. 48)</option>
-              <option value="copropietario">👤 Para Copropietario (Estado de Cuenta)</option>
+              <option value="tradicional" selected>📑 Estado de Cuenta Tradicional (8 Conceptos - Excel/Kardex)</option>
+              <option value="abogado">⚖️ Cobro Jurídico (Certificación de Deuda Art. 48 Ley 675)</option>
+              <option value="copropietario">👤 Resumen Informativo Mes a Mes</option>
             </select>
           </div>
 
@@ -16589,7 +16590,7 @@
 
         <div class="flex flex-wrap items-center gap-2">
 
-          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Descargar certificación en Excel">
+          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Descargar histórico en Excel (.xlsx) según el formato seleccionado">
 
             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
 
@@ -16597,19 +16598,19 @@
 
           </button>
 
+          <button type="button" onclick="imprimirEstudioHistorico('tradicional')" class="px-3 py-2 rounded-xl bg-sky-950/70 hover:bg-sky-900 text-sky-200 border border-sky-700/60 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir Estado de Cuenta Tradicional (8 Conceptos, 3 renglones por mes)">
+
+            <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>
+
+            <span>PDF Estado de Cuenta</span>
+
+          </button>
+
           <button type="button" onclick="imprimirEstudioHistorico('abogado')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir certificación con Mérito Ejecutivo Art. 48 para Abogado">
 
             <i data-lucide="scale" class="w-4 h-4 text-amber-400"></i>
 
-            <span>PDF Abogado</span>
-
-          </button>
-
-          <button type="button" onclick="imprimirEstudioHistorico('copropietario')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir estado de cuenta informativo para Copropietario">
-
-            <i data-lucide="user" class="w-4 h-4 text-sky-400"></i>
-
-            <span>PDF Copropietario</span>
+            <span>PDF Cobro Jurídico</span>
 
           </button>
 

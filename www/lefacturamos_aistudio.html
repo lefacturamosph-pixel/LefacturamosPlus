@@ -16460,8 +16460,9 @@
               Formato:
             </span>
             <select id="estudio-hist-filtro-destinatario" onchange="cambiarFiltroEstudioHistorico()" class="bg-slate-900 border border-sky-500/70 text-sky-300 font-bold text-xs rounded-xl px-2.5 py-1.5 focus:border-sky-400 focus:outline-none cursor-pointer">
-              <option value="abogado" selected>⚖️ Para Abogado (Cobro Jurídico / Art. 48)</option>
-              <option value="copropietario">👤 Para Copropietario (Estado de Cuenta)</option>
+              <option value="tradicional" selected>📑 Estado de Cuenta Tradicional (8 Conceptos - Excel/Kardex)</option>
+              <option value="abogado">⚖️ Cobro Jurídico (Certificación de Deuda Art. 48 Ley 675)</option>
+              <option value="copropietario">👤 Resumen Informativo Mes a Mes</option>
             </select>
           </div>
 
@@ -16589,7 +16590,7 @@
 
         <div class="flex flex-wrap items-center gap-2">
 
-          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Descargar certificación en Excel">
+          <button type="button" onclick="descargarExcelEstudioHistorico()" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Descargar histórico en Excel (.xlsx) según el formato seleccionado">
 
             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
 
@@ -16597,19 +16598,19 @@
 
           </button>
 
+          <button type="button" onclick="imprimirEstudioHistorico('tradicional')" class="px-3 py-2 rounded-xl bg-sky-950/70 hover:bg-sky-900 text-sky-200 border border-sky-700/60 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir Estado de Cuenta Tradicional (8 Conceptos, 3 renglones por mes)">
+
+            <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>
+
+            <span>PDF Estado de Cuenta</span>
+
+          </button>
+
           <button type="button" onclick="imprimirEstudioHistorico('abogado')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir certificación con Mérito Ejecutivo Art. 48 para Abogado">
 
             <i data-lucide="scale" class="w-4 h-4 text-amber-400"></i>
 
-            <span>PDF Abogado</span>
-
-          </button>
-
-          <button type="button" onclick="imprimirEstudioHistorico('copropietario')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-colors" title="Imprimir estado de cuenta informativo para Copropietario">
-
-            <i data-lucide="user" class="w-4 h-4 text-sky-400"></i>
-
-            <span>PDF Copropietario</span>
+            <span>PDF Cobro Jurídico</span>
 
           </button>
 
@@ -86825,7 +86826,112 @@ function descargarExcelEstudioHistorico(tipoParam) {
     return;
   }
 
-  const tipo = tipoParam || document.getElementById("estudio-hist-filtro-destinatario")?.value || "abogado";
+  const tipo = tipoParam || document.getElementById("estudio-hist-filtro-destinatario")?.value || "tradicional";
+
+  if (tipo === "tradicional") {
+    const codClean = (d.codigo || "4159").replace(/^cj_/, "");
+    const nombreEdif = d.edificio?.nombre || `EDIFICIO ${codClean} P.H.`;
+    const predioTxt = `${d.propietario || "Copropietario"}--Predio ${d.apto || ""} BLO. ${d.bloq || "AP"}`;
+    const filasExcel = [];
+
+    const headersCols = [
+      "Mes / Periodo", "", "Factura", "Concepto", "Admón", "Interés", "Otros",
+      "Extra", "Multa", "Ser. Publ.", "Ser./ Serv.", "Notas D/C", "Valor", "Pagos", "Notas/Desc."
+    ];
+
+    let pageNum = 1;
+    function agregarEncabezado(pag) {
+      filasExcel.push(["Estado de Cuenta"]);
+      filasExcel.push(["", "", nombreEdif, "", "", "", "", "", "", "", "", "", "", `Página ${pag}`]);
+      filasExcel.push([predioTxt]);
+      filasExcel.push(headersCols);
+      filasExcel.push([]);
+    }
+
+    agregarEncabezado(pageNum);
+    let itemsEnPagina = 0;
+
+    meses.forEach(m => {
+      if (itemsEnPagina >= 11) {
+        pageNum++;
+        filasExcel.push([]);
+        agregarEncabezado(pageNum);
+        itemsEnPagina = 0;
+      }
+
+      const periodoLabel = (m.periodo || `${m.mes_nombre || m.mes} de ${m.anio}`).toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+      const fac = m.fac || "";
+
+      const pendAdmon = Number(m.pend_puro || 0);
+      const pendInt = Number(m.interes_anterior || 0);
+      const pendOtr = Number(m.otros_anterior || 0);
+      const pendExt = Number(m.extra_anterior || 0);
+      const pendMul = Number(m.multa_anterior || 0);
+      const pendSp = Number(m.serpub_anterior || 0);
+      const pendSrv = Number(m.serv_anterior || 0);
+      const pendNd = Number(m.notas_anterior || 0);
+      const valPend = pendAdmon + pendInt + pendOtr + pendExt + pendMul + pendSp + pendSrv + pendNd;
+
+      const actAdmon = Number(m.actual_puro || 0);
+      const actInt = Number(m.interes_mes || 0);
+      const actOtr = Number(m.otros_mes || 0);
+      const actExt = Number(m.extra_mes || 0);
+      const actMul = Number(m.multa_mes || 0);
+      const actSp = Number(m.serpub_mes || 0);
+      const actSrv = Number(m.serv_mes || 0);
+      const actNd = Number(m.notas_mes || 0);
+      const valAct = actAdmon + actInt + actOtr + actExt + actMul + actSp + actSrv + actNd;
+
+      const totAdmon = pendAdmon + actAdmon;
+      const totInt = pendInt + actInt;
+      const totOtr = pendOtr + actOtr;
+      const totExt = pendExt + actExt;
+      const totMul = pendMul + actMul;
+      const totSp = pendSp + actSp;
+      const totSrv = pendSrv + actSrv;
+      const totNd = pendNd + actNd;
+      const valTot = Number(m.total || (totAdmon + totInt + totOtr + totExt + totMul + totSp + totSrv + totNd));
+      const pagos = Number(m.valpag || 0);
+      const desc = Number(m.valdesc || 0);
+
+      // 1. Fila Pendiente
+      filasExcel.push([
+        periodoLabel, "", fac, "Pendiente",
+        pendAdmon, pendInt, pendOtr, pendExt, pendMul, pendSp, pendSrv, pendNd, valPend, "", ""
+      ]);
+
+      // 2. Fila Actual
+      filasExcel.push([
+        "", "", "", "Actual",
+        actAdmon, actInt, actOtr, actExt, actMul, actSp, actSrv, actNd, valAct, "", ""
+      ]);
+
+      // 3. Fila Total
+      filasExcel.push([
+        "", "", "", "Total",
+        totAdmon, totInt, totOtr, totExt, totMul, totSp, totSrv, totNd, valTot, pagos, desc
+      ]);
+
+      filasExcel.push([]);
+      itemsEnPagina++;
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(filasExcel);
+    ws['!cols'] = [
+      { wch: 22 }, { wch: 3 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
+      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 },
+      { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 12 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, "Estado_de_Cuenta");
+    const nombreArchivo = `Estado_Cuenta_Tradicional_${codClean}_${d.apto || "inmueble"}.xlsx`;
+    XLSX.writeFile(wb, nombreArchivo);
+    if (typeof mostrarToast === "function") {
+      mostrarToast(`✓ Excel descargado (Estado de Cuenta Tradicional): ${nombreArchivo}`);
+    }
+    return;
+  }
+
   const esAbogado = tipo === "abogado";
 
   const primerMes = meses[0] || {};
@@ -87004,7 +87110,217 @@ function imprimirEstudioHistorico(tipoParam) {
     return;
   }
 
-  const tipo = tipoParam || document.getElementById("estudio-hist-filtro-destinatario")?.value || "abogado";
+  const tipo = tipoParam || document.getElementById("estudio-hist-filtro-destinatario")?.value || "tradicional";
+
+  if (tipo === "tradicional") {
+    const codClean = (d.codigo || "4159").replace(/^cj_/, "");
+    const nombreEdif = d.edificio?.nombre || `EDIFICIO ${codClean} P.H.`;
+    const predioTxt = `${d.propietario || "Copropietario"}--Predio ${d.apto || ""} BLO. ${d.bloq || "AP"}`;
+
+    const fmtNum = v => {
+      const n = Number(v) || 0;
+      return n === 0 ? "0" : n.toLocaleString('es-CO');
+    };
+
+    const chunks = [];
+    for (let i = 0; i < meses.length; i += 11) {
+      chunks.push(meses.slice(i, i + 11));
+    }
+    if (chunks.length === 0) chunks.push([]);
+
+    const pagesHtml = chunks.map((chunk, pageIdx) => {
+      const rowsHtml = chunk.map(m => {
+        const periodoLabel = (m.periodo || `${m.mes_nombre || m.mes} de ${m.anio}`).toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase());
+        const fac = m.fac || "";
+
+        const pendAdmon = Number(m.pend_puro || 0);
+        const pendInt = Number(m.interes_anterior || 0);
+        const pendOtr = Number(m.otros_anterior || 0);
+        const pendExt = Number(m.extra_anterior || 0);
+        const pendMul = Number(m.multa_anterior || 0);
+        const pendSp = Number(m.serpub_anterior || 0);
+        const pendSrv = Number(m.serv_anterior || 0);
+        const pendNd = Number(m.notas_anterior || 0);
+        const valPend = pendAdmon + pendInt + pendOtr + pendExt + pendMul + pendSp + pendSrv + pendNd;
+
+        const actAdmon = Number(m.actual_puro || 0);
+        const actInt = Number(m.interes_mes || 0);
+        const actOtr = Number(m.otros_mes || 0);
+        const actExt = Number(m.extra_mes || 0);
+        const actMul = Number(m.multa_mes || 0);
+        const actSp = Number(m.serpub_mes || 0);
+        const actSrv = Number(m.serv_mes || 0);
+        const actNd = Number(m.notas_mes || 0);
+        const valAct = actAdmon + actInt + actOtr + actExt + actMul + actSp + actSrv + actNd;
+
+        const totAdmon = pendAdmon + actAdmon;
+        const totInt = pendInt + actInt;
+        const totOtr = pendOtr + actOtr;
+        const totExt = pendExt + actExt;
+        const totMul = pendMul + actMul;
+        const totSp = pendSp + actSp;
+        const totSrv = pendSrv + actSrv;
+        const totNd = pendNd + actNd;
+        const valTot = Number(m.total || (totAdmon + totInt + totOtr + totExt + totMul + totSp + totSrv + totNd));
+        const pagos = Number(m.valpag || 0);
+        const desc = Number(m.valdesc || 0);
+
+        return `
+          <tr class="row-pend">
+            <td class="col-mes">${periodoLabel}</td>
+            <td class="col-fac">${fac}</td>
+            <td class="col-tipo">Pendiente</td>
+            <td class="col-num">${fmtNum(pendAdmon)}</td>
+            <td class="col-num">${fmtNum(pendInt)}</td>
+            <td class="col-num">${fmtNum(pendOtr)}</td>
+            <td class="col-num">${fmtNum(pendExt)}</td>
+            <td class="col-num">${fmtNum(pendMul)}</td>
+            <td class="col-num">${fmtNum(pendSp)}</td>
+            <td class="col-num">${fmtNum(pendSrv)}</td>
+            <td class="col-num">${fmtNum(pendNd)}</td>
+            <td class="col-num col-valor">${fmtNum(valPend)}</td>
+            <td class="col-num"></td>
+            <td class="col-num"></td>
+          </tr>
+          <tr class="row-act">
+            <td></td>
+            <td></td>
+            <td class="col-tipo">Actual</td>
+            <td class="col-num">${fmtNum(actAdmon)}</td>
+            <td class="col-num">${fmtNum(actInt)}</td>
+            <td class="col-num">${fmtNum(actOtr)}</td>
+            <td class="col-num">${fmtNum(actExt)}</td>
+            <td class="col-num">${fmtNum(actMul)}</td>
+            <td class="col-num">${fmtNum(actSp)}</td>
+            <td class="col-num">${fmtNum(actSrv)}</td>
+            <td class="col-num">${fmtNum(actNd)}</td>
+            <td class="col-num col-valor">${fmtNum(valAct)}</td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr class="row-tot">
+            <td></td>
+            <td></td>
+            <td class="col-tipo col-tot-label">Total</td>
+            <td class="col-num col-tot-val">${fmtNum(totAdmon)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totInt)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totOtr)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totExt)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totMul)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totSp)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totSrv)}</td>
+            <td class="col-num col-tot-val">${fmtNum(totNd)}</td>
+            <td class="col-num col-tot-val col-valor">${fmtNum(valTot)}</td>
+            <td class="col-num col-pago">${fmtNum(pagos)}</td>
+            <td class="col-num">${fmtNum(desc)}</td>
+          </tr>
+          <tr class="row-sep"><td colspan="14"></td></tr>
+        `;
+      }).join("");
+
+      return `
+        <div class="sheet-page">
+          <div class="header-box">
+            <div class="header-top">
+              <div class="h-title">Estado de Cuenta</div>
+              <div class="h-edif">${nombreEdif}</div>
+              <div class="h-page">Página ${pageIdx + 1} de ${chunks.length}</div>
+            </div>
+            <div class="h-predio">${predioTxt}</div>
+          </div>
+          <table class="tabla-estado">
+            <thead>
+              <tr>
+                <th style="width: 14%;">Mes</th>
+                <th style="width: 6%;">Factura</th>
+                <th style="width: 7%;">Concepto</th>
+                <th style="width: 7%;">Admón</th>
+                <th style="width: 6%;">Interés</th>
+                <th style="width: 7%;">Otros</th>
+                <th style="width: 6%;">Extra</th>
+                <th style="width: 5%;">Multa</th>
+                <th style="width: 6%;">Ser. Publ.</th>
+                <th style="width: 6%;">Ser./ Serv.</th>
+                <th style="width: 6%;">Notas D/C</th>
+                <th style="width: 8%;">Valor</th>
+                <th style="width: 8%;">Pagos</th>
+                <th style="width: 7%;">Notas/Desc.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }).join("");
+
+    const printWin = window.open("", "_blank");
+    if (!printWin) {
+      if (typeof mostrarToast === "function") mostrarToast("⚠️ Por favor permita ventanas emergentes para imprimir.", "warning");
+      return;
+    }
+
+    const htmlDoc = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estado de Cuenta - ${nombreEdif} - Apto ${d.apto || ''}</title>
+  <style>
+    @page { size: letter landscape; margin: 8mm 6mm; }
+    * { box-sizing: border-box; font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; }
+    body { background: #0f172a; color: #000; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    .no-print-bar { position: sticky; top: 10px; z-index: 100; background: #1e293b; padding: 10px 20px; border-radius: 12px; border: 1px solid #334155; display: flex; gap: 12px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .btn-act { background: #059669; color: white; border: none; padding: 8px 16px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+    .btn-act:hover { background: #10b981; }
+    .btn-sec { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; text-decoration: none; }
+    .btn-sec:hover { background: #475569; }
+    .sheet-page { background: #ffffff; width: 100%; max-width: 1100px; padding: 15px 20px; margin-bottom: 25px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); page-break-after: always; }
+    .sheet-page:last-child { page-break-after: auto; margin-bottom: 0; }
+    .header-box { border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-end; }
+    .h-title { font-size: 15px; font-weight: 800; letter-spacing: -0.5px; }
+    .h-edif { font-size: 15px; font-weight: 800; text-align: center; flex: 1; }
+    .h-page { font-size: 11px; font-weight: bold; text-align: right; }
+    .h-predio { font-size: 12px; font-weight: bold; margin-top: 4px; color: #1e293b; }
+    .tabla-estado { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+    .tabla-estado thead th { border-top: 1px solid #000; border-bottom: 1.5px solid #000; padding: 4px 3px; text-align: right; font-weight: 800; background: #f8fafc; }
+    .tabla-estado thead th:nth-child(1) { text-align: left; }
+    .tabla-estado thead th:nth-child(2) { text-align: center; }
+    .tabla-estado thead th:nth-child(3) { text-align: left; }
+    .tabla-estado tbody td { padding: 1.5px 3px; white-space: nowrap; }
+    .col-mes { font-weight: bold; text-align: left; }
+    .col-fac { text-align: center; color: #334155; }
+    .col-tipo { text-align: left; color: #475569; }
+    .col-tot-label { font-weight: 800; color: #000; }
+    .col-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .col-tot-val { font-weight: 800; color: #000; }
+    .col-valor { background: #f1f5f9; font-weight: 700; }
+    .col-pago { color: #047857; font-weight: 700; }
+    .row-tot td { border-bottom: 1px dashed #cbd5e1; padding-bottom: 2px; }
+    .row-sep td { height: 4px; border: none; padding: 0; }
+    @media print {
+      body { background: transparent !important; padding: 0 !important; }
+      .no-print-bar { display: none !important; }
+      .sheet-page { width: 100% !important; max-width: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print-bar">
+    <button class="btn-act" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    <button class="btn-sec" onclick="window.close()">✖️ Cerrar</button>
+  </div>
+  ${pagesHtml}
+</body>
+</html>`;
+
+    printWin.document.open();
+    printWin.document.write(htmlDoc);
+    printWin.document.close();
+    return;
+  }
+
   const esAbogado = tipo === "abogado";
 
   const primerMes = meses[0] || {};
