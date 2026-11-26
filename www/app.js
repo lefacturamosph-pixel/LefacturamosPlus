@@ -68509,7 +68509,7 @@ function renderizarInventarioInmuebles(datos = null) {
 
     const bloq = item.bloq !== undefined && item.bloq !== null ? item.bloq : "00";
 
-    const tipo = item.tipo || "Apartamento";
+    const tipo = (typeof normalizarTipoInmuebleCompleto === "function") ? normalizarTipoInmuebleCompleto(item.tipo || item.bloq) : (item.tipo || "Apartamento");
 
     const area = (item.area && String(item.area) !== "75 m²" && String(item.area) !== "0") ? String(item.area) : "";
 
@@ -68719,6 +68719,104 @@ function filtrarInventarioInmuebles(query) {
 
 
 
+// ==============================================================================
+// MAPEO Y NORMALIZACIÓN DE TIPOS DE INMUEBLE Y ABREVIATURAS DE BLOQUE / TORRE
+// ==============================================================================
+const MAPA_TIPOS_INMUEBLE_ABREV = {
+  "AP": "Apartamento",
+  "CA": "Casa",
+  "OF": "Oficina",
+  "CO": "Consultorio",
+  "LC": "Local",
+  "UT": "Cuarto Útil",
+  "PQ": "Parqueadero",
+  "BJ": "Burbuja"
+};
+
+const MAPA_TIPOS_INMUEBLE_EXPANDIDO = {
+  "AP": "Apartamento",
+  "APTO": "Apartamento",
+  "APT": "Apartamento",
+  "APARTAMENTO": "Apartamento",
+  "CA": "Casa",
+  "CASA": "Casa",
+  "OF": "Oficina",
+  "OFI": "Oficina",
+  "OFICINA": "Oficina",
+  "CO": "Consultorio",
+  "CS": "Consultorio",
+  "CONS": "Consultorio",
+  "CONSULTORIO": "Consultorio",
+  "LC": "Local",
+  "LOC": "Local",
+  "LOCAL": "Local",
+  "UT": "Cuarto Útil",
+  "CU": "Cuarto Útil",
+  "UTIL": "Cuarto Útil",
+  "CUARTO UTIL": "Cuarto Útil",
+  "CUARTO ÚTIL": "Cuarto Útil",
+  "PQ": "Parqueadero",
+  "PK": "Parqueadero",
+  "PARQ": "Parqueadero",
+  "PARQUEADERO": "Parqueadero",
+  "BJ": "Burbuja",
+  "BUR": "Burbuja",
+  "BURBUJA": "Burbuja"
+};
+
+const MAPA_TIPO_A_ABREV = {
+  "Apartamento": "AP",
+  "Casa": "CA",
+  "Oficina": "OF",
+  "Consultorio": "CO",
+  "Local": "LC",
+  "Cuarto Útil": "UT",
+  "Util": "UT",
+  "Parqueadero": "PQ",
+  "Burbuja": "BJ"
+};
+
+function normalizarTipoInmuebleCompleto(str) {
+  if (!str) return "Apartamento";
+  const limpia = String(str).trim().toUpperCase();
+  if (MAPA_TIPOS_INMUEBLE_EXPANDIDO[limpia]) {
+    return MAPA_TIPOS_INMUEBLE_EXPANDIDO[limpia];
+  }
+  for (const [sigla, nombre] of Object.entries(MAPA_TIPOS_INMUEBLE_ABREV)) {
+    if (limpia === sigla || limpia.startsWith(sigla)) {
+      return nombre;
+    }
+  }
+  return "Apartamento";
+}
+
+window.MAPA_TIPOS_INMUEBLE_ABREV = MAPA_TIPOS_INMUEBLE_ABREV;
+window.MAPA_TIPOS_INMUEBLE_EXPANDIDO = MAPA_TIPOS_INMUEBLE_EXPANDIDO;
+window.MAPA_TIPO_A_ABREV = MAPA_TIPO_A_ABREV;
+window.normalizarTipoInmuebleCompleto = normalizarTipoInmuebleCompleto;
+
+function alCambiarBloqueEditarInmueble(val) {
+  const limpia = String(val || "").trim().toUpperCase();
+  const tipoDetectado = MAPA_TIPOS_INMUEBLE_EXPANDIDO[limpia];
+  if (tipoDetectado) {
+    const selTipo = document.getElementById("edit-inmueble-tipo");
+    if (selTipo) selTipo.value = tipoDetectado;
+  }
+}
+window.alCambiarBloqueEditarInmueble = alCambiarBloqueEditarInmueble;
+
+function alCambiarTipoEditarInmueble(val) {
+  const bloqInput = document.getElementById("edit-inmueble-bloq");
+  if (bloqInput) {
+    const abrev = MAPA_TIPO_A_ABREV[val];
+    const actualUpper = (bloqInput.value || "").trim().toUpperCase();
+    if (!actualUpper || MAPA_TIPOS_INMUEBLE_EXPANDIDO[actualUpper]) {
+      bloqInput.value = abrev || actualUpper;
+    }
+  }
+}
+window.alCambiarTipoEditarInmueble = alCambiarTipoEditarInmueble;
+
 function editarInmuebleInventario(unidad) {
   const unidadesBase = obtenerUnidadesActivas();
   let item = unidadesBase.find(i => (i.unidad === unidad || i.apto === unidad)) || 
@@ -68735,8 +68833,13 @@ function editarInmuebleInventario(unidad) {
   if (document.getElementById("edit-inmueble-titulo-unidad")) document.getElementById("edit-inmueble-titulo-unidad").innerText = uCode;
   if (document.getElementById("edit-inmueble-unidad")) document.getElementById("edit-inmueble-unidad").value = uCode;
 
-  if (document.getElementById("edit-inmueble-bloq")) document.getElementById("edit-inmueble-bloq").value = item.bloq !== undefined ? item.bloq : (item.torre || "00");
-  if (document.getElementById("edit-inmueble-tipo")) document.getElementById("edit-inmueble-tipo").value = item.tipo || "Apartamento";
+  const rawBloq = item.bloq !== undefined && item.bloq !== null ? String(item.bloq).trim() : (item.torre || "");
+  const rawTipo = item.tipo !== undefined && item.tipo !== null ? String(item.tipo).trim() : "";
+  const tipoCompleto = normalizarTipoInmuebleCompleto(rawTipo || rawBloq);
+  const bloqAbrev = rawBloq || (MAPA_TIPO_A_ABREV[tipoCompleto] || "AP");
+
+  if (document.getElementById("edit-inmueble-bloq")) document.getElementById("edit-inmueble-bloq").value = bloqAbrev;
+  if (document.getElementById("edit-inmueble-tipo")) document.getElementById("edit-inmueble-tipo").value = tipoCompleto;
   if (document.getElementById("edit-inmueble-area")) document.getElementById("edit-inmueble-area").value = item.area || (resMatch ? resMatch.area : "") || "75 m²";
   if (document.getElementById("edit-inmueble-coef")) document.getElementById("edit-inmueble-coef").value = item.coeficiente || item.coef || (resMatch ? resMatch.coeficiente : "") || "0.000%";
   if (document.getElementById("edit-inmueble-parqueadero")) document.getElementById("edit-inmueble-parqueadero").value = item.parqueadero || item.pk || (resMatch ? resMatch.parqueadero : "") || "";
@@ -68808,8 +68911,13 @@ function guardarEdicionInmueble(e) {
       ? ((document.getElementById("edit-inmueble-residente")?.value || "").trim() || "Arrendatario registrado")
       : "Propietario habita";
 
-    if (document.getElementById("edit-inmueble-bloq")) item.bloq = document.getElementById("edit-inmueble-bloq").value.trim();
-    if (document.getElementById("edit-inmueble-tipo")) item.tipo = document.getElementById("edit-inmueble-tipo").value;
+    const selTipo = document.getElementById("edit-inmueble-tipo");
+    const inpBloq = document.getElementById("edit-inmueble-bloq");
+    const tipoSel = selTipo ? selTipo.value : "Apartamento";
+    const bloqVal = inpBloq ? inpBloq.value.trim().toUpperCase() : "";
+
+    item.tipo = tipoSel;
+    item.bloq = bloqVal || (window.MAPA_TIPO_A_ABREV ? window.MAPA_TIPO_A_ABREV[tipoSel] : "AP");
     if (document.getElementById("edit-inmueble-area")) item.area = document.getElementById("edit-inmueble-area").value.trim();
     if (document.getElementById("edit-inmueble-coef")) item.coeficiente = document.getElementById("edit-inmueble-coef").value.trim();
     if (document.getElementById("edit-inmueble-parqueadero")) item.parqueadero = document.getElementById("edit-inmueble-parqueadero").value.trim();

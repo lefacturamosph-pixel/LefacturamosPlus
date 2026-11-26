@@ -15447,7 +15447,7 @@
 
             <label class="block text-slate-400 font-bold mb-1">Bloque / Torre</label>
 
-            <input type="text" id="edit-inmueble-bloq" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500" required />
+            <input type="text" id="edit-inmueble-bloq" oninput="alCambiarBloqueEditarInmueble(this.value)" placeholder="Ej: AP, CA, OF, LC..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500 uppercase" required />
 
           </div>
 
@@ -15455,17 +15455,23 @@
 
             <label class="block text-slate-400 font-bold mb-1">Tipo de Inmueble</label>
 
-            <select id="edit-inmueble-tipo" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500">
+            <select id="edit-inmueble-tipo" onchange="alCambiarTipoEditarInmueble(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:border-emerald-500 cursor-pointer">
 
-              <option value="Apartamento">Apartamento</option>
+              <option value="Apartamento">Apartamento (AP)</option>
 
-              <option value="Local">Local</option>
+              <option value="Casa">Casa (CA)</option>
 
-              <option value="Oficina">Oficina</option>
+              <option value="Oficina">Oficina (OF)</option>
 
-              <option value="Parqueadero">Parqueadero</option>
+              <option value="Consultorio">Consultorio (CO)</option>
 
-              <option value="Cuarto Útil">Cuarto Útil</option>
+              <option value="Local">Local (LC)</option>
+
+              <option value="Cuarto Útil">Cuarto Útil (UT)</option>
+
+              <option value="Parqueadero">Parqueadero (PQ)</option>
+
+              <option value="Burbuja">Burbuja (BJ)</option>
 
             </select>
 
