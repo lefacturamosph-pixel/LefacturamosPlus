@@ -86843,17 +86843,24 @@ function descargarExcelEstudioHistorico(tipoParam) {
     const filasExcel = [];
 
     const headersCols = [
-      "Mes / Periodo", "", "Factura", "Concepto", "Admón", "Interés", "Otros",
+      "Mes / Periodo", "Factura", "Concepto", "Admón", "Interés", "Otros",
       "Extra", "Multa", "Ser. Publ.", "Ser./ Serv.", "Notas D/C", "Valor", "Pagos", "Notas/Desc."
     ];
 
     let pageNum = 1;
+    const merges = [];
     function agregarEncabezado(pag) {
+      const r0 = filasExcel.length;
       filasExcel.push(["Estado de Cuenta"]);
-      filasExcel.push(["", "", nombreEdif, "", "", "", "", "", "", "", "", "", "", `Página ${pag}`]);
+      filasExcel.push(["", nombreEdif, "", "", "", "", "", "", "", "", "", "", "", `Página ${pag}`]);
       filasExcel.push([predioTxt]);
       filasExcel.push(headersCols);
       filasExcel.push([]);
+
+      merges.push({ s: { r: r0, c: 0 }, e: { r: r0, c: 3 } }); // Estado de Cuenta (Col A a D)
+      merges.push({ s: { r: r0 + 1, c: 1 }, e: { r: r0 + 1, c: 10 } }); // nombreEdif en Col B a K (ancho completo sin cortar)
+      merges.push({ s: { r: r0 + 1, c: 12 }, e: { r: r0 + 1, c: 13 } }); // Página en Col M a N
+      merges.push({ s: { r: r0 + 2, c: 0 }, e: { r: r0 + 2, c: 10 } }); // predioTxt en Col A a K
     }
 
     agregarEncabezado(pageNum);
@@ -86902,21 +86909,21 @@ function descargarExcelEstudioHistorico(tipoParam) {
       const pagos = Number(m.valpag || 0);
       const desc = Number(m.valdesc || 0);
 
-      // 1. Fila Pendiente
+      // 1. Fila Pendiente (sin columna B vacía)
       filasExcel.push([
-        periodoLabel, "", fac, "Pendiente",
+        periodoLabel, fac, "Pendiente",
         pendAdmon, pendInt, pendOtr, pendExt, pendMul, pendSp, pendSrv, pendNd, valPend, "", ""
       ]);
 
       // 2. Fila Actual
       filasExcel.push([
-        "", "", "", "Actual",
+        "", "", "Actual",
         actAdmon, actInt, actOtr, actExt, actMul, actSp, actSrv, actNd, valAct, "", ""
       ]);
 
       // 3. Fila Total
       filasExcel.push([
-        "", "", "", "Total",
+        "", "", "Total",
         totAdmon, totInt, totOtr, totExt, totMul, totSp, totSrv, totNd, valTot, pagos, desc
       ]);
 
@@ -86926,11 +86933,38 @@ function descargarExcelEstudioHistorico(tipoParam) {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(filasExcel);
+    ws['!merges'] = merges;
     ws['!cols'] = [
-      { wch: 22 }, { wch: 3 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
-      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 },
-      { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 12 }
+      { wch: 20 }, // A: Mes / Periodo
+      { wch: 12 }, // B: Factura
+      { wch: 12 }, // C: Concepto
+      { wch: 12 }, // D: Admón
+      { wch: 12 }, // E: Interés
+      { wch: 12 }, // F: Otros
+      { wch: 12 }, // G: Extra
+      { wch: 12 }, // H: Multa
+      { wch: 11 }, // I: Ser. Publ.
+      { wch: 12 }, // J: Ser./ Serv.
+      { wch: 12 }, // K: Notas D/C
+      { wch: 14 }, // L: Valor
+      { wch: 14 }, // M: Pagos
+      { wch: 12 }  // N: Notas/Desc.
     ];
+
+    // Formatear todas las celdas numéricas con puntos de miles (#,##0)
+    if (ws['!ref']) {
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          const cell = ws[cellAddress];
+          if (cell && typeof cell.v === 'number') {
+            cell.t = 'n';
+            cell.z = '#,##0;(#,##0);"-"';
+          }
+        }
+      }
+    }
     XLSX.utils.book_append_sheet(wb, ws, "Estado_de_Cuenta");
     const nombreArchivo = `Estado_Cuenta_Tradicional_${codClean}_${d.apto || "inmueble"}.xlsx`;
     XLSX.writeFile(wb, nombreArchivo);
