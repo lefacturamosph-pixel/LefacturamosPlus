@@ -19,8 +19,19 @@ try:
 except ImportError:
     read_dbf_binary = None
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
+import sys
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+    if (BASE_DIR / "data").exists():
+        DATA_DIR = BASE_DIR / "data"
+    elif Path(r"C:\Users\CARLOS\LefacturamosApp\data").exists():
+        DATA_DIR = Path(r"C:\Users\CARLOS\LefacturamosApp\data")
+    else:
+        DATA_DIR = BASE_DIR / "data"
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+    DATA_DIR = BASE_DIR / "data"
+
 DBPLUS_BASE = Path(r"C:\dbplus")
 
 MESES_NOMBRES = {
@@ -206,7 +217,7 @@ def compilar_historico_edificio(codigo: str) -> Dict[str, Any]:
     return salida
 
 
-def obtener_estudio_cuenta_apto(codigo: str, apto_query: str) -> Dict[str, Any]:
+def obtener_estudio_cuenta_apto(codigo: str, apto_query: str, desde_periodo: Optional[str] = None, hasta_periodo: Optional[str] = None) -> Dict[str, Any]:
     clean_cod = str(codigo).replace("cj_", "").strip()
     apto_limpio = str(apto_query).strip()
     
@@ -265,7 +276,19 @@ def obtener_estudio_cuenta_apto(codigo: str, apto_query: str) -> Dict[str, Any]:
     meses = historico.get(target_apto_key, []) if target_apto_key else []
     info_u = unidades_master.get(target_apto_key or apto_limpio, {})
 
-    # Calcular acumulados
+    # Filtrar por rango de fechas / periodo inicial si se solicita
+    if desde_periodo or hasta_periodo:
+        meses_filtrados = []
+        for m in meses:
+            p_iso = m.get("periodo_iso") or f"{m.get('anio')}-{str(m.get('mes')).zfill(2)}"
+            if desde_periodo and p_iso < str(desde_periodo):
+                continue
+            if hasta_periodo and p_iso > str(hasta_periodo):
+                continue
+            meses_filtrados.append(m)
+        meses = meses_filtrados
+
+    # Calcular acumulados del periodo seleccionado
     total_facturado = sum(m.get("total_cobro_mes", 0) for m in meses)
     total_pagado = sum(m.get("valpag", 0) for m in meses)
     saldo_actual = meses[-1].get("total", 0) if meses else 0
@@ -281,6 +304,8 @@ def obtener_estudio_cuenta_apto(codigo: str, apto_query: str) -> Dict[str, Any]:
         "coeficiente": info_u.get("coeficiente") or "",
         "total_meses": len(meses),
         "meses": meses,
+        "desde_periodo": desde_periodo,
+        "hasta_periodo": hasta_periodo,
         "resumen": {
             "total_facturado": total_facturado,
             "total_pagado": total_pagado,
@@ -337,7 +362,7 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
     predio_txt = f"{propietario}--Predio {clean_apto} BLO. {bloque}"
 
     headers = [
-        "Mes / Periodo", "", "Factura", "Concepto", "Admón", "Interés", "Otros",
+        "Mes / Periodo", "Factura", "Concepto", "Admón", "Interés", "Otros",
         "Extra", "Multa", "Ser. Publ.", "Ser./ Serv.", "Notas D/C", "Valor", "Pagos", "Notas/Desc."
     ]
 
@@ -345,24 +370,39 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
     num_fmt = "#,##0"
 
     def write_header_block(row_idx, page_num):
-        ws.cell(row=row_idx, column=1, value="Estado de Cuenta").font = font_title
-        ws.cell(row=row_idx+1, column=3, value=nombre_edif).font = font_title
-        cell_pag = ws.cell(row=row_idx+1, column=14, value=f"Página {page_num}")
+        # Fila 1: Título "Estado de Cuenta" combinado (Col A a D)
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=4)
+        c_title = ws.cell(row=row_idx, column=1, value="Estado de Cuenta")
+        c_title.font = font_title
+        c_title.alignment = Alignment(horizontal="left", vertical="center")
+
+        # Fila 2: Nombre de la Copropiedad combinado de Col B a K (Col 2 a 11) para que NUNCA se corte
+        ws.merge_cells(start_row=row_idx+1, start_column=2, end_row=row_idx+1, end_column=11)
+        c_edif = ws.cell(row=row_idx+1, column=2, value=nombre_edif)
+        c_edif.font = font_title
+        c_edif.alignment = Alignment(horizontal="left", vertical="center")
+
+        # Fila 2: Número de Página a la derecha combinado en Col M a N (Col 13 a 14)
+        ws.merge_cells(start_row=row_idx+1, start_column=13, end_row=row_idx+1, end_column=14)
+        cell_pag = ws.cell(row=row_idx+1, column=13, value=f"Página {page_num}")
         cell_pag.font = font_bold
-        cell_pag.alignment = Alignment(horizontal="right")
-        ws.cell(row=row_idx+2, column=1, value=predio_txt).font = font_bold
+        cell_pag.alignment = Alignment(horizontal="right", vertical="center")
+
+        # Fila 3: Predio y Propietario combinado de Col A a K (Col 1 a 11)
+        ws.merge_cells(start_row=row_idx+2, start_column=1, end_row=row_idx+2, end_column=11)
+        c_predio = ws.cell(row=row_idx+2, column=1, value=predio_txt)
+        c_predio.font = font_bold
+        c_predio.alignment = Alignment(horizontal="left", vertical="center")
 
         h_row = row_idx + 3
         for col_idx, h in enumerate(headers, start=1):
-            if not h:
-                continue
             cell = ws.cell(row=h_row, column=col_idx, value=h)
             cell.font = font_header
             cell.fill = fill_header
             cell.border = thin_border
-            if col_idx in (1, 4):
+            if col_idx in (1, 3):
                 cell.alignment = Alignment(horizontal="left", vertical="center")
-            elif col_idx == 3:
+            elif col_idx == 2:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="right", vertical="center")
@@ -421,13 +461,13 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
         # 1. Fila Pendiente
         ws.cell(row=curr_row, column=1, value=periodo_label).font = font_bold
         if fac:
-            c_fac = ws.cell(row=curr_row, column=3, value=str(fac))
+            c_fac = ws.cell(row=curr_row, column=2, value=str(fac))
             c_fac.font = font_regular
             c_fac.alignment = Alignment(horizontal="center")
-        ws.cell(row=curr_row, column=4, value="Pendiente").font = font_regular
+        ws.cell(row=curr_row, column=3, value="Pendiente").font = font_regular
 
         row_vals_pend = [pend_admon, pend_int, pend_otr, pend_ext, pend_mul, pend_sp, pend_srv, pend_nd, val_pend]
-        for c_idx, val in enumerate(row_vals_pend, start=5):
+        for c_idx, val in enumerate(row_vals_pend, start=4):
             c = ws.cell(row=curr_row, column=c_idx, value=val)
             c.number_format = num_fmt
             c.font = font_regular
@@ -435,9 +475,9 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
 
         # 2. Fila Actual
         curr_row += 1
-        ws.cell(row=curr_row, column=4, value="Actual").font = font_regular
+        ws.cell(row=curr_row, column=3, value="Actual").font = font_regular
         row_vals_act = [act_admon, act_int, act_otr, act_ext, act_mul, act_sp, act_srv, act_nd, val_act]
-        for c_idx, val in enumerate(row_vals_act, start=5):
+        for c_idx, val in enumerate(row_vals_act, start=4):
             c = ws.cell(row=curr_row, column=c_idx, value=val)
             c.number_format = num_fmt
             c.font = font_regular
@@ -445,9 +485,9 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
 
         # 3. Fila Total
         curr_row += 1
-        ws.cell(row=curr_row, column=4, value="Total").font = font_bold
+        ws.cell(row=curr_row, column=3, value="Total").font = font_bold
         row_vals_tot = [tot_admon, tot_int, tot_otr, tot_ext, tot_mul, tot_sp, tot_srv, tot_nd, val_tot, pagos, desc]
-        for c_idx, val in enumerate(row_vals_tot, start=5):
+        for c_idx, val in enumerate(row_vals_tot, start=4):
             c = ws.cell(row=curr_row, column=c_idx, value=val)
             c.number_format = num_fmt
             c.font = font_bold
@@ -458,8 +498,8 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
         items_on_page += 1
 
     col_widths = {
-        1: 22, 2: 3, 3: 11, 4: 12, 5: 12, 6: 12, 7: 12, 8: 12, 9: 10,
-        10: 12, 11: 12, 12: 12, 13: 14, 14: 14, 15: 12
+        1: 20, 2: 12, 3: 12, 4: 12, 5: 12, 6: 12, 7: 12, 8: 12, 9: 11,
+        10: 12, 11: 12, 12: 14, 13: 14, 14: 12
     }
     for col_idx, width in col_widths.items():
         ws.column_dimensions[get_column_letter(col_idx)].width = width
@@ -467,16 +507,23 @@ def generar_excel_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto:
     out_dir = DATA_DIR / "reportes_historicos"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"Estado_Cuenta_Tradicional_{clean_cod}_{clean_apto}.xlsx"
-    wb.save(out_file)
+    try:
+        wb.save(out_file)
+    except PermissionError:
+        import time
+        ts = int(time.time()) % 100000
+        out_file = out_dir / f"Estado_Cuenta_Tradicional_{clean_cod}_{clean_apto}_{ts}.xlsx"
+        wb.save(out_file)
     return out_file
 
 
-def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Path:
+def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado", desde_periodo: Optional[str] = None, hasta_periodo: Optional[str] = None) -> Path:
     """
     Genera un archivo Excel profesional (.xlsx) con la liquidación detallada del estudio histórico.
     Soporta formato 'tradicional' (Estado de Cuenta con 8 conceptos) y 'abogado' (Cobro Judicial).
+    Permite filtrar por periodo inicial ('desde_periodo', ej. '2024-01') o rango.
     """
-    res = obtener_estudio_cuenta_apto(codigo, apto)
+    res = obtener_estudio_cuenta_apto(codigo, apto, desde_periodo=desde_periodo, hasta_periodo=hasta_periodo)
     tipo_str = str(tipo or "abogado").lower().strip()
     if tipo_str in ("tradicional", "estado_cuenta", "kardex", "copropietario_tradicional"):
         return generar_excel_tradicional_8conceptos(res, codigo, apto)
@@ -486,7 +533,6 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     from openpyxl.utils import get_column_letter
     from openpyxl.comments import Comment
 
-    res = obtener_estudio_cuenta_apto(codigo, apto)
     edif = res.get("edificio", {})
     meses = res.get("meses", [])
     es_abogado = str(tipo).lower() == "abogado"
@@ -525,11 +571,16 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         bottom=Side(style='thin', color='CBD5E1')
     )
 
-    # 1. Título principal
+    # 1. Título principal centrado sobre toda la tabla (A1:I1 y A2:I2)
     ws["A1"] = "CERTIFICACIÓN DE DEUDA Y LIQUIDACIÓN DISCRIMINADA DE CRÉDITO PARA COBRO JUDICIAL" if es_abogado else "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA"
     ws["A1"].font = font_title
+    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells("A1:I1")
+
     ws["A2"] = "(EXPEDIDO DE CONFORMIDAD CON EL ARTÍCULO 48 DE LA LEY 675 DE 2001 - PRESTA MÉRITO EJECUTIVO)" if es_abogado else "(INFORME CONTABLE DETALLADO DE PAGOS Y CUOTAS DE ADMINISTRACIÓN)"
     ws["A2"].font = font_sub
+    ws["A2"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.merge_cells("A2:I2")
 
     # 2. Metadatos
     primer_mes = meses[0]["periodo"] if meses else ""
@@ -671,7 +722,7 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
         ws.cell(row=total_row, column=c).border = thin_border
 
     # Anchos de columna proporcionales para encajar 100% en hoja horizontal (Landscape)
-    col_widths = {1: 18, 2: 15, 3: 18, 4: 16, 5: 18, 6: 16, 7: 16, 8: 18, 9: 34}
+    col_widths = {1: 18, 2: 22, 3: 18, 4: 16, 5: 18, 6: 16, 7: 16, 8: 18, 9: 32}
     for col_idx, width in col_widths.items():
         ws.column_dimensions[get_column_letter(col_idx)].width = width
 
@@ -738,11 +789,78 @@ def generar_excel_historico(codigo: str, apto: str, tipo: str = "abogado") -> Pa
     c_fin.number_format = num_fmt
     c_fin.font = font_bold
 
-    out_dir = Path("data/drive_docs") / str(codigo) / "historicos"
+    # 5. Declaración Juramentada y Firmas Oficiales (Rigor Legal para Juzgados)
+    if es_abogado:
+        curr_row += 2
+        ws.cell(row=curr_row, column=1, value="CONSTANCIA DE MÉRITO EJECUTIVO - LEY 675 DE 2001 (ART. 48 Y 49) Y C.G.P. (ART. 422):").font = font_bold
+        curr_row += 1
+        decl_text = (
+            f"El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad {edif.get('nombre', 'EDIFICIO ' + str(codigo))}, "
+            f"con NIT {edif.get('nit', '901690778-9')}, CERTIFICA BAJO LA GRAVEDAD DE JURAMENTO: "
+            f"1) Que la presente liquidación de crédito fue tomada fielmente de los libros oficiales de contabilidad y software contable. "
+            f"2) Que las expensas comunes ordinarias y extraordinarias fueron aprobadas por la Asamblea General de Copropietarios. "
+            f"3) Que los intereses de mora fueron calculados a la tasa legal aprobada sin superar el límite de usura de la Superfinanciera (Art. 30 Ley 675/2001). "
+            f"4) Que los pagos recibidos fueron imputados conforme a los Arts. 1653 del C.C. y 881 del C.Co. "
+            f"5) Que la obligación es CLARA, EXPRESA Y ACTUALMENTE EXIGIBLE a cargo del deudor, PRESTANDO MÉRITO EJECUTIVO SUFICIENTE."
+        )
+        decl_cell = ws.cell(row=curr_row, column=1, value=decl_text)
+        decl_cell.font = font_notas
+        decl_cell.alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells(start_row=curr_row, start_column=1, end_row=curr_row+1, end_column=9)
+        ws.row_dimensions[curr_row].height = 35
+        curr_row += 3
+
+        # Firmas
+        ws.cell(row=curr_row, column=1, value="_____________________________________________").font = font_bold
+        ws.cell(row=curr_row, column=5, value="_____________________________________________").font = font_bold
+        curr_row += 1
+        ws.cell(row=curr_row, column=1, value=str(edif.get('administrador', 'ADMINISTRADOR(A) Y REPRESENTANTE LEGAL'))).font = font_bold
+        ws.cell(row=curr_row, column=5, value="REVISOR(A) FISCAL / CONTADOR(A) PÚBLICO(A)").font = font_bold
+        curr_row += 1
+        ws.cell(row=curr_row, column=1, value=f"Representante Legal - {edif.get('nombre', '')}").font = font_regular
+        ws.cell(row=curr_row, column=5, value="T.P. No. ___________ - Junta Central de Contadores").font = font_regular
+        curr_row += 1
+        ws.cell(row=curr_row, column=1, value=f"C.C. ___________________ de Medellín").font = font_regular
+        ws.cell(row=curr_row, column=5, value="(Fe Pública Contable - Art. 10 Ley 43 de 1990)").font = font_notas
+
+    # Anchos de columnas balanceados y proporcionados (evita que el título ensanche la Columna A)
+    col_widths = {
+        1: 20,  # Periodo (Año-Mes) - espacio exacto para ej: 'SEPTIEMBRE 2026'
+        2: 15,  # Factura / Cuenta No.
+        3: 17,  # Saldo Anterior Capital
+        4: 15,  # Interés Mora Anterior
+        5: 16,  # Cuota y Cargos Mes
+        6: 15,  # Interés Moratorio Mes
+        7: 15,  # Pago Mes (Abono)
+        8: 18,  # Saldo Total Exigible
+        9: 28   # Discriminación de Conceptos / Notas
+    }
+    for col_idx, width in col_widths.items():
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    out_dir = DATA_DIR / "reportes_historicos"
     out_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"Cobro_Juridico_Art48_{codigo}_Apto_{apto}_{len(meses)}_Meses.xlsx" if es_abogado else f"Estado_Cuenta_Historico_{codigo}_Apto_{apto}.xlsx"
+    suffix = f"_desde_{desde_periodo}" if desde_periodo else ""
+    filename = f"Cobro_Juridico_Art48_{codigo}_Apto_{apto}_{len(meses)}_Meses{suffix}.xlsx" if es_abogado else f"Estado_Cuenta_Historico_{codigo}_Apto_{apto}{suffix}.xlsx"
     out_path = out_dir / filename
-    wb.save(out_path)
+
+    try:
+        wb.save(out_path)
+    except PermissionError:
+        import time
+        ts = int(time.time()) % 100000
+        filename = filename.replace(".xlsx", f"_{ts}.xlsx")
+        out_path = out_dir / filename
+        wb.save(out_path)
+
+    # Copia de seguridad en drive_docs
+    try:
+        drive_dir = Path("data/drive_docs") / str(codigo) / "historicos"
+        drive_dir.mkdir(parents=True, exist_ok=True)
+        wb.save(drive_dir / filename)
+    except Exception:
+        pass
+
     return out_path
 
 
@@ -1100,12 +1218,13 @@ def generar_html_tradicional_8conceptos(res: Dict[str, Any], codigo: str, apto: 
     return html
 
 
-def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str:
+def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado", desde_periodo: Optional[str] = None, hasta_periodo: Optional[str] = None) -> str:
     """
     Genera el documento HTML completo listo para visualizar o imprimir en PDF oficial.
-    Soporta 'tradicional' (Estado de Cuenta con 8 conceptos) y 'abogado' (Cobro Judicial).
+    Soporta 'tradicional' (Estado de Cuenta con 8 conceptos) y 'abogado' (Cobro Judicial Ejecutivo).
+    Permite filtrar por periodo inicial ('desde_periodo', ej. '2024-01') o rango.
     """
-    res = obtener_estudio_cuenta_apto(codigo, apto)
+    res = obtener_estudio_cuenta_apto(codigo, apto, desde_periodo=desde_periodo, hasta_periodo=hasta_periodo)
     tipo_str = str(tipo or "abogado").lower().strip()
     if tipo_str in ("tradicional", "estado_cuenta", "kardex", "copropietario_tradicional"):
         return generar_html_tradicional_8conceptos(res, codigo, apto)
@@ -1192,15 +1311,29 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
         </tr>
         """)
 
-    titulo_doc = "CERTIFICACIÓN DE DEUDA Y ESTADO DE CUENTA CRONOLÓGICO DISCRIMINADO" if es_abogado else "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA"
-    subtitulo_doc = "(TÍTULO EJECUTIVO - ARTÍCULO 48 DE LA LEY 675 DE 2001 Y ART. 422 DEL C.G.P.)" if es_abogado else "(INFORME CONTABLE DETALLADO MES A MES PARA EL COPROPIETARIO)"
+    titulo_doc = "CERTIFICACIÓN DE ESTADO DE CUENTA Y LIQUIDACIÓN DISCRIMINADA DE CRÉDITO PARA COBRO JUDICIAL EJECUTIVO" if es_abogado else "ESTADO DE CUENTA HISTÓRICO Y TRAZABILIDAD DE CARTERA"
+    subtitulo_doc = "(TÍTULO EJECUTIVO PLENO - ARTÍCULOS 48 Y 49 DE LA LEY 675 DE 2001 Y ARTÍCULO 422 DEL CÓDIGO GENERAL DEL PROCESO - LEY 1564 DE 2012)" if es_abogado else "(INFORME CONTABLE DETALLADO MES A MES PARA EL COPROPIETARIO)"
 
     nota_legal = f"""
-      <div style="border: 1px solid #94a3b8; background: #f8fafc; padding: 10px; font-size: 9px; text-align: justify; margin: 15px 0; border-radius: 4px;">
-        <b>CONSTANCIA DE MÉRITO EJECUTIVO (ARTÍCULO 48 LEY 675 DE 2001):</b><br/>
-        El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad <b>{edif.get('nombre', 'EDIFICIO ' + str(codigo))}</b>, 
-        certifica que la relación contable anterior corresponde fielmente a los saldos adeudados por concepto de expensas comunes ordinarias e intereses moratorios para la unidad privada <b>{res.get('apto', '')}</b>. 
-        Se expide la presente liquidación para que sirva de <b>PLENA PRUEBA Y TÍTULO EJECUTIVO</b> constituyendo una obligación clara, expresa y actualmente exigible.
+      <div style="border: 2px solid #0f172a; background: #f8fafc; padding: 12px; font-size: 8.5px; text-align: justify; margin: 12px 0; border-radius: 4px; line-height: 1.45;">
+        <h4 style="margin: 0 0 6px 0; font-size: 9.5px; text-transform: uppercase; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px;">
+          DECLARACIÓN JURAMENTADA Y CONSTANCIA DE MÉRITO EJECUTIVO (ART. 48 Y 49 LEY 675 DE 2001 / ART. 422 C.G.P.)
+        </h4>
+        El(la) suscrito(a) Administrador(a) y Representante Legal de la copropiedad <b>{edif.get('nombre', 'EDIFICIO ' + str(codigo))}</b> (P.H.), con NIT {edif.get('nit', '901690778-9')}, en cumplimiento de sus deberes legales conferidos por la Ley 675 de 2001 y el Reglamento de Propiedad Horizontal, <b>CERTIFICA BAJO LA GRAVEDAD DE JURAMENTO</b>:
+        <ol style="margin: 4px 0 6px 18px; padding: 0;">
+          <li>Que la liquidación cronológica y discriminada que antecede fue extraída fiel y directamente de los libros de contabilidad oficiales y del software contable de la copropiedad, correspondiendo a los saldos adeudados por la unidad privada <b>Apto/Inmueble {res.get('apto', '')}</b>.</li>
+          <li>Que las expensas comunes ordinarias y extraordinarias fueron aprobadas válidamente por la Asamblea General de Copropietarios conforme al presupuesto legal.</li>
+          <li>Que la liquidación de intereses moratorios se realizó conforme a la tasa pactada en el Reglamento de Propiedad Horizontal y supletoriamente según el Artículo 30 de la Ley 675 de 2001, sin exceder en ningún período el límite legal de usura certificado por la Superintendencia Financiera de Colombia.</li>
+          <li>Que los pagos y abonos registrados fueron imputados rigurosamente en el orden legal previsto por el Artículo 1653 del Código Civil y el Artículo 881 del Código de Comercio (costas/gastos, intereses moratorios y remanente a capital).</li>
+          <li>Que la obligación aquí contenida es <b>CLARA, EXPRESA Y ACTUALMENTE EXIGIBLE</b> a cargo del demandado(a) y a favor de la copropiedad acreedora, <b>PRESTANDO MÉRITO EJECUTIVO SUFICIENTE</b> para su cobro judicial ante los Jueces Civiles de la República.</li>
+        </ol>
+        <div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 8px; color: #475569;">
+          <b>DOCUMENTOS ANEXOS DE RIGOR PARA EL PROCESO EJECUTIVO ANTE EL JUZGADO:</b> 
+          1. Original suscrito de este Certificado de Deuda. 
+          2. Certificado de Existencia y Representación Legal expedido por la Alcaldía Municipal (vigencia no mayor a 30 días). 
+          3. Copia del acta de Asamblea de Copropietarios aprobatoria de las cuotas. 
+          4. Certificado de Tradición y Libertad del inmueble (vigencia no mayor a 30 días).
+        </div>
       </div>
     """ if es_abogado else f"""
       <div style="border: 1px solid #94a3b8; background: #f8fafc; padding: 10px; font-size: 9px; text-align: justify; margin: 15px 0; border-radius: 4px;">
@@ -1208,6 +1341,38 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
         La presente relación refleja fielmente la trazabilidad de cuotas causadas, intereses y pagos imputados a la unidad privada <b>{res.get('apto', '')}</b>. 
         Para cualquier inquietud o conciliación de pagos, favor comunicarse con la Administración.
       </div>
+    """
+
+    firmas_html = f"""
+    <div class="firmas">
+      <div class="firma-col">
+        <p>________________________________________________</p>
+        <p><b>{edif.get('administrador', 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL')}</b></p>
+        <p>Administrador(a) y Representante Legal</p>
+        <p>{edif.get('nombre', '')} • NIT: {edif.get('nit', '')}</p>
+        <p style="font-size: 7.5px; color: #475569;">Certificación expedida de conformidad con el Art. 48 de la Ley 675 de 2001</p>
+      </div>
+      <div class="firma-col">
+        <p>________________________________________________</p>
+        <p><b>REVISIÓN FISCAL / CONTABILIDAD</b></p>
+        <p>Contador(a) Público(a) / Revisor(a) Fiscal</p>
+        <p>T.P. No. _________________ - Junta Central de Contadores</p>
+        <p style="font-size: 7.5px; color: #475569;">Dictamen con presunción de Fe Pública Contable (Ley 43 de 1990, Art. 10)</p>
+      </div>
+    </div>
+    """ if es_abogado else f"""
+    <div class="firmas">
+      <div class="firma-col">
+        <p><b>{edif.get('administrador', 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL')}</b></p>
+        <p>Administrador(a) y Representante Legal</p>
+        <p>{edif.get('nombre', '')}</p>
+      </div>
+      <div class="firma-col">
+        <p><b>CONSTANCIA DE EMISIÓN</b></p>
+        <p>Expedido en {edif.get('ciudad', 'Medellín • Colombia')}</p>
+        <p>Fecha de emisión: {fecha_hoy}</p>
+      </div>
+    </div>
     """
 
     html = f"""<!DOCTYPE html>
@@ -1249,17 +1414,17 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
 
   <div class="meta-grid">
     <div class="meta-box">
-      <h4>1. DATOS DEL INMUEBLE Y DESTINATARIO</h4>
+      <h4>1. DATOS DEL INMUEBLE Y DESTINATARIO (PARTE DEMANDADA)</h4>
       <p><b>UNIDAD PRIVADA:</b> Inmueble / Apto {res.get('apto', '')}</p>
       <p><b>PROPIETARIO(A):</b> {res.get('propietario', '')}</p>
       <p><b>C.C. / NIT:</b> {res.get('cc', '')}</p>
       <p><b>COEFICIENTE P.H.:</b> {res.get('coeficiente', '')}</p>
     </div>
     <div class="meta-box">
-      <h4>2. CONDICIONES DE LIQUIDACIÓN</h4>
+      <h4>2. CONDICIONES DE LIQUIDACIÓN DE LA OBLIGACIÓN</h4>
       <p><b>PERIODO ANALIZADO:</b> {len(meses)} Meses ({primer_mes.get('periodo', '')} hasta {ult_mes.get('periodo', '')})</p>
       <p><b>TASA MORA APLICADA:</b> {edif.get('interesMora', '2.10% M.V.')}</p>
-      <p><b>FECHA DE EXPEDICIÓN:</b> {fecha_hoy}</p>
+      <p><b>FECHA DE CORTE Y EXPEDICIÓN:</b> {fecha_hoy}</p>
       <p><b>ESTADO:</b> {'OBLIGACIÓN EXIGIBLE EN MORA' if saldo_final > 0 else 'A PAZ Y SALVO'}</p>
     </div>
   </div>
@@ -1315,18 +1480,368 @@ def generar_html_historico(codigo: str, apto: str, tipo: str = "abogado") -> str
 
   {nota_legal}
 
-  <div class="firmas">
-    <div class="firma-col">
-      <p><b>{edif.get('administrador', 'ADMINISTRACIÓN Y REPRESENTACIÓN LEGAL')}</b></p>
-      <p>Administrador(a) y Representante Legal</p>
-      <p>{edif.get('nombre', '')}</p>
-    </div>
-    <div class="firma-col">
-      <p><b>CONSTANCIA DE EMISIÓN</b></p>
-      <p>Expedido en {edif.get('ciudad', 'Medellín • Colombia')}</p>
-      <p>Fecha de emisión: {fecha_hoy}</p>
-    </div>
-  </div>
+  {firmas_html}
 </body>
 </html>"""
     return html
+
+
+def generar_pdf_historico(codigo: str, apto: str, tipo: str = "abogado", desde_periodo: Optional[str] = None, hasta_periodo: Optional[str] = None) -> Path:
+    """
+    Genera el archivo PDF oficial de alta resolución usando el motor de renderizado
+    vectorial headless de Microsoft Edge, garantizando formato de impresión legal.
+    """
+    import subprocess
+    import tempfile
+    import shutil
+    import time
+    import os
+
+    clean_cod = str(codigo).replace("cj_", "").strip()
+    clean_apto = str(apto).strip()
+    es_abogado = str(tipo or "abogado").lower().strip() == "abogado"
+
+    html_content = generar_html_historico(clean_cod, clean_apto, tipo=tipo, desde_periodo=desde_periodo, hasta_periodo=hasta_periodo)
+
+    out_dir = DATA_DIR / "reportes_historicos"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = f"_desde_{desde_periodo}" if desde_periodo else ""
+    
+    prefix = "Cobro_Juridico_Art48" if es_abogado else "Estado_Cuenta_Historico"
+    pdf_filename = f"{prefix}_{clean_cod}_Apto_{clean_apto}{suffix}.pdf"
+    html_filename = f"tmp_{prefix}_{clean_cod}_Apto_{clean_apto}{suffix}.html"
+    
+    pdf_out = out_dir / pdf_filename
+    html_out = out_dir / html_filename
+
+    # Verificar si el archivo destino existe y si está bloqueado por tenerlo abierto en un visor PDF
+    if pdf_out.exists():
+        try:
+            with open(pdf_out, "ab"):
+                pass
+        except PermissionError:
+            ts = int(time.time()) % 100000
+            pdf_filename = f"{prefix}_{clean_cod}_Apto_{clean_apto}{suffix}_{ts}.pdf"
+            pdf_out = out_dir / pdf_filename
+
+    with open(html_out, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    # Buscar ejecutable de Microsoft Edge o Chrome
+    candidatos_edge = [
+        Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+        Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+        Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+    ]
+    edge_bin = next((c for c in candidatos_edge if c.exists()), None)
+    if not edge_bin:
+        raise FileNotFoundError("No se encontró msedge.exe para generar el archivo PDF oficial.")
+
+    html_url = html_out.resolve().as_uri()
+    temp_profile = Path(tempfile.gettempdir()) / f"edge_pdf_profile_{os.getpid()}_{int(time.time() * 1000) % 1000000}"
+
+    edge_args = [
+        str(edge_bin),
+        "--headless=new",
+        "--disable-gpu",
+        "--no-pdf-header-footer",
+        "--run-all-compositor-stages-before-draw",
+        f"--user-data-dir={temp_profile}",
+        "--disable-dev-shm-usage",
+        f"--print-to-pdf={pdf_out}",
+        html_url
+    ]
+
+    try:
+        subprocess.run(edge_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    except Exception:
+        # Fallback para versiones previas de Edge
+        edge_args[1] = "--headless"
+        subprocess.run(edge_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+
+    # Esperar hasta 5 segundos a que el archivo sea terminado de escribir y cerrado en disco
+    for _ in range(50):
+        if pdf_out.exists() and pdf_out.stat().st_size > 0:
+            break
+        time.sleep(0.1)
+
+    # Limpiar archivo temporal html y perfil temporal
+    try:
+        if html_out.exists():
+            html_out.unlink()
+    except Exception:
+        pass
+
+    try:
+        if temp_profile.exists():
+            shutil.rmtree(temp_profile, ignore_errors=True)
+    except Exception:
+        pass
+
+    if not pdf_out.exists() or pdf_out.stat().st_size == 0:
+        raise RuntimeError(f"Error generando PDF oficial en {pdf_out}")
+
+    print(f"✅ PDF oficial generado exitosamente: {pdf_out}")
+    return pdf_out
+    return html
+
+
+def exportar_matriz_consolidada_edificio(codigo: str, desde_periodo: Optional[str] = None) -> Path:
+    """
+    Genera un archivo Excel consolidado de todo el edificio con:
+    1. Hoja de Resumen General de Cartera por Unidad (saldo actual, pagos totales, intereses, mora).
+    2. Matriz Histórica de Saldos Mes a Mes por Unidad.
+    3. Matriz Histórica de Pagos/Abonos Mes a Mes por Unidad.
+    Permite filtrar por periodo inicial ('desde_periodo', ej. '2024-01').
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    clean_cod = str(codigo).replace("cj_", "").strip()
+    json_path = DATA_DIR / f"edificio_{clean_cod}_historico.json"
+    
+    data = None
+    if json_path.exists():
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = None
+            
+    if not data or not data.get("historico_por_apto"):
+        data = compilar_historico_edificio(clean_cod)
+
+    edif = data.get("edificio", {})
+    historico_aptos = data.get("historico_por_apto", {})
+    unidades_master = data.get("unidades_master", {})
+
+    wb = Workbook()
+    
+    # Fuentes y estilos
+    font_title = Font(name="Calibri", size=12, bold=True, color="000000")
+    font_sub = Font(name="Calibri", size=9, bold=True, color="475569")
+    font_hdr = Font(name="Calibri", size=9, bold=True, color="FFFFFF")
+    font_bold = Font(name="Calibri", size=9, bold=True)
+    font_regular = Font(name="Calibri", size=9)
+    fill_hdr = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    fill_hdr_sub = PatternFill(start_color="334155", end_color="334155", fill_type="solid")
+    fill_total = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    
+    thin_border = Border(
+        left=Side(style='thin', color='E2E8F0'),
+        right=Side(style='thin', color='E2E8F0'),
+        top=Side(style='thin', color='E2E8F0'),
+        bottom=Side(style='thin', color='E2E8F0')
+    )
+    num_fmt = "#,##0"
+
+    # Obtener lista global de periodos ordenados
+    todos_periodos = set()
+    for apto_k, meses_list in historico_aptos.items():
+        for m in meses_list:
+            todos_periodos.add(m.get("periodo_iso") or f"{m.get('anio')}-{str(m.get('mes')).zfill(2)}")
+    periodos_ordenados = sorted(list(todos_periodos))
+    if desde_periodo:
+        periodos_ordenados = [p for p in periodos_ordenados if p >= str(desde_periodo)]
+
+    # ==========================================
+    # HOJA 1: RESUMEN GENERAL DE CARTERA
+    # ==========================================
+    ws1 = wb.active
+    ws1.title = "Resumen_General"
+    ws1.views.sheetView[0].showGridLines = True
+
+    ws1["A1"] = f"CONSOLIDADO HISTÓRICO GENERAL DE CARTERA - {edif.get('nombre', f'EDIFICIO {clean_cod}')}"
+    ws1["A1"].font = font_title
+    ws1["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    ws1.merge_cells("A1:L1")
+
+    ws1["A2"] = f"Código: {clean_cod} | NIT: {edif.get('nit', 'N/A')} | Total Inmuebles: {len(historico_aptos)} | Períodos: {len(periodos_ordenados)}"
+    ws1["A2"].font = font_sub
+    ws1["A2"].alignment = Alignment(horizontal="center", vertical="center")
+    ws1.merge_cells("A2:L2")
+
+    headers1 = [
+        "Unidad", "Propietario", "C.C. / NIT", "Teléfono", 
+        "Meses Reg.", "Primer Período", "Último Período",
+        "Total Cargos/Cuotas", "Total Int. Mora", "Total Pagos", "Saldo Final Exigible", "Estado"
+    ]
+    
+    for c_idx, h in enumerate(headers1, 1):
+        cell = ws1.cell(row=4, column=c_idx, value=h)
+        cell.font = font_hdr
+        cell.fill = fill_hdr
+        cell.alignment = Alignment(horizontal="center" if c_idx in [1, 5, 6, 7, 12] else "left" if c_idx in [2, 3, 4] else "right", vertical="center")
+
+    curr_row = 5
+    tot_cargos_edif = 0.0
+    tot_int_edif = 0.0
+    tot_pagos_edif = 0.0
+    tot_saldo_edif = 0.0
+
+    # Ordenar unidades alfabéticamente/numéricamente
+    aptos_ordenados = sorted(historico_aptos.keys(), key=lambda x: (len(x), x))
+
+    for apto in aptos_ordenados:
+        meses = historico_aptos[apto]
+        u_info = unidades_master.get(apto, {}) or unidades_master.get(apto.lstrip("0"), {})
+        prop = u_info.get("propietario") or "-"
+        cc = u_info.get("cc") or "-"
+        tel = u_info.get("tel") or "-"
+        
+        cant_meses = len(meses)
+        primer_per = meses[0].get("periodo", "-") if meses else "-"
+        ult_per = meses[-1].get("periodo", "-") if meses else "-"
+        
+        sum_cargos = sum(float(m.get("cuota_admon", 0) or 0) for m in meses)
+        sum_int = sum(float(m.get("interes_mes", 0) or 0) for m in meses)
+        sum_pag = sum(float(m.get("valpag", 0) or 0) for m in meses)
+        saldo_fin = float(meses[-1].get("total", 0) or 0) if meses else 0.0
+        
+        tot_cargos_edif += sum_cargos
+        tot_int_edif += sum_int
+        tot_pagos_edif += sum_pag
+        tot_saldo_edif += saldo_fin
+
+        estado = "EN MORA" if saldo_fin > 1000 else "AL DÍA"
+
+        row_data = [
+            apto, prop, cc, tel, cant_meses, primer_per, ult_per,
+            sum_cargos, sum_int, sum_pag, saldo_fin, estado
+        ]
+
+        for c_idx, val in enumerate(row_data, 1):
+            cell = ws1.cell(row=curr_row, column=c_idx, value=val)
+            cell.font = font_regular
+            cell.border = thin_border
+            if c_idx in [8, 9, 10, 11]:
+                cell.number_format = num_fmt
+                cell.alignment = Alignment(horizontal="right")
+            elif c_idx in [1, 5, 6, 7]:
+                cell.alignment = Alignment(horizontal="center")
+            elif c_idx == 12:
+                cell.alignment = Alignment(horizontal="center")
+                cell.font = Font(name="Calibri", size=9, bold=True, color="DC2626" if estado == "EN MORA" else "16A34A")
+        curr_row += 1
+
+    # Fila de Totales
+    ws1.cell(row=curr_row, column=1, value="TOTALES").font = font_bold
+    ws1.cell(row=curr_row, column=8, value=tot_cargos_edif).number_format = num_fmt
+    ws1.cell(row=curr_row, column=9, value=tot_int_edif).number_format = num_fmt
+    ws1.cell(row=curr_row, column=10, value=tot_pagos_edif).number_format = num_fmt
+    ws1.cell(row=curr_row, column=11, value=tot_saldo_edif).number_format = num_fmt
+    for c in range(1, 13):
+        cell = ws1.cell(row=curr_row, column=c)
+        cell.font = font_bold
+        cell.fill = fill_total
+        cell.border = thin_border
+
+    # ==========================================
+    # HOJA 2: MATRIZ DE SALDOS FINALES MES A MES
+    # ==========================================
+    headers2 = ["Unidad", "Propietario"] + periodos_ordenados
+    total_cols_ws2 = max(len(headers2), 6)
+
+    ws2 = wb.create_sheet(title="Matriz_Saldos_Mensuales")
+    ws2.views.sheetView[0].showGridLines = True
+    ws2["A1"] = f"EVOLUCIÓN MENSUAL DE SALDOS POR UNIDAD - {edif.get('nombre', f'EDIFICIO {clean_cod}')}"
+    ws2["A1"].font = font_title
+    ws2["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    ws2.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols_ws2)
+
+    for c_idx, h in enumerate(headers2, 1):
+        cell = ws2.cell(row=3, column=c_idx, value=h)
+        cell.font = font_hdr
+        cell.fill = fill_hdr_sub
+        cell.alignment = Alignment(horizontal="center" if c_idx > 2 else "left")
+
+    for r_idx, apto in enumerate(aptos_ordenados, 4):
+        u_info = unidades_master.get(apto, {}) or unidades_master.get(apto.lstrip("0"), {})
+        ws2.cell(row=r_idx, column=1, value=apto).font = font_bold
+        ws2.cell(row=r_idx, column=2, value=u_info.get("propietario", "-")).font = font_regular
+        
+        meses_dict = {m.get("periodo_iso") or f"{m.get('anio')}-{str(m.get('mes')).zfill(2)}": float(m.get("total", 0) or 0) for m in historico_aptos[apto]}
+        for p_idx, per in enumerate(periodos_ordenados, 3):
+            val = meses_dict.get(per, 0.0)
+            cell = ws2.cell(row=r_idx, column=p_idx, value=val)
+            cell.number_format = num_fmt
+            cell.font = font_regular
+            cell.alignment = Alignment(horizontal="right")
+            cell.border = thin_border
+
+    # ==========================================
+    # HOJA 3: MATRIZ DE PAGOS MES A MES
+    # ==========================================
+    ws3 = wb.create_sheet(title="Matriz_Pagos_Mensuales")
+    ws3.views.sheetView[0].showGridLines = True
+    ws3["A1"] = f"EVOLUCIÓN MENSUAL DE PAGOS POR UNIDAD - {edif.get('nombre', f'EDIFICIO {clean_cod}')}"
+    ws3["A1"].font = font_title
+    ws3["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    total_cols_ws3 = max(len(headers2), 6)
+    ws3.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols_ws3)
+
+    for c_idx, h in enumerate(headers2, 1):
+        cell = ws3.cell(row=3, column=c_idx, value=h)
+        cell.font = font_hdr
+        cell.fill = fill_hdr_sub
+        cell.alignment = Alignment(horizontal="center" if c_idx > 2 else "left")
+
+    for r_idx, apto in enumerate(aptos_ordenados, 4):
+        u_info = unidades_master.get(apto, {}) or unidades_master.get(apto.lstrip("0"), {})
+        ws3.cell(row=r_idx, column=1, value=apto).font = font_bold
+        ws3.cell(row=r_idx, column=2, value=u_info.get("propietario", "-")).font = font_regular
+        
+        meses_dict = {m.get("periodo_iso") or f"{m.get('anio')}-{str(m.get('mes')).zfill(2)}": float(m.get("valpag", 0) or 0) for m in historico_aptos[apto]}
+        for p_idx, per in enumerate(periodos_ordenados, 3):
+            val = meses_dict.get(per, 0.0)
+            cell = ws3.cell(row=r_idx, column=p_idx, value=val)
+            cell.number_format = num_fmt
+            cell.font = font_regular
+            cell.alignment = Alignment(horizontal="right")
+            cell.border = thin_border
+
+    # Anchos equilibrados y limpios para Hoja 1 (Resumen General)
+    col_widths_ws1 = {
+        1: 12,  # Unidad (espacio exacto para 0001, 0101 sin dejar hueco)
+        2: 28,  # Propietario
+        3: 16,  # C.C. / NIT
+        4: 16,  # Teléfono
+        5: 12,  # Meses Reg.
+        6: 18,  # Primer Período
+        7: 18,  # Último Período
+        8: 18,  # Total Cargos/Cuotas
+        9: 16,  # Total Int. Mora
+        10: 16, # Total Pagos
+        11: 18, # Saldo Final Exigible
+        12: 14  # Estado
+    }
+    for col_idx, width in col_widths_ws1.items():
+        ws1.column_dimensions[get_column_letter(col_idx)].width = width
+
+    # Anchos equilibrados para Hojas 2 y 3 (Matrices Mensuales)
+    for ws in [ws2, ws3]:
+        ws.column_dimensions['A'].width = 12  # Unidad
+        ws.column_dimensions['B'].width = 28  # Propietario
+        for col_idx in range(3, len(headers2) + 1):
+            ws.column_dimensions[get_column_letter(col_idx)].width = 16  # Periodos
+
+    out_dir = DATA_DIR / "reportes_historicos"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = f"_desde_{desde_periodo}" if desde_periodo else ""
+    out_file = out_dir / f"Consolidado_Historico_Multianual_{clean_cod}{suffix}.xlsx"
+
+    try:
+        wb.save(out_file)
+    except PermissionError:
+        import time
+        ts = int(time.time()) % 100000
+        out_file = out_dir / f"Consolidado_Historico_Multianual_{clean_cod}{suffix}_{ts}.xlsx"
+        wb.save(out_file)
+
+    print(f"✅ Matriz consolidada multianual generada: {out_file}")
+    return out_file
+    print(f"✅ Matriz consolidada multianual generada: {out_file}")
+    return out_file
+

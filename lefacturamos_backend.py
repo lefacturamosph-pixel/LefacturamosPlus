@@ -1540,10 +1540,10 @@ def api_estudio_cuenta_historico(conjunto_id: str, numero_apto: str):
 
 @app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}/excel")
 @app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}/excel")
-def api_estudio_historico_excel(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
+def api_estudio_historico_excel(conjunto_id: str, numero_apto: str, tipo: str = "abogado", desde_periodo: Optional[str] = None):
     try:
         from historico_service import generar_excel_historico
-        file_path = generar_excel_historico(conjunto_id, numero_apto, tipo)
+        file_path = generar_excel_historico(conjunto_id, numero_apto, tipo=tipo, desde_periodo=desde_periodo)
         filename = file_path.name
         return FileResponse(
             path=str(file_path),
@@ -1554,15 +1554,36 @@ def api_estudio_historico_excel(conjunto_id: str, numero_apto: str, tipo: str = 
         raise HTTPException(status_code=500, detail=f"Error generando Excel: {str(e)}")
 
 
+@app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/excel-matriz")
+@app.get("/api/estudio-cuenta-historico/{conjunto_id}/excel-matriz")
+def api_estudio_historico_matriz_excel(conjunto_id: str, desde_periodo: Optional[str] = None):
+    try:
+        from historico_service import exportar_matriz_consolidada_edificio
+        file_path = exportar_matriz_consolidada_edificio(conjunto_id, desde_periodo=desde_periodo)
+        return FileResponse(
+            path=str(file_path),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename=file_path.name
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando Matriz Excel: {str(e)}")
+
+
 @app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}/imprimir")
 @app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}/imprimir")
 @app.get("/api/conjuntos/{conjunto_id}/estudio-cuenta-historico/{numero_apto}/pdf")
 @app.get("/api/estudio-cuenta-historico/{conjunto_id}/{numero_apto}/pdf")
-def api_estudio_historico_imprimir(conjunto_id: str, numero_apto: str, tipo: str = "abogado"):
+def api_estudio_historico_imprimir(conjunto_id: str, numero_apto: str, tipo: str = "abogado", desde_periodo: Optional[str] = None):
     try:
         from fastapi.responses import HTMLResponse
-        from historico_service import generar_html_historico
-        html_content = generar_html_historico(conjunto_id, numero_apto, tipo)
+        from historico_service import generar_pdf_historico, generar_html_historico
+        try:
+            pdf_path = generar_pdf_historico(conjunto_id, numero_apto, tipo=tipo, desde_periodo=desde_periodo)
+            if pdf_path.exists():
+                return FileResponse(path=str(pdf_path), media_type="application/pdf", filename=pdf_path.name)
+        except Exception:
+            pass
+        html_content = generar_html_historico(conjunto_id, numero_apto, tipo=tipo, desde_periodo=desde_periodo)
         return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generando visualización: {str(e)}")

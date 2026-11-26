@@ -646,18 +646,38 @@ class ConversorLefacturamosDBPlus:
                 u["email"] or "Pendiente de registro", u["coeficiente"], u["estado"]
             ])
 
-        # Ajuste de anchos en ambas hojas
+        # Ajuste de anchos en ambas hojas (iniciando en fila 5 para evitar que títulos combinados A1:W1 ensanchen la Columna A)
         for sheet in [ws, ws_prop]:
             for col in range(1, sheet.max_column + 1):
                 col_letter = get_column_letter(col)
                 max_len = 0
-                for row in range(1, min(sheet.max_row + 1, 150)):
+                for row in range(5, min(sheet.max_row + 1, 150)):
                     val = sheet.cell(row=row, column=col).value
                     if val is not None:
                         max_len = max(max_len, len(str(val)))
                 sheet.column_dimensions[col_letter].width = max(max_len + 3, 11)
 
-        wb.save(ruta_salida)
+        # Ajustes de ancho estéticos y proporcionados para las columnas principales
+        ws.column_dimensions["A"].width = 8   # Bloque (no se ensancha por el título)
+        ws.column_dimensions["B"].width = 9   # Apto
+        ws.column_dimensions["C"].width = 28  # Propietario
+        ws.column_dimensions["D"].width = 14  # Cédula / NIT
+        ws.column_dimensions["E"].width = 10  # No. Factura
+
+        ws_prop.column_dimensions["A"].width = 8
+        ws_prop.column_dimensions["B"].width = 9
+        ws_prop.column_dimensions["C"].width = 28
+
+        try:
+            wb.save(ruta_salida)
+        except PermissionError:
+            import time
+            from pathlib import Path
+            ts = int(time.time()) % 100000
+            p = Path(ruta_salida)
+            ruta_salida = str(p.parent / f"{p.stem}_{ts}{p.suffix}")
+            wb.save(ruta_salida)
+
         print(f"[ÉXITO] Archivo Excel oficial guardado en: {ruta_salida}")
 
     def exportar_json(self, ruta_salida: str):

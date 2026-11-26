@@ -47,11 +47,15 @@ def ajustar_anchos(ws, max_cols=30):
     for col in range(1, max_cols + 1):
         col_letter = get_column_letter(col)
         max_len = 0
-        for row in range(1, ws.max_row + 1):
+        # Iniciar en la fila 5 para omitir las filas 1 a 4 que contienen títulos combinados (A1:W1)
+        for row in range(5, ws.max_row + 1):
             val = ws.cell(row=row, column=col).value
             if val is not None:
                 max_len = max(max_len, len(str(val)))
         ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+    # Evitar que la Columna A (Bloque/Ident) se ensanche indebidamente
+    if ws.column_dimensions["A"].width > 12:
+        ws.column_dimensions["A"].width = 9
 
 # ==============================================================================
 # 1. PLANTILLA FACTURACIÓN Y CARTERA (SSxxxx + CAMPO_FAC)
