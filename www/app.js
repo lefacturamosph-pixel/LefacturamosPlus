@@ -19661,13 +19661,13 @@ function obtenerDatosCopropiedad(codigoOId) {
       } else if (limpioSinCj === "0950") {
         cop.unidades = (typeof getUnidadesFortaleza0950Master === "function") ? getUnidadesFortaleza0950Master() : [];
         cop.coeficienteTotal = "0.000%";
-      }       } else if (limpioSinCj === "4159") {
+      } else if (limpioSinCj === "4159") {
         cop.unidades = (typeof getUnidadesFrontera4159Master === "function") ? getUnidadesFrontera4159Master() : [];
         cop.inmueblesCount = cop.unidades.length;
         cop.inmueblesOcupados = cop.unidades.length;
         cop.censoCount = cop.unidades.length;
         cop.coeficienteTotal = "100.000%";
-      else if (limpioSinCj === "4160") {
+      } else if (limpioSinCj === "4160") {
         cop.unidades = (typeof getUnidadesRiachuelo4160Master === "function") ? getUnidadesRiachuelo4160Master() : [];
       } else if (limpioSinCj === "4901") {
         cop.unidades = (typeof getUnidadesRobleAlto4901Master === "function") ? getUnidadesRobleAlto4901Master() : [];
