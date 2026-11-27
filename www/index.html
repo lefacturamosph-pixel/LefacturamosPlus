@@ -560,7 +560,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div class="relative">
                 <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
-                <input type="text" id="login-admin-cedula" value="" placeholder="Ej: Ingrese su cédula o ID (ej: 79845120)" oninput="manejarInputCedulaAdmin(this)" onblur="formatearCedulaAdminOnBlur(this)" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-mono font-bold focus:border-emerald-500 focus:outline-none" />
+                <input type="text" id="login-admin-cedula" value="" placeholder="Ej: Ingrese su cédula o ID (ej: 79845120)" oninput="manejarInputCedulaAdmin(this)" onkeyup="manejarInputCedulaAdmin(this)" onpaste="setTimeout(() => manejarInputCedulaAdmin(this), 20)" onblur="formatearCedulaAdminOnBlur(this)" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-mono font-bold focus:border-emerald-500 focus:outline-none" />
               </div>
               <div id="login-admin-nombre-box" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 min-h-[42px] transition-all">
                 <i id="login-admin-nombre-icon" data-lucide="user" class="w-4 h-4 text-slate-600 shrink-0"></i>
@@ -20061,7 +20061,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="/app.js?v=20261127_caja_menor_excel_bank_v9"></script>
+  <script src="/app.js?v=20261127_cedula_points_syntax_fix_v10"></script>
   <script>
     // Enrutamiento directo instantáneo a Superadministrador
     (function() {
