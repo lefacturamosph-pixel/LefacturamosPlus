@@ -701,15 +701,46 @@ def main():
     parser.add_argument("--archivo", "-a", type=str, help="Ruta del archivo SSxxxx.DBF o SSxxxx.xlsx")
     parser.add_argument("--edificio", "-e", type=str, help="Código del edificio (ej: 7480)")
     parser.add_argument("--auto", action="store_true", help="Convierte automáticamente todos los archivos SS*.DBF encontrados")
+    parser.add_argument("--extracto", "-x", type=str, help="Ruta del extracto bancario (.xlsx, .csv) para conciliar pagos y generar BASEPAG/BASERC")
 
     args = parser.parse_args()
 
-    print("=" * 75)
-    print(f" LEFACTURAMOS - Conversor Maestro de Bases de Datos (Python v{VERSION})")
-    print(" Formato oficial: SSxxxx + CAMPO_FAC -> Plataforma Web y Apps Android/iOS")
-    print("=" * 75)
-
     base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Modo Conciliador de Extracto Bancario
+    if args.extracto:
+        from dbplus_extractor_bancario import parsear_archivo_extracto, conciliar_extracto_con_edificio, generar_archivos_dbplus_pagos
+        from dbplus_service import obtener_datos_dbplus_edificio
+
+        cod = str(args.edificio or "7480").strip()
+        print("=" * 75)
+        print(f" LEFACTURAMOS PLUS - CONCILIADOR DE EXTRACTOS BANCARIOS DBPLUS")
+        print(f" Edificio: #{cod} | Archivo: {args.extracto}")
+        print("=" * 75)
+
+        if not os.path.exists(args.extracto):
+            print(f"[-] No existe el archivo de extracto: {args.extracto}")
+            return
+
+        with open(args.extracto, "rb") as f:
+            txs = parsear_archivo_extracto(f.read(), args.extracto)
+        print(f"[*] Transacciones de abono detectadas: {len(txs)}")
+
+        ed_data = obtener_datos_dbplus_edificio(cod)
+        if not ed_data:
+            print(f"[-] No se encontraron datos para el edificio {cod}.")
+            return
+
+        res = conciliar_extracto_con_edificio(txs, ed_data)
+        print(f"[*] Total Recaudado: {res['total_recaudado_fmt']}")
+        print(f"[*] Resumen Semáforo: 🟢 Identificados: {res['metricas']['verdes']} ({res['metricas']['porcentaje_identificado']}%) | 🟡 Sugeridos: {res['metricas']['amarillos']} | 🔴 No identificados: {res['metricas']['rojos']}")
+
+        out_res = generar_archivos_dbplus_pagos(res["pagos"], cod)
+        print(f"[OK] Archivos generados con éxito en: {out_res['directorio']}")
+        print(f"     - BASEPAG.DBF ({out_res['total_pagos']} pagos)")
+        print(f"     - BASERC.DBF (Recibos de caja)")
+        print(f"     - Excel: {os.path.basename(out_res['archivos']['excel'])}")
+        return
 
     archivos_a_procesar = []
 

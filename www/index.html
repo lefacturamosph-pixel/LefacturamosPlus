@@ -476,8 +476,8 @@
 
 
 
-      <!-- 3 Role Selection Tabs (Administrador, Copropietarios, Portería) -->
-      <div class="grid grid-cols-3 gap-2.5">
+      <!-- 4 Role Selection Tabs (Administrador, Copropietarios, Portería, Superadmin) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <button type="button" onclick="seleccionarRolLogin('admin')" id="tab-login-admin" class="tab-login-btn active flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200">
           <i data-lucide="building-2" class="w-4 h-4"></i>
           <span>Administrador</span>
@@ -491,6 +491,11 @@
         <button type="button" onclick="seleccionarRolLogin('porteria')" id="tab-login-porteria" class="tab-login-btn flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200">
           <i data-lucide="shield" class="w-4 h-4"></i>
           <span>Portería</span>
+        </button>
+
+        <button type="button" onclick="seleccionarRolLogin('superadmin')" id="tab-login-superadmin" class="tab-login-btn flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm font-bold border border-purple-500/30 text-purple-300 hover:text-white transition-all duration-200">
+          <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+          <span>Superadmin</span>
         </button>
       </div>
 
@@ -7012,7 +7017,7 @@
 
               </span>
 
-              <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold">
+              <span id="badge-pagos-edificio" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold">
 
                 EDIFICIO ROBLE ALTO P.H.
 
@@ -7036,11 +7041,11 @@
 
           <div class="flex items-center gap-2.5 shrink-0">
 
-            <button type="button" onclick="exportarPagosAdminExcel()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all">
+            <button type="button" onclick="exportarPagosAdminExcel()" class="px-3.5 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 hover:text-white border border-emerald-500/50 font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer" title="Exportar reporte oficial a Excel (.xlsx / .csv)">
 
-              <i data-lucide="upload" class="w-3.5 h-3.5 text-slate-400"></i>
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
 
-              <span>Exportar</span>
+              <span>Exportar a Excel</span>
 
             </button>
 
@@ -7058,11 +7063,51 @@
 
 
 
-        <!-- 3 TARJETAS KPI DE EGRESOS & PROVEEDORES (EXACTAS AL SCREENSHOT) -->
+        <!-- 4 TARJETAS KPI DE EGRESOS, PROVEEDORES Y CUENTA BANCARIA CON SALDO -->
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
 
-          <!-- Card 1: Total Pagos Realizados -->
+          <!-- Card 1: Saldo en Cuenta Bancaria (Cuenta creada del Edificio) -->
+
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/40 flex items-center justify-between relative overflow-hidden shadow-lg group">
+
+            <div class="min-w-0 pr-2">
+
+              <div class="flex items-center gap-1.5 mb-1">
+
+                <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">SALDO EN BANCO</span>
+
+                <span id="badge-pagos-tipo-cuenta" class="px-1.5 py-0.2 rounded bg-emerald-900/60 text-emerald-300 text-[9px] font-mono font-bold">Ahorros</span>
+
+              </div>
+
+              <div id="kpi-pagos-saldo-banco" class="text-2xl font-black text-emerald-300 font-mono tracking-tight">$35.480.000</div>
+
+              <p id="kpi-pagos-cuenta-banco" class="text-[11px] text-slate-300 font-mono truncate mt-1" title="Bancolombia • Cta: 556-000045-21">Bancolombia • Cta: 556-000045-21</p>
+
+            </div>
+
+            <div class="flex flex-col items-center gap-1.5 shrink-0">
+
+              <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center shadow-inner">
+
+                <i data-lucide="landmark" class="w-5 h-5 text-emerald-400"></i>
+
+              </div>
+
+              <button type="button" onclick="actualizarSaldoBancoPrompt()" title="Ajustar o Conciliar Saldo Bancario" class="text-[10px] font-bold text-emerald-400/90 hover:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer">
+
+                <i data-lucide="edit-2" class="w-2.5 h-2.5"></i>
+
+                <span>Ajustar</span>
+
+              </button>
+
+            </div>
+
+          </div>
+
+          <!-- Card 2: Total Pagos Realizados -->
 
           <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
 
@@ -7076,9 +7121,9 @@
 
             </div>
 
-            <div class="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-800/80 text-emerald-400 flex items-center justify-center shrink-0">
+            <div class="w-11 h-11 rounded-2xl bg-rose-950/80 border border-rose-800/80 text-rose-400 flex items-center justify-center shrink-0">
 
-              <span class="text-xl font-black">$</span>
+              <span class="text-lg font-black">$</span>
 
             </div>
 
@@ -7161,6 +7206,14 @@
               <option value="Obras / Cubiertas">Obras / Cubiertas</option>
 
               <option value="Servicios Públicos">Servicios Públicos</option>
+
+              <option value="Aseo y Limpieza">Aseo y Limpieza</option>
+
+              <option value="Honorarios Profesionales">Honorarios Profesionales</option>
+
+              <option value="Caja Menor">Caja Menor</option>
+
+              <option value="Otros Egresos">Otros Egresos</option>
 
             </select>
 
@@ -11418,6 +11471,14 @@
 
             </div>
 
+            <div>
+
+              <label class="block text-[11px] text-emerald-400 font-bold mb-1">Saldo en Banco ($ COP):</label>
+
+              <input type="number" id="modal-nc-saldo-banco" value="" placeholder="Ej: 35000000" class="w-full bg-[#0b1220] border border-emerald-500/60 rounded-xl px-2.5 py-2 text-xs text-emerald-300 font-mono font-bold focus:outline-none focus:border-emerald-400 transition-colors">
+
+            </div>
+
           </div>
 
         </div>
@@ -12262,8 +12323,178 @@
 
             </button>
 
+            <button type="button" onclick="abrirModalExtractoDbplus()" id="btn-f3-extracto-dbplus" class="px-3.5 py-2 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 hover:text-white border border-emerald-500/40 font-bold text-xs flex items-center gap-2 shadow transition-all cursor-pointer" title="Lector y conciliador de extractos bancarios para DBPlus">
+
+              <i data-lucide="landmark" class="w-4 h-4 text-emerald-400"></i>
+
+              <span>🏦 Conciliar Extracto</span>
+
+            </button>
+
           </div>
 
+        </div>
+
+        <!-- MODAL DE CONCILIACIÓN DE EXTRACTO BANCARIO LEFACTURAMOSPLUS -->
+        <div id="modal-dbplus-extracto" class="hidden fixed inset-0 z-[150] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-scale-up">
+            
+            <!-- HEADER MODAL -->
+            <div class="p-5 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-indigo-950/80 border-b border-emerald-500/30 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
+                  <i data-lucide="landmark" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-base sm:text-lg font-black text-white">Lector de Extractos Bancarios • LefacturamosPlus</h3>
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">DBPlus FoxPro</span>
+                  </div>
+                  <p class="text-xs text-slate-300">Cruce automático contra censo y cartera • Genera <code class="text-amber-300 font-mono">BASEPAG.DBF</code> y Recibos <code class="text-amber-300 font-mono">BASERC.DBF</code></p>
+                </div>
+              </div>
+              <button type="button" onclick="cerrarModalExtractoDbplus()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-950 hover:text-rose-400 text-slate-400 flex items-center justify-center transition-all cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <!-- CONTENIDO MODAL CON SCROLL -->
+            <div class="p-5 space-y-5 overflow-y-auto flex-1">
+              
+              <!-- BARRA DE CONFIGURACIÓN Y ACCIONES -->
+              <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                  <span class="text-xs font-bold text-slate-400">Edificio DBPlus:</span>
+                  <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5">
+                    <i data-lucide="building" class="w-4 h-4 text-indigo-400"></i>
+                    <input type="text" id="extracto-codigo-edificio" placeholder="7480" class="w-16 bg-transparent text-center font-mono font-bold text-xs text-white uppercase outline-none">
+                    <span id="extracto-nombre-edificio" class="text-xs text-slate-400 max-w-[200px] truncate">--</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button type="button" onclick="descargarPlantillaExtractoDbplus()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-400"></i>
+                    <span>Descargar Plantilla Modelo (Excel)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ZONA DE CARGA DRAG & DROP -->
+              <div id="dropzone-extracto-dbplus" onclick="document.getElementById('input-file-extracto-dbplus').click()" class="border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-3xl p-8 text-center bg-emerald-950/10 hover:bg-emerald-950/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group">
+                <input type="file" id="input-file-extracto-dbplus" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="onSeleccionarArchivoExtracto(this)">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 group-hover:scale-110 border border-emerald-500/30 flex items-center justify-center text-emerald-400 transition-all">
+                  <i data-lucide="file-spreadsheet" class="w-7 h-7"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-white">Haz clic o arrastra aquí el Extracto Bancario</p>
+                  <p class="text-xs text-slate-400 mt-1">Compatible con <strong class="text-emerald-300">Bancolombia, Davivienda, Banco de Bogotá, AV Villas, BBVA</strong> y cualquier Excel (.xlsx, .xls) o CSV (.csv)</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono">Solo procesa los abonos / consignaciones recibidas</span>
+              </div>
+
+              <!-- SPINNER DE CARGA -->
+              <div id="spinner-extracto-dbplus" class="hidden py-8 flex flex-col items-center justify-center gap-3">
+                <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs font-bold text-emerald-300">Cruzando transacciones contra el censo y cartera DBPlus...</p>
+              </div>
+
+              <!-- PANEL DE RESULTADOS (OCULTO INICIALMENTE) -->
+              <div id="seccion-resultados-extracto" class="hidden space-y-4">
+                
+                <!-- TARJETAS DE RESUMEN METRICO -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3 text-center">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Recaudado</span>
+                    <p id="met-extracto-total-recaudado" class="text-base sm:text-lg font-black text-emerald-400 mt-0.5">$0</p>
+                  </div>
+                  <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3 text-center">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Transacciones</span>
+                    <p id="met-extracto-total-tx" class="text-base sm:text-lg font-black text-white mt-0.5">0</p>
+                  </div>
+                  <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-2xl p-3 text-center">
+                    <span class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider">🟢 Identificados</span>
+                    <p id="met-extracto-verdes" class="text-base sm:text-lg font-black text-emerald-400 mt-0.5">0 (0%)</p>
+                  </div>
+                  <div class="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-3 text-center">
+                    <span class="text-[10px] text-amber-300 uppercase font-bold tracking-wider">🟡 Sugeridos</span>
+                    <p id="met-extracto-amarillos" class="text-base sm:text-lg font-black text-amber-400 mt-0.5">0</p>
+                  </div>
+                  <div class="bg-rose-950/30 border border-rose-500/30 rounded-2xl p-3 text-center col-span-2 sm:col-span-1">
+                    <span class="text-[10px] text-rose-300 uppercase font-bold tracking-wider">🔴 Por Revisar</span>
+                    <p id="met-extracto-rojos" class="text-base sm:text-lg font-black text-rose-400 mt-0.5">0</p>
+                  </div>
+                </div>
+
+                <!-- FILTRO Y TABLA -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden">
+                  <div class="p-3 border-b border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs font-bold text-white">Detalle de Pagos Identificados</span>
+                      <span id="badge-total-filas-extracto" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">0</span>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                      <input type="text" id="filtro-tabla-extracto" placeholder="Buscar por apto, nombre o valor..." oninput="filtrarTablaExtracto(this.value)" class="w-full sm:w-64 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500">
+                    </div>
+                  </div>
+
+                  <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                      <thead class="bg-slate-900/90 text-slate-400 font-bold sticky top-0 z-10 border-b border-slate-800">
+                        <tr>
+                          <th class="p-2.5 text-center">Estado</th>
+                          <th class="p-2.5">Fecha</th>
+                          <th class="p-2.5 text-right">Valor Abono</th>
+                          <th class="p-2.5">Descripción en Extracto</th>
+                          <th class="p-2.5">Apto Asignado</th>
+                          <th class="p-2.5">Propietario / Titular</th>
+                          <th class="p-2.5">Criterio Matching</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tbody-extracto-dbplus" class="divide-y divide-slate-800/60 font-mono text-slate-200">
+                        <!-- Render dinámico -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- PANEL DE ÉXITO TRAS APLICAR -->
+                <div id="panel-exito-extracto" class="hidden bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                      <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold text-white">¡Archivos DBPlus y Recibos Generados Exitosamente!</p>
+                      <p id="txt-rutas-generadas-extracto" class="text-[11px] text-emerald-300">BASEPAG.DBF y BASERC.DBF guardados correctamente.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="descargarExcelConciliacionDbplus()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer">
+                      <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                      <span>Descargar Excel</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- FOOTER CON BOTONES DE ACCIÓN -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span class="text-[11px] text-slate-400">Los pagos se imputan según orden de Ley 675 (Intereses ➜ Multas ➜ Extra ➜ Admón)</span>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="cerrarModalExtractoDbplus()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all cursor-pointer">
+                  Cerrar
+                </button>
+                <button type="button" id="btn-aplicar-extracto-dbplus" onclick="aplicarPagosExtractoDbplus()" disabled class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 disabled:opacity-40 disabled:cursor-not-allowed hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center gap-2 shadow-lg transition-all cursor-pointer">
+                  <i data-lucide="save" class="w-4 h-4"></i>
+                  <span>⚡ Asentar Pagos y Generar DBF / Recibos</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
         </div>
 
 
@@ -14232,6 +14463,14 @@
               <label class="font-bold text-slate-300 block mb-1">Número de Cuenta</label>
 
               <input type="text" id="edit-cop-cuenta" placeholder="Ej: 031-894520-11" class="w-full bg-slate-900 border border-slate-700 focus:border-purple-400 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none">
+
+            </div>
+
+            <div>
+
+              <label class="font-bold text-emerald-400 block mb-1">Saldo Disponible en Banco ($ COP)</label>
+
+              <input type="number" id="edit-cop-saldo-banco" placeholder="Ej: 35000000" class="w-full bg-slate-900 border border-emerald-500/60 focus:border-emerald-400 rounded-xl px-3 py-2 text-emerald-300 font-mono text-xs font-bold focus:outline-none">
 
             </div>
 
@@ -16817,7 +17056,7 @@
 
             </label>
 
-            <select id="nuevo-pago-categoria" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-emerald-500 cursor-pointer">
+            <select id="nuevo-pago-categoria" onchange="onCambioCategoriaNuevoPago(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-emerald-500 cursor-pointer">
 
               <option value="Mantenimiento" selected>Mantenimiento</option>
 
@@ -16830,6 +17069,8 @@
               <option value="Aseo y Limpieza">Aseo y Limpieza</option>
 
               <option value="Honorarios Profesionales">Honorarios Profesionales</option>
+
+              <option value="Caja Menor">Caja Menor</option>
 
               <option value="Otros Egresos">Otros Egresos</option>
 
@@ -16967,7 +17208,9 @@
 
               <option value="Wompi Bancolombia">Wompi Bancolombia</option>
 
-              <option value="Efectivo / Cheque">Efectivo / Cheque</option>
+              <option value="Efectivo / Caja Menor">Efectivo / Caja Menor</option>
+
+              <option value="Cheque">Cheque</option>
 
             </select>
 
@@ -19818,7 +20061,7 @@
 
   <!-- Lógica y Controladores en JavaScript -->
 
-  <script src="/app.js?v=20261126_excel_points_fix_v8"></script>
+  <script src="/app.js?v=20261127_caja_menor_excel_bank_v9"></script>
   <script>
     // Enrutamiento directo instantáneo a Superadministrador
     (function() {

@@ -1161,6 +1161,121 @@ def api_dbplus_disponibles():
     disponibles = listar_edificios_dbplus()
     return {"total": len(disponibles), "edificios": disponibles}
 
+# ==============================================================================
+# LEFACTURAMOS PLUS - CONCILIADOR DE EXTRACTOS BANCARIOS (DBPLUS)
+# ==============================================================================
+@app.post("/api/dbplus/extracto/analizar")
+async def api_dbplus_extracto_analizar(
+    codigo: str = Query(...),
+    file: UploadFile = File(...)
+):
+    """
+    Analiza un extracto bancario en Excel (.xlsx, .xls) o CSV (.csv) para un edificio de DBPlus.
+    Cruza cada abono contra el censo (MMxxxx) y cartera (SSxxxx) asignando semáforo:
+    🟢 Verde: Identificado con alta confianza
+    🟡 Amarillo: Coincidencia sugerida
+    🔴 Rojo: No identificado (en suspenso)
+    """
+    from dbplus_service import obtener_datos_dbplus_edificio
+    from dbplus_extractor_bancario import parsear_archivo_extracto, conciliar_extracto_con_edificio
+
+    clean_cod = str(codigo).replace("cj_", "").strip()
+    ed_data = obtener_datos_dbplus_edificio(clean_cod)
+    if not ed_data:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontraron datos de DBPlus para el edificio '{clean_cod}'."
+        )
+
+    contenido = await file.read()
+    if not contenido:
+        raise HTTPException(status_code=400, detail="El archivo de extracto bancario está vacío.")
+
+    try:
+        txs = parsear_archivo_extracto(contenido, file.filename or "extracto.xlsx")
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=f"Error leyendo extracto bancario: {str(ex)}")
+
+    if not txs:
+        raise HTTPException(status_code=400, detail="No se detectaron transacciones de abono o crédito (> $0) en el archivo.")
+
+    resultado = conciliar_extracto_con_edificio(txs, ed_data)
+    resultado["nombre_archivo"] = file.filename
+    return resultado
+
+
+@app.post("/api/dbplus/extracto/aplicar")
+async def api_dbplus_extracto_aplicar(payload: Dict[str, Any] = Body(...)):
+    """
+    Aplica y asienta los pagos confirmados de la conciliación bancaria para DBPlus.
+    Genera los archivos oficiales:
+    - BASEPAG.DBF  (Todos los pagos)
+    - BASEPAG1.DBF (Pagos identificados)
+    - BASEPAG2.DBF (Pagos no identificados)
+    - BASERC.DBF   (Recibos de caja oficiales)
+    - BASELRC.DBF  (Listado oficial para envío)
+    - CONCILIACION_BANCARIA.xlsx
+    """
+    from dbplus_extractor_bancario import generar_archivos_dbplus_pagos
+
+    codigo = str(payload.get("codigo_edificio") or payload.get("codigo", "")).replace("cj_", "").strip()
+    pagos = payload.get("pagos", [])
+    if not codigo:
+        raise HTTPException(status_code=400, detail="Falta el código de edificio DBPlus.")
+    if not pagos:
+        raise HTTPException(status_code=400, detail="No hay pagos para procesar.")
+
+    try:
+        res = generar_archivos_dbplus_pagos(pagos, codigo)
+        return res
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Error generando archivos DBPlus: {str(ex)}")
+
+
+@app.get("/api/dbplus/extracto/plantilla")
+async def api_dbplus_extracto_plantilla():
+    """Descarga la plantilla oficial en Excel de extracto bancario modelo."""
+    from dbplus_extractor_bancario import generar_plantilla_extracto_excel
+    temp_dir = os.path.join(os.path.abspath("data"), "temp")
+    os.makedirs(temp_dir, exist_ok=True)
+    plantilla_p = os.path.join(temp_dir, "PLANTILLA_EXTRACTO_BANCARIO_LEFACTURAMOSPLUS.xlsx")
+    generar_plantilla_extracto_excel(plantilla_p)
+    return FileResponse(
+        plantilla_p, 
+        filename="PLANTILLA_EXTRACTO_BANCARIO_LEFACTURAMOSPLUS.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.get("/api/dbplus/extracto/descargar/{archivo:path}")
+async def api_dbplus_extracto_descargar(archivo: str):
+    """Descarga un archivo generado de conciliación bancaria (Excel o DBF)."""
+    base_data = os.path.abspath("data")
+    base_dbplus = os.path.abspath("C:/dbplus") if os.path.exists("C:/dbplus") else base_data
+    
+    cand1 = os.path.abspath(os.path.join(base_data, archivo))
+    cand2 = os.path.abspath(os.path.join("C:/dbplus", archivo)) if os.path.exists("C:/dbplus") else cand1
+    
+    target = None
+    if os.path.exists(cand1) and os.path.isfile(cand1):
+        target = cand1
+    elif os.path.exists(cand2) and os.path.isfile(cand2):
+        target = cand2
+    elif os.path.exists(archivo) and os.path.isfile(archivo):
+        target = os.path.abspath(archivo)
+
+    if not target or not os.path.exists(target):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado.")
+
+    fname = os.path.basename(target)
+    media_type = "application/octet-stream"
+    if fname.endswith(".xlsx"):
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    elif fname.endswith(".dbf"):
+        media_type = "application/x-dbf"
+
+    return FileResponse(target, filename=fname, media_type=media_type)
+
 @app.post("/api/extraer-datos-archivo")
 async def api_extraer_datos_archivo(file: UploadFile = File(...)):
     """
