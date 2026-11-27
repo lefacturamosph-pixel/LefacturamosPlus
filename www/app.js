@@ -19398,16 +19398,45 @@ const MENUS_POR_ROL = {
     ],
     items: [
       { id: "superadmin", label: "Superadministrador Global", icono: "globe" },
-      { id: "cargamasiva", label: "Crear Edificio", icono: "building-2", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'carga')" },
+
+      // SUBMENÚ ACORDEÓN 1: CREACIÓN DE EDIFICIO
+      {
+        id: "creacion-edificio-super",
+        label: "Creación de Edificio",
+        icono: "building-2",
+        badge: "Plus",
+        subitems: [
+          { id: "modal-nueva-copropiedad", label: "Crear Nueva Copropiedad", icono: "plus-circle", action: "abrirModalNuevaCopropiedad()" },
+          { id: "cargamasiva-fusion", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'fusion3en1')" },
+          { id: "mapeador-visual", label: "Mapeador Visual de Columnas", icono: "git-pull-request", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'mapeador')" },
+          { id: "config-edificio", label: "Configurar Edificio Actual", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
+          { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" }
+        ]
+      },
+
+      // SUBMENÚ ACORDEÓN 2: FACTURACIÓN
+      {
+        id: "facturacion-menu-super",
+        label: "Facturación",
+        icono: "receipt",
+        badge: "Ley 675",
+        subitems: [
+          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
+          { id: "conciliacion-extracto", label: "2. Lector Extracto Bancario", icono: "landmark", action: "abrirModalExtractoDbplus()" },
+          { id: "saldos", label: "3. Base de Saldos & Cartera", icono: "wallet" },
+          { id: "facturacion", label: "4. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
+          { id: "documentos", label: "5. Listados y Facturas Oficiales", icono: "folder" },
+          { id: "devolver-saldos", label: "6. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
+        ]
+      },
+
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
-      { id: "apartamentos", label: "Apartamentos", icono: "home" },
+      { id: "pagosadmin", label: "Pagos Administración", icono: "credit-card" },
       { id: "residentes", label: "Residentes", icono: "users" },
-      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
-      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
-      { id: "documentos", label: "Documentos", icono: "folder" },
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
       { id: "reservas", label: "Reservas", icono: "calendar" },
       { id: "visitantes", label: "Visitas", icono: "qr-code" },
+      { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
       { id: "pqr", label: "PQR", icono: "message-square" },
       { id: "comunicados", label: "Comunicados", icono: "megaphone" },
       { id: "votaciones", label: "Asamblea Ley 675", icono: "file-check-2" },
@@ -19483,46 +19512,62 @@ const MENUS_POR_ROL = {
   },
 
   admin: {
-
     titulo: "Panel de Control",
-
     subtitulo: "Gestión Integral de Copropiedades P.H.",
-
     icono: "building",
-
     color: "emerald",
-
     homeTab: "admin",
-
     badgeTexto: "Perfil: Administrador del Conjunto",
-
     itemsMovil: [
-
       { id: "admin", label: "Panel", icono: "layout-grid" },
-
       { id: "apartamentos", label: "Aptos", icono: "home" },
-
       { id: "reservas", label: "Reservas", icono: "calendar" },
-
       { id: "pqr", label: "PQR", icono: "message-square" },
-
       { id: "mascotas", label: "Mascotas", icono: "paw-print" }
-
     ],
-
-    // Módulos completos con acceso a Asamblea y Ley 675
-
+    // Módulos completos con menús acordeón de Creación de Edificio y Facturación
     items: [
       { id: "admin", label: "Panel Principal", icono: "layout-grid" },
-      { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" },
+
+      // SUBMENÚ ACORDEÓN 1: CREACIÓN DE EDIFICIO
+      {
+        id: "creacion-edificio",
+        label: "Creación de Edificio",
+        icono: "building-2",
+        badge: "Plus",
+        subitems: [
+          { id: "modal-nueva-copropiedad", label: "Crear Nueva Copropiedad", icono: "plus-circle", action: "abrirModalNuevaCopropiedad()" },
+          { id: "cargamasiva-fusion", label: "Carga Masiva & Fusión 3-en-1", icono: "upload-cloud", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'fusion3en1')" },
+          { id: "mapeador-visual", label: "Mapeador Visual de Columnas", icono: "git-pull-request", action: "abrirModalImportarExcelEdificio(AppState.codigoEdificio, 'mapeador')" },
+          { id: "config-edificio", label: "Configurar Edificio Actual", icono: "settings", action: "abrirModalEditarEdificio(AppState.conjuntoId || ('cj_' + AppState.codigoEdificio))" },
+          { id: "apartamentos", label: "Apartamentos y Coeficientes", icono: "home" }
+        ]
+      },
+
+      // SUBMENÚ ACORDEÓN 2: FACTURACIÓN (Orden Cronológico de Facturación Condominal Ley 675)
+      {
+        id: "facturacion-menu",
+        label: "Facturación",
+        icono: "receipt",
+        badge: "Ley 675",
+        subitems: [
+          { id: "planilla-novedades", label: "1. Planilla Pagos, Notas D/C", icono: "file-spreadsheet", action: "cambiarSubtabFacturacion('planilla')" },
+          { id: "conciliacion-extracto", label: "2. Lector Extracto Bancario", icono: "landmark", action: "abrirModalExtractoDbplus()" },
+          { id: "saldos", label: "3. Base de Saldos & Cartera", icono: "wallet" },
+          { id: "facturacion", label: "4. Facturación y Liquidación", icono: "bolt", action: "cambiarSubtabFacturacion('liquidacion')" },
+          { id: "documentos", label: "5. Listados y Facturas Oficiales", icono: "folder" },
+          { id: "devolver-saldos", label: "6. Devolver Saldos Mes Anterior", icono: "rotate-ccw", action: "abrirModalDevolverSaldosMesAnterior()" }
+        ]
+      },
+
+      // PAGOS ADMINISTRACIÓN (Egresos y Proveedores)
+      { id: "pagosadmin", label: "Pagos Administración", icono: "credit-card" },
+
       { id: "residentes", label: "Residentes", icono: "users" },
       { id: "reservas", label: "Reservas", icono: "calendar" },
       { id: "visitantes", label: "Visitas", icono: "car" },
       { id: "parqueaderos", label: "PQ Moto / Carro", icono: "car" },
-      { id: "saldos", label: "Base de Saldos", icono: "wallet" },
       { id: "historico-copropietarios", label: "Histórico de Copropietarios", icono: "history", action: "abrirModalSelectorHistoricoCopropietarios()" },
-      { id: "pagosadmin", label: "Pagos Administración", icono: "receipt" },
-      { id: "documentos", label: "Documentos", icono: "folder" },
       { id: "pqr", label: "PQR", icono: "message-square", badge: "2" },
       { id: "comunicados", label: "Comunicados", icono: "megaphone" },
       { id: "votaciones", label: "Asamblea Ley 675", icono: "file-check-2", badge: "2" },
@@ -19533,7 +19578,6 @@ const MENUS_POR_ROL = {
       { id: "mascotas", label: "Mascotas", icono: "paw-print" },
       { id: "vista-copropietario", label: "Vista Copropietario (Apto)", icono: "user-check", action: "abrirModalSeleccionarAptoVistaCopropietario()" }
     ]
-
   },
 
   porteria: {
