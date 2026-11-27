@@ -2,15 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Manual Integral Operativo & Estrategia Comercial - LefacturamosPlus</title>
+<title>Manual Maestro Operativo & Estrategia Comercial - LefacturamosPlus</title>
 <style>
 @page {
     size: letter;
-    margin: 15mm 15mm 15mm 15mm;
-    @bottom-center {
-        content: "LefacturamosPlus • Edición Enterprise & Lector de Extractos Bancarios • Página " counter(page);
-        font-size: 8pt;
+    margin: 14mm 14mm 14mm 14mm;
+    @bottom-left {
+        content: "LefacturamosPlus • Suite Enterprise de Propiedad Horizontal & Lector de Extractos Bancarios";
+        font-size: 7.5pt;
         color: #64748b;
+    }
+    @bottom-right {
+        content: "Página " counter(page);
+        font-size: 8pt;
+        font-weight: bold;
+        color: #4c1d95;
     }
 }
 @media print {
@@ -22,24 +28,24 @@
 body {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
     color: #0f172a;
-    line-height: 1.5;
-    font-size: 9.5pt;
+    line-height: 1.48;
+    font-size: 9pt;
     background: #ffffff;
     margin: 0;
     padding: 0;
 }
-h1, h2, h3, h4 { color: #4c1d95; font-weight: 800; margin-top: 0; letter-spacing: -0.01em; }
+h1, h2, h3, h4 { color: #3b0764; font-weight: 800; margin-top: 0; letter-spacing: -0.01em; }
 h1 { font-size: 22pt; line-height: 1.2; }
-h2 { font-size: 14pt; margin-top: 14px; margin-bottom: 8px; border-bottom: 2px solid #8b5cf6; padding-bottom: 4px; color: #6d28d9; }
-h3 { font-size: 11pt; margin-top: 10px; margin-bottom: 5px; color: #5b21b6; }
-h4 { font-size: 10pt; margin-top: 8px; margin-bottom: 3px; color: #1e293b; }
-p { margin: 0 0 8px 0; text-align: justify; }
-ul, ol { margin: 0 0 10px 0; padding-left: 20px; }
-li { margin-bottom: 4px; }
+h2 { font-size: 13pt; margin-top: 14px; margin-bottom: 7px; border-bottom: 2px solid #8b5cf6; padding-bottom: 4px; color: #6d28d9; text-transform: uppercase; letter-spacing: 0.02em; }
+h3 { font-size: 10.5pt; margin-top: 11px; margin-bottom: 4px; color: #5b21b6; border-left: 3px solid #8b5cf6; padding-left: 6px; }
+h4 { font-size: 9.5pt; margin-top: 7px; margin-bottom: 2px; color: #1e293b; font-weight: 700; }
+p { margin: 0 0 7px 0; text-align: justify; }
+ul, ol { margin: 0 0 8px 0; padding-left: 20px; }
+li { margin-bottom: 3.5px; text-align: justify; }
 b, strong { color: #0f172a; }
 
 /* Callout Boxes */
-.box { border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 9pt; page-break-inside: avoid; }
+.box { border-radius: 6px; padding: 9px 12px; margin: 8px 0; font-size: 8.5pt; page-break-inside: avoid; }
 .box-tip { background: #f0fdf4; border-left: 4px solid #16a34a; color: #166534; }
 .box-note { background: #f8fafc; border-left: 4px solid #6366f1; color: #3730a3; }
 .box-warning { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
@@ -48,15 +54,15 @@ b, strong { color: #0f172a; }
 .box-plus { background: #f5f3ff; border: 1.5px solid #c4b5fd; color: #4c1d95; }
 
 /* Tables */
-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8.5pt; page-break-inside: avoid; }
-th, td { padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 8pt; page-break-inside: avoid; }
+th, td { padding: 5px 7px; border: 1px solid #cbd5e1; text-align: left; }
 th { background: #2e1065; color: #ffffff; font-weight: 700; }
 tr:nth-child(even) td { background: #f8fafc; }
 
-/* Steps */
-.step-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; margin-bottom: 8px; background: #ffffff; page-break-inside: avoid; }
-.step-num { display: inline-block; background: #7c3aed; color: #ffffff; font-weight: 800; font-size: 8pt; padding: 2px 7px; border-radius: 9999px; margin-right: 6px; }
-.badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; }
+/* Step Cards */
+.step-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; background: #ffffff; page-break-inside: avoid; }
+.step-num { display: inline-block; background: #7c3aed; color: #ffffff; font-weight: 800; font-size: 7.5pt; padding: 2px 6px; border-radius: 9999px; margin-right: 5px; }
+.badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 7pt; font-weight: 700; text-transform: uppercase; }
 .badge-purple { background: #ede9fe; color: #6d28d9; }
 .badge-gold { background: #fef3c7; color: #b45309; }
 .badge-emerald { background: #dcfce7; color: #15803d; }
@@ -71,209 +77,315 @@ tr:nth-child(even) td { background: #f8fafc; }
     page-break-after: always;
 }
 .cover-header { border-bottom: 4px solid #7c3aed; padding-bottom: 18px; }
-.cover-title { font-size: 26pt; font-weight: 900; margin: 14px 0 4px 0; color: #3b0764; line-height: 1.15; }
-.cover-subtitle { font-size: 13pt; color: #6d28d9; font-weight: 600; margin-bottom: 12px; }
+.cover-title { font-size: 27pt; font-weight: 900; margin: 14px 0 4px 0; color: #3b0764; line-height: 1.15; }
+.cover-subtitle { font-size: 13pt; color: #6d28d9; font-weight: 600; margin-bottom: 10px; }
 .cover-meta { font-size: 9pt; color: #64748b; margin-top: 15px; }
-.cover-body { margin: 35px 0; }
+.cover-body { margin: 25px 0; }
 .cover-footer { border-top: 1px solid #cbd5e1; padding-top: 12px; font-size: 8.5pt; color: #64748b; display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
 
-<!-- PORTADA -->
+<!-- ========================================================================= -->
+<!-- PORTADA                                                                   -->
+<!-- ========================================================================= -->
 <div class="cover">
   <div class="cover-header">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span class="badge badge-purple" style="font-size:10pt; padding:4px 12px;">MANUAL OFICIAL • EDICIÓN ENTERPRISE PLUS</span>
+      <span class="badge badge-purple" style="font-size:10pt; padding:4px 12px;">MANUAL MAESTRO • EDICIÓN ENTERPRISE PLUS</span>
       <span style="font-size:9pt; font-weight:700; color:#6d28d9;">LEFACTURAMOS PLUS</span>
     </div>
     <div class="cover-title">LEFACTURAMOS PLUS</div>
-    <div class="cover-subtitle">Manual Operativo Paso a Paso (4 Roles) & Estrategia Comercial de Alto Valor</div>
-    <p style="color:#475569; font-size:10pt;">La suite más avanzada de Propiedad Horizontal en Colombia: incluye Lector Inteligente de Extractos Bancarios DBPlus, Carga Masiva y Fusión 3-en-1, Mapeador Visual de Columnas, Menús Acordeón Cronológicos Ley 675 y Sistema de Reversión Segura de Saldos.</p>
+    <div class="cover-subtitle">Manual Exhaustivo de Operación Módulo a Módulo & Estrategia Comercial de Alto Valor</div>
+    <p style="color:#475569; font-size:9.5pt;">La guía definitiva de la plataforma tecnológica más avanzada de Propiedad Horizontal en Colombia: Lector Inteligente de Extractos Bancarios DBPlus, Carga Masiva & Fusión 3-en-1, Mapeador Visual de Columnas, Menús Acordeón Cronológicos Ley 675, Sistema de Reversión Segura por Snapshots y Estrategias Comerciales de Venta Consultiva para Consejos de Administración y Administradores Profesionales Multi-Copropiedad.</p>
   </div>
 
   <div class="cover-body">
     <div class="box box-plus">
-      <b>CARACTERÍSTICAS EXCLUSIVAS DE LA EDICIÓN PLUS DOCUMENTADAS EN ESTE MANUAL:</b>
-      <ol style="margin-top:6px; margin-bottom:2px;">
-        <li><b>Lector Inteligente de Extractos Bancarios:</b> Cruce algorítmico semafórico de extractos de cualquier banco colombiano para asentar pagos en 1 clic.</li>
-        <li><b>Carga Masiva & Fusión 3-en-1:</b> Fusión simultánea de base de inmuebles, censo de residentes y saldos contables iniciales.</li>
-        <li><b>Mapeador Visual de Columnas:</b> Migración universal de datos desde cualquier archivo Excel o software contable antiguo sin programar.</li>
-        <li><b>Menús Acordeón Dinámicos:</b> Organización cronológica de Creación de Edificio y Facturación Ley 675 en el menú lateral.</li>
-        <li><b>Reversión Segura de Facturación (Snapshot):</b> Restauración automática de cartera ante errores contables sin pérdida de datos.</li>
-        <li><b>Conciliación Bancaria Automática:</b> Saldo bancario disponible recalculado en tiempo real con cada pago a proveedor o caja menor.</li>
-      </ol>
+      <b style="font-size:9.5pt;">ÍNDICE GENERAL DEL MANUAL EXHAUSTIVO PLUS:</b>
+      <table style="margin-top:6px; margin-bottom:2px; font-size:8pt; border:none;">
+        <tr style="background:transparent;"><td style="border:none; width:50%;"><b>1. ROL SUPERADMINISTRADOR PLUS</b><br>• Panel Global Multi-Conjunto Enterprise Cloud<br>• Carga Masiva y Fusión 3-en-1 en segundos<br>• Mapeador Visual de Columnas sin programación<br>• Parametrización bancaria y pasarelas de pago</td>
+        <td style="border:none; width:50%;"><b>2. ROL ADMINISTRADOR PLUS</b><br>• Acordeón 1: Creación de Edificio (5 submódulos)<br>• Acordeón 2: Facturación Ley 675 (6 fases cronológicas)<br>• <b>Lector Inteligente de Extractos Bancarios DBPlus</b><br>• Egresos, Caja Menor y Saldo Banco en Tiempo Real<br>• Reversión Segura de Facturación (Snapshot)</td></tr>
+        <tr style="background:transparent;"><td style="border:none;"><b>3. ROL COPROPIETARIO / RESIDENTE PLUS</b><br>• Notificación instantánea de extracto conciliado<br>• Estado de cuenta con descuentos por pronto pago<br>• Facturación electrónica y recibos en Google Drive<br>• Pasarelas Bre-B (inmediata) y PSE</td>
+        <td style="border:none;"><b>4. ROL PORTERÍA / VIGILANCIA PLUS</b><br>• Minuta digital táctica y relevos blindados<br>• Escáner de Códigos QR de visitantes y vehículos<br>• Trazabilidad de paquetería y encomiendas<br>• Blindaje de Habeas Data legal (Ley 1581/2012)</td></tr>
+        <tr style="background:transparent;"><td style="border:none;"><b>5. VENTA AL CONSEJO DE ALTA GAMA</b><br>• El fin de la "plata flotante" no identificada<br>• Conciliación bancaria viva y auditoría total<br>• Manejo de las 8 objeciones de conjuntos grandes<br>• Discurso de cierre patrimonial en reunión</td>
+        <td style="border:none;"><b>6. VENTA AL ADMINISTRADOR PROFESIONAL</b><br>• De 3 días a 15 minutos en conciliación de bancos<br>• Escala multi-edificio: de 5 a 20 edificios sin personal extra<br>• Cómo presentar el costo para asunción en presupuesto<br>• Guión de demostración en vivo (Live Demo) de 10 minutos</td></tr>
+      </table>
     </div>
   </div>
 
   <div class="cover-footer">
-    <span><b>Autor:</b> Equipo de Arquitectura de Software Lefacturamos Plus</span>
+    <span><b>Publicación Oficial:</b> Arquitectura de Software Lefacturamos Plus</span>
     <span><b>Vigencia:</b> 2026 - 2027</span>
-    <span><b>Certificación:</b> Ley 675/2001, Ley 1581/2012 & Estándares DIAN</span>
+    <span><b>Certificación Legal:</b> Ley 675 de 2001, Ley 1581 de 2012 & Estándares DIAN</span>
   </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- MÓDULO 1: SUPERADMINISTRADOR PLUS                                         -->
+<!-- CAPÍTULO 1: SUPERADMINISTRADOR PLUS                                       -->
 <!-- ========================================================================= -->
 <div class="page-break"></div>
-<h2>1. Manual Paso a Paso del Superadministrador Plus</h2>
-<p>El <b>Superadministrador Plus</b> administra carteras a escala multi-copropiedad masiva, configurando conexiones bancarias, módulos avanzados de migración y auditoría global.</p>
+<h2>Capítulo 1: Manual Detallado del Superadministrador Plus</h2>
+<p>El <b>Superadministrador Plus</b> opera una consola empresarial diseñada para compañías de administración inmobiliaria y administradores de grandes complejos residenciales o comerciales. Permite aprovisionar copropiedades de 500+ unidades en minutos y auditar simultáneamente decenas de conjuntos.</p>
 
+<h3>1.1. Consola Global Multi-Conjunto Enterprise Cloud</h3>
 <div class="step-card">
-  <span class="step-num">Paso 1</span> <b>Acceso al Panel Global Multi-Conjunto Enterprise</b>
-  <p>Ingrese por la pestaña superior <b>«Superadmin»</b>. Al validar las credenciales maestras, se desplegará el panel con visión consolidada de todas las copropiedades activas en la nube, indicadores de recaudos y estado de pasarelas de pago (Bre-B, PSE, Wompi).</p>
+  <span class="step-num">Paso 1.1</span> <b>Acceso con Llave Maestra y Monitor de Infraestructura</b><br>
+  Ingrese por la pestaña superior <b>«Superadmin»</b>. La consola muestra de un vistazo todas las copropiedades conectadas a la base de datos distribuida, con contadores de inmuebles totales, recaudos globales del mes y salud de las conexiones bancarias.
 </div>
 
+<h3>1.2. Mapeador Visual de Columnas (Paso a Paso)</h3>
+<p>El <b>Mapeador Visual de Columnas</b> es una innovación exclusiva de LefacturamosPlus que resuelve el mayor dolor de la industria: <i>migrar desde softwares antiguos o Excels desorganizados sin contratar digitadores</i>.</p>
+
 <div class="step-card">
-  <span class="step-num">Paso 2</span> <b>Submenú Acordeón «Creación de Edificio»</b>
-  <p>En el menú lateral del Superadministrador, el acordeón <b>«Creación de Edificio»</b> brinda las 5 herramientas maestras de despliegue:</p>
+  <span class="step-num">Paso 1.2.1</span> <b>Apertura de la Interfaz del Mapeador</b><br>
+  En el menú lateral, bajo el acordeón <b>«Creación de Edificio»</b>, haga clic en <b>«Mapeador Visual de Columnas»</b> (o desde el modal de edición de copropiedad).
+</div>
+<div class="step-card">
+  <span class="step-num">Paso 1.2.2</span> <b>Carga del Archivo Origen</b><br>
+  Arrastre el archivo Excel (<code>.xlsx</code> o <code>.xls</code>) o <code>.csv</code> que le entregó la administración anterior. El sistema lee en memoria los nombres de todas las columnas del archivo sin importar el desorden (ej: <i>"APTO_NO", "NOM_PROPIETARIO", "COEF_PORC", "SALDO_OCTUBRE", "CELULAR_1"</i>).
+</div>
+<div class="step-card">
+  <span class="step-num">Paso 1.2.3</span> <b>Asignación Gráfica de Correspondencias</b><br>
+  En la pantalla verá dos columnas: a la izquierda, los campos requeridos por la base de datos de Lefacturamos; a la derecha, selectores desplegables con las columnas detectadas en su archivo:
   <ul>
-    <li><b>Crear Nueva Copropiedad:</b> Formulario institucional con asignación de código, NIT, dirección, banco, cuenta y saldo bancario inicial.</li>
-    <li><b>Carga Masiva & Fusión 3-en-1:</b> Permite arrastrar los archivos de datos brutos del edificio y fusionar en segundos inmuebles, residentes y cartera.</li>
-    <li><b>Mapeador Visual de Columnas:</b> Interfaz gráfica para asociar las columnas del Excel de origen (apto, nombre, saldo, cuota) con los campos internos de la base de datos.</li>
-    <li><b>Configurar Edificio Actual:</b> Permite modificar en caliente la tasa de mora Ley 675, correos de administración y datos del representante legal.</li>
-    <li><b>Apartamentos y Coeficientes:</b> Verificación de que la suma de coeficientes de copropiedad cuadre exactamente al <b>100.000%</b>.</li>
+    <li><b>Campo Inmueble / Apto:</b> Asocie la columna correspondiente (ej: <code>APTO_NO</code> o <code>UNIDAD</code>).</li>
+    <li><b>Campo Propietario / Residente:</b> Asocie la columna del titular (ej: <code>NOMBRE_COMPLETO</code>).</li>
+    <li><b>Campo Coeficiente (%):</b> Asocie la columna de coeficientes (ej: <code>COEF</code> o <code>PORCENTAJE</code>).</li>
+    <li><b>Campo Saldo Inicial / Cartera:</b> Asocie la deuda acumulada del corte anterior.</li>
+    <li><b>Campo Teléfono / Correo:</b> Datos para el envío automático de facturación.</li>
   </ul>
 </div>
-
 <div class="step-card">
-  <span class="step-num">Paso 3</span> <b>Supervisión del Lector de Extractos Bancarios Global</b>
-  <p>Desde el acordeón de <b>Facturación</b>, el Superadministrador puede acceder a la herramienta de conciliación de extractos para verificar que ningún abono o consignación quede como "pago flotante" sin identificar en las cuentas bancarias de las copropiedades.</p>
+  <span class="step-num">Paso 1.2.4</span> <b>Validación y Procesamiento Instantáneo</b><br>
+  Presione <b>«Validar y Aplicar Mapeo»</b>. El sistema analiza la coherencia de datos, verifica que la sumatoria de coeficientes cuadre exactamente al <b>100.000%</b> (alertando si hay faltantes) e inserta todas las unidades en la base de datos en menos de 3 segundos.
 </div>
+
+<h3>1.3. Carga Masiva & Fusión 3-en-1</h3>
+<p>Permite fusionar en una sola operación tres fuentes de datos críticas que normalmente están desarticuladas:</p>
+<ol>
+  <li><b>Archivo 1 (Padrón Inmobiliario):</b> Lista de apartamentos, parqueaderos privados, cuartos útiles y coeficientes de copropiedad según escritura de reglamento.</li>
+  <li><b>Archivo 2 (Censo de Residentes):</b> Directorio de propietarios, arrendatarios, teléfonos de emergencia y correos para notificación formal.</li>
+  <li><b>Archivo 3 (Balance de Saldos de Cartera):</b> Cartera histórica vencida por unidad para transferir los saldos pendientes sin perder un solo peso.</li>
+</ol>
+<p>El motor de fusión procesa los tres archivos cruzándolos por la clave única del apartamento, creando una base de datos consolidada, limpia y libre de inconsistencias.</p>
 
 <!-- ========================================================================= -->
-<!-- MÓDULO 2: ADMINISTRADOR PLUS                                              -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-<h2>2. Manual Paso a Paso del Administrador Plus</h2>
-<p>El <b>Administrador Plus</b> cuenta con las herramientas más potentes del mercado para reducir el tiempo contable de días a minutos.</p>
-
-<div class="step-card">
-  <span class="step-num">Paso 1</span> <b>Ingreso con Autodetección y Formato de Cédula</b>
-  <p>Al digitar la cédula, el sistema inserta los puntos automáticos y autocompleta el nombre del administrador. Digite su contraseña para abrir el <b>Panel de Control Plus</b>.</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 2</span> <b>Uso del Submenú Acordeón «Facturación» (Ley 675)</b>
-  <p>En el menú vertical izquierdo, haga clic sobre el acordeón <b>«Facturación»</b> (con distintivo oficial Ley 675). Desplegará la secuencia cronológica de 6 pasos:</p>
-  <ol>
-    <li><b>1. Planilla Pagos, Notas D/C (Cancelaciones):</b> Registro de abonos recibidos por ventanilla, transferencias bancarias directas y aplicación de notas débito o crédito con formato contable oficial.</li>
-    <li><b>2. Lector Extracto Bancario (DBPlus):</b> Carga masiva de extractos bancarios con conciliación algorítmica automática <i>(ver explicación detallada abajo)</i>.</li>
-    <li><b>3. Base de Saldos & Cartera:</b> Matriz consolidada de saldos anteriores, intereses de mora devengados y estado de cobro jurídico.</li>
-    <li><b>4. Facturación y Liquidación Mensual:</b> Emisión masiva de la facturación del nuevo período contable con generación automática de copia de seguridad (Snapshot).</li>
-    <li><b>5. Listados y Facturas Oficiales:</b> Descarga en bloque de estados de cuenta individuales en PDF y listados consolidados.</li>
-    <li><b>6. Devolver Saldos Mes Anterior:</b> Botón de emergencia para revertir la liquidación si se detecta un error, devolviendo la cartera al estado previo sin corromper la contabilidad.</li>
-  </ol>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 3</span> <b>Operación del Lector Inteligente de Extractos Bancarios</b>
-  <p>Esta es la joya tecnológica de LefacturamosPlus. Siga estos pasos:</p>
-  <ul>
-    <li>Haga clic en <b>«2. Lector Extracto Bancario»</b> en el menú acordeón de Facturación.</li>
-    <li>Arrastre el archivo del extracto bancario del mes (Excel, CSV, TXT o PDF de Bancolombia, Davivienda, Caja Social, etc.).</li>
-    <li>El motor de inteligencia artificial cruza las descripciones, referencias y valores contra el censo de propietarios y asigna un semáforo de confianza:
-      <ul>
-        <li><b style="color:#16a34a;">🟢 Verde (100% Confianza):</b> Apto y titular identificados plenamente. Listo para asentar.</li>
-        <li><b style="color:#d97706;">🟡 Amarillo (Coincidencia Parcial):</b> Coincide el valor o referencia aproximada. Permite seleccionar el apartamento en un menú desplegable.</li>
-        <li><b style="color:#dc2626;">🔴 Rojo (En Suspenso):</b> Pago no identificado. Queda registrado como consignación por aclarar para no descuadrar el banco.</li>
-      </ul>
-    </li>
-    <li>Haga clic en <b>«Asentar Pagos y Conciliar en DBPlus»</b>: En un segundo se generan los recibos de caja, se actualizan los saldos de los apartamentos y se genera el archivo Excel de auditoría.</li>
-  </ul>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 4</span> <b>Gestión de Pagos de Administración con Saldo Bancario Automático</b>
-  <p>En el módulo <b>«Pagos Administración»</b>, la tarjeta <b>SALDO EN BANCO</b> calcula y exhibe el saldo disponible en tiempo real según la fórmula matemática:
-  <br>$$	ext{Saldo Bancario} = 	ext{Saldo Inicial / Recaudos} - 	ext{Total Egresos Registrados}$$
-  Al presionar <i>«+ Montar Pago de Administración»</i>, puede registrar egresos de mantenimiento, aseo, vigilancia o <b>Caja Menor</b>, adjuntando soporte y garantía. El botón <i>«Exportar a Excel»</i> genera el informe contable oficial con un clic.</p>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MÓDULO 3 & 4: COPROPIETARIO Y PORTERÍA PLUS                               -->
+<!-- CAPÍTULO 2: ADMINISTRADOR PLUS                                            -->
 <!-- ========================================================================= -->
 <div class="page-break"></div>
-<h2>3. Copropietario y Portería en LefacturamosPlus</h2>
+<h2>Capítulo 2: Manual Detallado del Administrador Plus</h2>
+<p>El Administrador Plus dispone de un menú lateral estructurado con <b>submenús acordeón desplegables</b> que guían su operación diaria y mensual en estricto orden cronológico conforme a la Ley 675 de 2001.</p>
 
-<h3>Portal del Copropietario Plus:</h3>
+<h3>2.1. Submenú Acordeón «Creación de Edificio» (5 Submódulos)</h3>
+<p>Diseñado para gobernar la estructura inmobiliaria y legal de la copropiedad:</p>
 <ul>
-  <li><b>Notificación Inmediata de Conciliación:</b> Cuando el administrador asienta el extracto bancario con el Lector Inteligente, el copropietario ve su recibo de caja expedido y su cuenta a paz y salvo en tiempo real.</li>
-  <li><b>Integración Nativa Bre-B y PSE:</b> Pagos interbancarios inmediatos con confirmación digital sin necesidad de enviar pantallazos por WhatsApp a la administración.</li>
-  <li><b>Expediente Digital en Google Drive:</b> Consulta histórica de facturas, paz y salvos y actas de asamblea debidamente indexadas.</li>
+  <li><b>1. Crear Nueva Copropiedad:</b> Registro de nuevos edificios con asignación de código, NIT, cuenta bancaria y saldo inicial.</li>
+  <li><b>2. Carga Masiva & Fusión 3-en-1:</b> Módulo de fusión rápida de apartamentos, residentes y saldos.</li>
+  <li><b>3. Mapeador Visual de Columnas:</b> Herramienta gráfica de homologación de columnas Excel.</li>
+  <li><b>4. Configurar Edificio Actual:</b> Edición de tasas de mora, datos del representante legal y cuentas bancarias.</li>
+  <li><b>5. Apartamentos y Coeficientes:</b> Matriz completa de unidades con áreas privadas, coeficientes ponderados y edición rápida.</li>
 </ul>
 
-<h3>Puesto de Control & Portería Plus:</h3>
-<ul>
-  <li><b>Lector de Códigos QR Dinámicos:</b> Escaneo veloz de autorizaciones emitidas por residentes para acceso express de visitas y contratistas.</li>
-  <li><b>Minuta Digital Blindada:</b> Registro digital inmodificable de relevos de turno, novedades perimetrales y llamadas de emergencia.</li>
-  <li><b>Trazabilidad de Encomiendas:</b> Registro de guías de mensajería con notificación push al residente.</li>
-</ul>
+<h3>2.2. Submenú Acordeón «Facturación» Ley 675 (6 Fases Cronológicas)</h3>
+<p>Este módulo representa la columna vertebral contable de LefacturamosPlus. Cada mes, el administrador sigue este ciclo secuencial garantizando que la facturación salga perfecta y sin reclamos:</p>
 
-<!-- ========================================================================= -->
-<!-- MÓDULO 5: ESTRATEGIA DE VENTA AL CONSEJO DE ADMINISTRACIÓN (PLUS)         -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-<h2>5. Cómo Vender LefacturamosPlus a un Consejo de Administración</h2>
-<p>Los Consejos de Administración de edificios de estrato medio-alto y conjuntos cerrados de gran escala buscan <b>garantías absolutas de que los dineros del conjunto están blindados contra fraudes, descuidos o desorden contable</b>.</p>
-
-<h3>Argumentario Maestro de Venta para Consejos Exigentes:</h3>
 <table>
   <thead>
     <tr>
-      <th style="width:25%;">Pilar de Venta</th>
-      <th style="width:40%;">El Riesgo con Otros Programas</th>
-      <th style="width:35%;">La Ventaja Insuperable de LefacturamosPlus</th>
+      <th style="width:20%;">Paso Cronológico</th>
+      <th style="width:35%;">Función Operativa en el Sistema</th>
+      <th style="width:45%;">Impacto Contable & Legal (Ley 675)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><b>Cero Pagos Flotantes</b></td>
-      <td>Miles de pesos quedan en "consignaciones por identificar" durante meses porque nadie revisa el extracto a tiempo.</td>
-      <td><b>Lector de Extractos DBPlus:</b> Cruce automático diario o mensual. Cada peso que entra al banco tiene nombre y apartamento.</td>
+      <td><b>1. Planilla Pagos, Notas D/C</b></td>
+      <td>Registro previo de abonos por ventanilla, cancelaciones anticipadas, notas crédito por reclamos justificados o notas débito por multas de convivencia.</td>
+      <td>Garantiza que la liquidación mensual incorpore todos los abonos y descuentos antes de calcular intereses moratorios.</td>
     </tr>
     <tr>
-      <td><b>Seguridad Contable Total</b></td>
-      <td>Si un contador liquida mal un mes en programas viejos, daña el histórico y toca pagar horas extras para arreglarlo.</td>
-      <td><b>Botón de Reversión Segura (Snapshot):</b> Si hay un error, se regresa al estado previo en un clic con respaldo blindado.</td>
+      <td><b>2. Lector Extracto Bancario (DBPlus)</b></td>
+      <td>Carga del extracto bancario en Excel, CSV, TXT o PDF para cruce algorítmico y semafórico de consignaciones contra los apartamentos.</td>
+      <td>Elimina la "plata flotante", emite automáticamente los recibos de caja DBPlus y actualiza los saldos en 1 clic.</td>
     </tr>
     <tr>
-      <td><b>Auditoría Bancaria Viva</b></td>
-      <td>El Consejo no sabe cuánto hay realmente en el banco hasta que el extracto llega al mes siguiente.</td>
-      <td><b>Saldo Bancario en Vivo:</b> El sistema descuenta cada cheque, transferencia o gasto de caja menor al instante.</td>
+      <td><b>3. Base de Saldos & Cartera</b></td>
+      <td>Auditoría general de cartera: revisión de unidades al día vs unidades en mora, discriminando cuotas ordinarias, extraordinarias e intereses.</td>
+      <td>Permite clasificar cartera prejurídica y jurídica con mérito ejecutivo (Arts. 48 y 49 Ley 675).</td>
     </tr>
     <tr>
-      <td><b>Migración sin Traumas</b></td>
-      <td>Los conjuntos no cambian de software por el miedo a perder la cartera histórica acumulada en años.</td>
-      <td><b>Fusión 3-en-1 & Mapeador:</b> Migramos cualquier base de datos de Excel o software viejo en minutos y sin errores.</td>
+      <td><b>4. Facturación & Liquidación Mensual</b></td>
+      <td>Generación de la nueva facturación del período con aplicación de cuota fija, cálculo de mora y <b>guardado automático de Snapshot de seguridad</b>.</td>
+      <td>Crea las cuentas de cobro del mes y genera un punto de restauración seguro antes de cerrar el ciclo.</td>
+    </tr>
+    <tr>
+      <td><b>5. Listados & Facturas Oficiales</b></td>
+      <td>Generación masiva y exportación en PDF de todas las facturas individuales y listados consolidados para archivo de revisoría y cartelera.</td>
+      <td>Sincroniza los documentos oficiales con Google Drive para que los residentes los descarguen al instante.</td>
+    </tr>
+    <tr>
+      <td><b>6. Devolver Saldos Mes Anterior</b></td>
+      <td>Botón de emergencia para revertir la facturación si se detectó un error humano o una cuota extraordinaria mal digitada.</td>
+      <td>Restaura la cartera al snapshot del mes anterior sin perder los abonos asentados y sin alterar el histórico contable.</td>
     </tr>
   </tbody>
 </table>
 
-<div class="box box-sale">
-  <b>Discurso de Cierre Irresistible ante el Consejo:</b><br>
-  <i>«Distinguidos miembros del Consejo: Administrar una copropiedad sin un software de conciliación bancaria es como manejar de noche con las luces apagadas. Con <b>LefacturamosPlus</b>, este conjunto da el salto tecnológico que exige la Ley 675. Nuestro <b>Lector Inteligente de Extractos</b> garantiza que no habrá un solo centavo sin conciliar; el Consejo tendrá acceso a un tablero donde el saldo bancario coincide con la realidad; y los propietarios contarán con la plataforma más moderna de Colombia. Adoptar LefacturamosPlus no es un gasto: es la mejor póliza de tranquilidad y valorización para su patrimonio.»</i>
+<!-- ========================================================================= -->
+<!-- SECCIÓN ESTRELLA: LECTOR DE EXTRACTOS BANCARIOS                           -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h3>2.3. Operación Paso a Paso del Lector Inteligente de Extractos Bancarios</h3>
+<p>El <b>Lector Inteligente de Extractos</b> es la innovación más potente de LefacturamosPlus. Automatiza lo que antes tomaba días de revisión manual en extractos de Bancolombia, Davivienda, Banco de Bogotá, Colpatria, Caja Social o cualquier banco de Colombia.</p>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.1</span> <b>Descarga del Extracto Bancario en su Portal Bancario</b><br>
+  Ingrese a la sucursal virtual del banco del edificio y descargue el extracto de movimientos del mes en formato Excel (<code>.xlsx</code> / <code>.xls</code>), CSV o texto plano.
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.2</span> <b>Carga del Archivo en LefacturamosPlus</b><br>
+  En el menú acordeón de <b>Facturación</b>, seleccione <b>«2. Lector Extracto Bancario»</b>. Arrastre el archivo a la zona de carga (dropzone). El motor algorítmico lee cada línea bancaria: fecha, descripción, número de referencia, canal (corresponsal, sucursal, PSE, transferencia) y valor depositado.
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.3</span> <b>Clasificación Semafórica Inteligente</b><br>
+  El motor cruza los datos con la base de propietarios y clasifica cada transacción con un semáforo de confianza:
+  <ul>
+    <li><b style="color:#16a34a;">🟢 Semáforo Verde (100% de Confianza):</b> El algoritmo identificó con certeza el número de apartamento en la referencia o en la descripción (ej: <i>"DEP BR APTO 0402 CARLOS M"</i> o coincidencia de cédula). El pago está listo para ser asentado sin intervención del usuario.</li>
+    <li><b style="color:#d97706;">🟡 Semáforo Amarillo (Coincidencia Parcial / Sugerencia):</b> El valor coincide exactamente con la cuota de administración de una unidad que debe ese valor, pero la referencia bancaria no trae el número de apartamento claro. El sistema sugiere el apartamento más probable y le permite al administrador confirmarlo o cambiarlo en un menú desplegable en 1 segundo.</li>
+    <li><b style="color:#dc2626;">🔴 Semáforo Rojo (En Suspenso / Pago No Identificado):</b> Depósitos sin referencia alguna o transferencias con nombres de terceros desconocidos. El sistema lo marca como <i>«En Suspenso»</i> para que quede registrado contablemente (cuadrando el banco) pero sin abonarlo a ningún apartamento hasta que el residente presente el soporte.</li>
+  </ul>
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.4</span> <b>Asentamiento en 1 Clic en DBPlus y Emisión de Recibos de Caja</b><br>
+  Revise el resumen: <i>"45 pagos identificados (95% verde), 2 amarillos confirmados, 1 rojo en suspenso"</i>. Haga clic en el botón <b>«Asentar Pagos y Conciliar en DBPlus»</b>. En menos de 2 segundos, el sistema:
+  <ol>
+    <li>Genera los archivos oficiales DBPlus (<code>BASEPAG.DBF</code>, <code>BASEPAG1.DBF</code>, <code>BASERC.DBF</code>).</li>
+    <li>Genera los Recibos de Caja consecutivos oficiales en PDF.</li>
+    <li>Resta la deuda en la cartera de cada apartamento y actualiza su estado a Paz y Salvo.</li>
+    <li>Genera un informe consolidado en Excel listo para descargar y archivar.</li>
+  </ol>
+</div>
+
+<h3>2.4. Saldo Bancario 100% Automático en Pagos de Administración</h3>
+<p>En el módulo <b>«Pagos Administración»</b>, la tarjeta <b>SALDO EN BANCO</b> opera sin botón de ajuste manual:</p>
+<div class="box box-note">
+  <b>Fórmula de Conciliación Bancaria Continua:</b><br>
+  $$	ext{Saldo Disponible en Banco} = 	ext{Saldo Inicial de Cuenta} + 	ext{Total Recaudos por Extracto/Bre-B} - 	ext{Total Egresos Registrados}$$
+  Al registrar pagos a proveedores de vigilancia, aseo, mantenimiento o gastos de <b>Caja Menor</b>, el saldo bancario descuenta el monto al instante. Esto permite que el Consejo y el Administrador conozcan en todo momento el flujo de caja real sin tener que esperar el extracto bancario del mes siguiente.
 </div>
 
 <!-- ========================================================================= -->
-<!-- MÓDULO 6: ESTRATEGIA DE VENTA AL ADMINISTRADOR PROFESIONAL (PLUS)         -->
+<!-- CAPÍTULO 3 & 4: COPROPIETARIO Y PORTERÍA PLUS                             -->
 <!-- ========================================================================= -->
 <div class="page-break"></div>
-<h2>6. Cómo Vender LefacturamosPlus al Administrador Profesional</h2>
-<p>El Administrador Profesional que gestiona 5, 10 o más edificios vive atrapado en la rutina operativa. <b>LefacturamosPlus es su multiplicador de rentabilidad y escala.</b></p>
-
-<h3>Cómo LefacturamosPlus Multiplica la Rentabilidad del Administrador:</h3>
+<h2>Capítulo 3: Portal del Copropietario / Residente Plus</h2>
+<p>El portal para copropietarios en LefacturamosPlus ofrece una experiencia moderna de banca digital y autogestión:</p>
 <ul>
-  <li><b>De 3 Días a 15 Minutos en Conciliación Bancaria:</b> Cruzar a mano el extracto de un edificio de 120 apartamentos toma entre 6 y 8 horas. Con el Lector de Extractos de LefacturamosPlus toma menos de 3 minutos por edificio.</li>
-  <li><b>Capacidad de Escala Multi-Edificio:</b> Un administrador que hoy está al límite con 6 edificios puede administrar fácilmente 15 o 20 con el mismo esfuerzo y personal administrativo.</li>
-  <li><b>Cero Miedo a los Errores de Liquidación:</b> Gracias al sistema de Reversión Segura con Snapshots, nunca más tendrá que trasnochar corrigiendo notas débito o intereses mal liquidados.</li>
-  <li><b>Ventaja Competitiva en Licitaciones:</b> Cuando el administrador se presenta a una convocatoria de administración y muestra LefacturamosPlus con su lector de extractos y app móvil, gana la licitación frente a competidores que ofrecen métodos obsoletos.</li>
+  <li><b>Acreditación Instantánea por Extracto:</b> Cuando el administrador asienta el extracto bancario con el Lector Inteligente, el copropietario recibe notificación automática en su teléfono y puede visualizar de inmediato su <b>Recibo de Caja Oficial</b> expedido y su cuenta a <b>Paz y Salvo</b>.</li>
+  <li><b>Liquidación con Descuento Dinámico:</b> Visualización del valor neto a pagar con descuento de pronto pago hasta el día 10 o 15, y el valor ordinario con desglose de cuotas e intereses posteriores.</li>
+  <li><b>Pagos Inmediatos Bre-B & PSE:</b> Conexión nativa con el sistema de pagos inmediatos del Banco de la República (Bre-B) para transferir entre cualquier entidad financiera colombiana con acreditación en segundos y costo transaccional cero.</li>
+  <li><b>Expediente Digital Permanente en Google Drive:</b> Historial completo de facturas, recibos de caja, paz y salvos y actas de asambleas pasadas siempre disponibles para descargar en PDF.</li>
+  <li><b>Radicación de PQRs con Soporte Fotográfico:</b> Permite adjuntar fotos de humedades, daños en zonas comunes o sugerencias con trazabilidad de fecha y hora formal de respuesta administrativa.</li>
 </ul>
 
+<hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;">
+
+<h2>Capítulo 4: Puesto de Control & Portería Plus 24/7</h2>
+<p>Transforma la portería en una terminal de seguridad tecnológica de alto nivel:</p>
+<ul>
+  <li><b>Escáner de Códigos QR de Acceso Dinámico:</b> Los residentes generan códigos QR desde su app con validez temporal para sus invitados, contratistas o domiciliarios. El guarda acerca el código a la cámara web o lector de mano y el sistema autoriza el ingreso con foto y timbre auditivo en 1 segundo.</li>
+  <li><b>Minuta Digital Blindada con Firma de Relevo:</b> Registro digital inmodificable de rondas perimetrales, novedades de citofonía y cambio de guardia con entrega de inventario. Evita el extravío o alteración de los libros de minuta en papel tradicionales.</li>
+  <li><b>Módulo de Encomiendas con Código de Retiro:</b> Cada paquete recibido genera un código de seguridad de 4 dígitos enviado al celular del residente. Para retirar el paquete de portería, el residente dicta su código, garantizando cero pérdidas de encomiendas.</li>
+  <li><b>Cumplimiento de la Ley de Habeas Data (Ley 1581 de 2012):</b> La interfaz de portería tiene bloqueado por código el acceso a estados de cuenta, carteras o saldos de los residentes, evitando filtraciones ilegales de información financiera protegida.</li>
+</ul>
+
+<!-- ========================================================================= -->
+<!-- CAPÍTULO 5: VENDER PLUS AL CONSEJO DE ADMINISTRACIÓN                      -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h2>Capítulo 5: Estrategia de Venta de LefacturamosPlus a Consejos Exigentes</h2>
+<p>Los Consejos de Administración de edificios grandes (100 a 500+ apartamentos) o de estratos 4, 5 y 6 administran presupuestos anuales de cientos de millones de pesos. <b>No compran "software barato"; compran tranquilidad patrimonial, blindaje contra fraudes y cero disputas vecinales</b>.</p>
+
+<h3>5.1. El Dolor Financiero Oculto: La "Plata Flotante"</h3>
+<div class="box box-warning">
+  <b>El Mayor Riesgo Contable en Grandes Conjuntos:</b><br>
+  En una copropiedad de 150 unidades, entre 10 y 25 residentes consignan mensualmente en corresponsales bancarios sin colocar el número de apartamento en la colilla de consignación. Esos millones de pesos quedan registrados en el banco en una cuenta puente de <i>"Consignaciones por Identificar"</i> durante meses o años.<br>
+  Esto genera dos problemas gravísimos:
+  <ol>
+    <li>Al apartamento que pagó le siguen cobrando intereses moratorios injustificados, lo que provoca discusiones acaloradas en asamblea y amenazas de demandas.</li>
+    <li>El Revisor Fiscal y el Consejo no pueden certificar con veracidad si el dinero en bancos coincide con la cartera real del conjunto.</li>
+  </ol>
+  <b>La Solución LefacturamosPlus:</b> El <b>Lector Inteligente de Extractos</b> cruza diariamente o mensualmente el 100% de los depósitos, eliminando la plata flotante y cruzando los pagos en minutos.
+</div>
+
+<h3>5.2. Los 4 Pilares de Venta Insuperables de LefacturamosPlus para el Consejo</h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:25%;">Pilar de Venta Plus</th>
+      <th style="width:35%;">El Problema con Otros Programas</th>
+      <th style="width:40%;">La Solución Definitiva de LefacturamosPlus</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Cero Descuadres Bancarios</b></td>
+      <td>El banco dice que hay $80 millones pero el software contable muestra $65 millones porque los egresos no se concilian al día.</td>
+      <td><b>Saldo en Banco en Vivo:</b> El saldo bancario se recalcula de forma automática con cada pago a proveedor o egreso registrado.</td>
+    </tr>
+    <tr>
+      <td><b>Reversión Segura (Snapshots)</b></td>
+      <td>Si el contador liquida mal un mes, desbarata el histórico y corregirlo cuesta semanas de reproceso contable.</td>
+      <td><b>Punto de Restauración Blindado:</b> Antes de cada liquidación mensual, el sistema toma una copia de seguridad que permite revertir en 1 clic.</td>
+    </tr>
+    <tr>
+      <td><b>Migración sin Pérdida de Datos</b></td>
+      <td>El Consejo no cambia de software viejo por temor a perder la cartera histórica o demorarse 2 meses en el empalme.</td>
+      <td><b>Mapeador Visual & Fusión 3-en-1:</b> Migramos cualquier archivo de Excel o programa viejo en menos de 24 horas y con exactitud del 100.000%.</td>
+    </tr>
+    <tr>
+      <td><b>Cultura de Pago con Bre-B</b></td>
+      <td>Los bancos cobran altas comisiones por botón de pago o recaudos por ventanilla.</td>
+      <td><b>Pagos Inmediatos sin Costo:</b> Integración con Bre-B para transferencias instantáneas entre cualquier banco sin cobros bancarios abusivos.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>5.3. Discurso de Cierre Irresistible ante el Consejo de Administración</h3>
+<div class="box box-sale">
+  <i>«Distinguidos miembros del Consejo de Administración: Como consejeros, la ley colombiana les exige responder por la debida diligencia en el cuidado de los recursos de todos los propietarios. Hoy en día, ningún edificio moderno puede permitirse que la administración pase 10 días cruzando a mano un extracto bancario con una planilla de Excel.<br><br>
+  Hoy les presentamos <b>LefacturamosPlus</b>, la plataforma enterprise de propiedad horizontal más avanzada del país. LefacturamosPlus cuenta con un <b>Lector Inteligente de Extractos Bancarios</b> que lee el archivo de su banco y concilia automáticamente cada depósito con su respectivo apartamento en 2 segundos; el saldo bancario del edificio se refleja en tiempo real ante el Consejo; y contamos con un sistema de <b>Reversión Segura por Snapshots</b> que protege la contabilidad contra cualquier error humano.<br><br>
+  Implementar LefacturamosPlus no solo moderniza el conjunto y valoriza sus apartamentos; le otorga al Consejo la certeza matemática y legal de que cada peso de la copropiedad está plenamente justificado y auditado. ¿Autorizan al presidente del Consejo para que firmemos la orden de implementación esta misma noche?»</i>
+</div>
+
+<!-- ========================================================================= -->
+<!-- CAPÍTULO 6: VENDER PLUS AL ADMINISTRADOR PROFESIONAL                      -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h2>Capítulo 6: Cómo Vender LefacturamosPlus al Administrador Profesional</h2>
+<p>El Administrador Profesional que maneja entre 5 y 20 copropiedades tiene un límite físico: <b>el tiempo que le toma cerrar el mes en cada edificio</b>. LefacturamosPlus es su herramienta de apalancamiento masivo.</p>
+
+<h3>6.1. La Transformación de Productividad del Administrador Plus</h3>
+<ul>
+  <li><b>De 3 Días a 15 Minutos en Conciliación de Bancos:</b> En un edificio de 200 apartamentos, cruzar manualmente el extracto bancario comparando referencias contra recibos toma entre 8 y 10 horas de trabajo tedioso. Con el Lector de Extractos de LefacturamosPlus toma <b>menos de 3 minutos</b> por copropiedad.</li>
+  <li><b>Multiplicación de la Capacidad de Gestión:</b> Un administrador que hoy está colapsado con 6 edificios puede asumir 15 o 20 copropiedades con el mismo equipo de auxiliares, triplicando su facturación mensual por honorarios de administración.</li>
+  <li><b>Cero Pánico a Liquidar Errores:</b> Gracias al botón <b>«Devolver Saldos Mes Anterior»</b>, si un propietario pagó a última hora o se digitó mal una cuota extraordinaria, el administrador revierte la facturación al snapshot de seguridad en 1 clic y vuelve a facturar en 30 segundos.</li>
+  <li><b>Ventaja Competitiva en Licitaciones:</b> Cuando el administrador se presenta a una convocatoria de administración y muestra a los consejeros la plataforma LefacturamosPlus con su lector de extractos y app móvil, gana la licitación frente a administradores tradicionales que siguen trabajando con hojas de Excel desarticuladas.</li>
+</ul>
+
+<h3>6.2. Guión de Demostración en Vivo (Live Demo) de 10 Minutos</h3>
+<p>La mejor forma de vender LefacturamosPlus a un administrador es no hablarle de teoría, sino pedirle un archivo de extracto bancario real y mostrárselo funcionando:</p>
+
 <div class="box box-tip">
-  <b>Guión de Cierre Rápido con el Administrador:</b><br>
-  <i>«Colega administrador: ¿Cuánto vale tu tranquilidad y tu tiempo libre a fin de mes? Si multiplicas las horas que pasas cruzando pagos del banco por los edificios que manejas, estás perdiendo miles de horas al año. LefacturamosPlus hace ese trabajo por ti con su Lector de Extractos algorítmico y sus menús acordeón Ley 675. Permíteme cargarte el extracto de este mes de tu edificio más grande; si en 5 minutos no te deja conciliado el 95% de los pagos, no me compras. Pero cuando lo veas funcionar, vas a preguntarte cómo pudiste trabajar sin él.»</i>
+  <b>Estructura de la Demostración Rápida de Alto Impacto:</b><br>
+  <b>Minuto 1 a 3 (El Dolor):</b> <i>«Colega, ábreme el extracto bancario de tu edificio más grande. ¿Cuántas páginas tiene? ¿Cuántas horas te toma a fin de mes cruzar esas 150 transferencias una por una?»</i><br>
+  <b>Minuto 4 a 6 (La Magia del Lector):</b> <i>«Mira esto: arrastramos tu archivo aquí en LefacturamosPlus. Fíjate cómo el algoritmo en 3 segundos te colorea en verde el 95% de los apartamentos identificados y te marca en amarillo los dos que tienen dudas. Con un clic le damos 'Asentar Pagos'. Listo: todos los recibos de caja emitidos, la cartera actualizada y el saldo bancario cuadrado.»</i><br>
+  <b>Minuto 7 a 9 (El Cierre de Tiempo):</b> <i>«Lo que te costaba 8 horas de trasnocho te acaba de tomar 2 minutos. Si multiplicas eso por los 8 edificios que manejas, te acabo de devolver 4 días libres al mes. ¿Cuánto vale eso para tu salud y tu familia?»</i><br>
+  <b>Minuto 10 (La Oferta):</b> <i>«El software no lo pagas tú de tu bolsillo: lo incluye el edificio dentro de sus gastos de administración porque ahorra fotocopias y mensajería. Te entregamos la propuesta lista para que el Consejo la apruebe esta semana.»</i>
 </div>
 
 </body>

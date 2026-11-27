@@ -2,15 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Manual Integral Operativo & Guía Comercial - Lefacturamos</title>
+<title>Manual Maestro Operativo & Guía Comercial - Lefacturamos</title>
 <style>
 @page {
     size: letter;
-    margin: 15mm 15mm 15mm 15mm;
-    @bottom-center {
-        content: "Lefacturamos • Software Oficial de Propiedad Horizontal • Página " counter(page);
-        font-size: 8pt;
+    margin: 14mm 14mm 14mm 14mm;
+    @bottom-left {
+        content: "Lefacturamos • Software Integral de Propiedad Horizontal (Ley 675/2001)";
+        font-size: 7.5pt;
         color: #64748b;
+    }
+    @bottom-right {
+        content: "Página " counter(page);
+        font-size: 8pt;
+        font-weight: bold;
+        color: #064e3b;
     }
 }
 @media print {
@@ -22,24 +28,24 @@
 body {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
     color: #0f172a;
-    line-height: 1.5;
-    font-size: 9.5pt;
+    line-height: 1.48;
+    font-size: 9pt;
     background: #ffffff;
     margin: 0;
     padding: 0;
 }
 h1, h2, h3, h4 { color: #064e3b; font-weight: 800; margin-top: 0; letter-spacing: -0.01em; }
 h1 { font-size: 22pt; line-height: 1.2; }
-h2 { font-size: 14pt; margin-top: 14px; margin-bottom: 8px; border-bottom: 2px solid #10b981; padding-bottom: 4px; color: #047857; }
-h3 { font-size: 11pt; margin-top: 10px; margin-bottom: 5px; color: #065f46; }
-h4 { font-size: 10pt; margin-top: 8px; margin-bottom: 3px; color: #1e293b; }
-p { margin: 0 0 8px 0; text-align: justify; }
-ul, ol { margin: 0 0 10px 0; padding-left: 20px; }
-li { margin-bottom: 4px; }
+h2 { font-size: 13pt; margin-top: 14px; margin-bottom: 7px; border-bottom: 2px solid #10b981; padding-bottom: 4px; color: #047857; text-transform: uppercase; letter-spacing: 0.02em; }
+h3 { font-size: 10.5pt; margin-top: 11px; margin-bottom: 4px; color: #065f46; border-left: 3px solid #10b981; padding-left: 6px; }
+h4 { font-size: 9.5pt; margin-top: 7px; margin-bottom: 2px; color: #1e293b; font-weight: 700; }
+p { margin: 0 0 7px 0; text-align: justify; }
+ul, ol { margin: 0 0 8px 0; padding-left: 20px; }
+li { margin-bottom: 3.5px; text-align: justify; }
 b, strong { color: #0f172a; }
 
 /* Callout Boxes */
-.box { border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 9pt; page-break-inside: avoid; }
+.box { border-radius: 6px; padding: 9px 12px; margin: 8px 0; font-size: 8.5pt; page-break-inside: avoid; }
 .box-tip { background: #f0fdf4; border-left: 4px solid #16a34a; color: #166534; }
 .box-note { background: #f8fafc; border-left: 4px solid #0284c7; color: #0c4a6e; }
 .box-warning { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
@@ -47,18 +53,21 @@ b, strong { color: #0f172a; }
 .box-sale { background: #fdf2f8; border-left: 4px solid #db2777; color: #831843; }
 
 /* Tables */
-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8.5pt; page-break-inside: avoid; }
-th, td { padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 8pt; page-break-inside: avoid; }
+th, td { padding: 5px 7px; border: 1px solid #cbd5e1; text-align: left; }
 th { background: #064e3b; color: #ffffff; font-weight: 700; }
 tr:nth-child(even) td { background: #f8fafc; }
 
-/* Steps */
-.step-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; margin-bottom: 8px; background: #ffffff; page-break-inside: avoid; }
-.step-num { display: inline-block; background: #059669; color: #ffffff; font-weight: 800; font-size: 8pt; padding: 2px 7px; border-radius: 9999px; margin-right: 6px; }
-.badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; }
+/* Step Cards */
+.step-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; background: #ffffff; page-break-inside: avoid; }
+.step-num { display: inline-block; background: #059669; color: #ffffff; font-weight: 800; font-size: 7.5pt; padding: 2px 6px; border-radius: 9999px; margin-right: 5px; }
+.badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 7pt; font-weight: 700; text-transform: uppercase; }
 .badge-green { background: #dcfce7; color: #15803d; }
 .badge-blue { background: #e0f2fe; color: #0369a1; }
 .badge-amber { background: #fef3c7; color: #b45309; }
+
+/* Grid Columns */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
 
 /* Cover Page */
 .cover {
@@ -70,278 +79,397 @@ tr:nth-child(even) td { background: #f8fafc; }
     page-break-after: always;
 }
 .cover-header { border-bottom: 4px solid #10b981; padding-bottom: 18px; }
-.cover-title { font-size: 26pt; font-weight: 900; margin: 14px 0 4px 0; color: #064e3b; line-height: 1.15; }
-.cover-subtitle { font-size: 13pt; color: #059669; font-weight: 600; margin-bottom: 12px; }
+.cover-title { font-size: 27pt; font-weight: 900; margin: 14px 0 4px 0; color: #064e3b; line-height: 1.15; }
+.cover-subtitle { font-size: 13pt; color: #059669; font-weight: 600; margin-bottom: 10px; }
 .cover-meta { font-size: 9pt; color: #64748b; margin-top: 15px; }
-.cover-body { margin: 35px 0; }
+.cover-body { margin: 25px 0; }
 .cover-footer { border-top: 1px solid #cbd5e1; padding-top: 12px; font-size: 8.5pt; color: #64748b; display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
 
-<!-- PORTADA -->
+<!-- ========================================================================= -->
+<!-- PORTADA                                                                   -->
+<!-- ========================================================================= -->
 <div class="cover">
   <div class="cover-header">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span class="badge badge-green" style="font-size:10pt; padding:4px 12px;">MANUAL OFICIAL • EDICIÓN ESTÁNDAR</span>
+      <span class="badge badge-green" style="font-size:10pt; padding:4px 12px;">MANUAL MAESTRO • EDICIÓN ESTÁNDAR COMPLETA</span>
       <span style="font-size:9pt; font-weight:700; color:#047857;">LEFACTURAMOS PH</span>
     </div>
     <div class="cover-title">LEFACTURAMOS</div>
-    <div class="cover-subtitle">Manual Operativo Paso a Paso para los 4 Roles & Guía Maestra de Venta Comercial</div>
-    <p style="color:#475569; font-size:10pt;">Guía técnica y comercial integral para Superadministradores, Administradores, Copropietarios y Portería, con estrategias de venta de alto impacto para Consejos de Administración y Administradores de Propiedad Horizontal bajo la Ley 675 de 2001.</p>
+    <div class="cover-subtitle">Manual Técnico y Operativo Módulo por Módulo & Guía Maestra de Venta Comercial</div>
+    <p style="color:#475569; font-size:9.5pt;">Documentación exhaustiva para Superadministradores, Administradores de Copropiedad, Copropietarios y Vigilancia de Portería. Incluye metodología de ventas, manejo avanzado de objeciones y guiones de cierre comercial para Consejos de Administración y Administradores de Propiedad Horizontal bajo la Ley 675 de 2001 y Ley 1581 de 2012.</p>
   </div>
 
   <div class="cover-body">
     <div class="box box-note">
-      <b>ESTRUCTURA DEL PRESENTE MANUAL:</b>
-      <ol style="margin-top:6px; margin-bottom:2px;">
-        <li><b>Módulo 1:</b> Manual Paso a Paso del Superadministrador (Creación, Configuración y Control Global).</li>
-        <li><b>Módulo 2:</b> Manual Paso a Paso del Administrador (Cartera, Egresos, Caja Menor, PQRs, Asambleas).</li>
-        <li><b>Módulo 3:</b> Manual Paso a Paso del Copropietario / Residente (Pagos en línea, Facturas Drive, PQRs).</li>
-        <li><b>Módulo 4:</b> Manual Paso a Paso de Portería / Vigilancia 24/7 (Minuta Digital, Control QR y Paquetería).</li>
-        <li><b>Módulo 5:</b> Cómo Vender Lefacturamos a un Consejo de Administración (Argumentario & Respuestas a Objeciones).</li>
-        <li><b>Módulo 6:</b> Cómo Vender Lefacturamos a un Administrador de PH (Propuesta de Valor & Cierre Efectivo).</li>
-      </ol>
+      <b style="font-size:9.5pt;">ÍNDICE GENERAL DEL MANUAL EXHAUSTIVO:</b>
+      <table style="margin-top:6px; margin-bottom:2px; font-size:8pt; border:none;">
+        <tr style="background:transparent;"><td style="border:none; width:50%;"><b>1. ROL SUPERADMINISTRADOR</b><br>• Acceso y Panel Global Multi-Conjunto<br>• Registro detallado de Copropiedades<br>• Configuración bancaria y tasas de mora Ley 675<br>• Conmutación rápida entre edificios</td>
+        <td style="border:none; width:50%;"><b>2. ROL ADMINISTRADOR DE PH</b><br>• Login con Cédula formateada y autodetección<br>• Dashboard financiero (Recaudos vs Egresos)<br>• Base de Saldos, Cartera e Intereses moratorios<br>• Egresos, Proveedores, Caja Menor y Saldo Banco</td></tr>
+        <tr style="background:transparent;"><td style="border:none;"><b>3. ROL COPROPIETARIO / RESIDENTE</b><br>• Ingreso seguro al inmueble<br>• Estado de cuenta y liquidación con descuento<br>• Descarga de Facturas y Recibos en Google Drive<br>• Pasarelas de pago Bre-B, PSE y Transferencia</td>
+        <td style="border:none;"><b>4. ROL PORTERÍA Y VIGILANCIA 24/7</b><br>• Minuta digital blindada y relevo de turnos<br>• Validación táctica de Códigos QR de visitantes<br>• Control de paquetería y encomiendas<br>• Cumplimiento estricto de Habeas Data legal</td></tr>
+        <tr style="background:transparent;"><td style="border:none;"><b>5. CÓMO VENDER AL CONSEJO DE ADMON.</b><br>• Los 5 dolores críticos del Consejo<br>• Argumentario de blindaje patrimonial y legal<br>• Manejo exhaustivo de 8 objeciones duras<br>• Discurso estructurado de 5 minutos en reunión</td>
+        <td style="border:none;"><b>6. CÓMO VENDER AL ADMINISTRADOR</b><br>• Reducción de 25+ horas de desgaste mensual<br>• Demostración rápida de alto impacto (Live Demo)<br>• Estrategia de pricing y asunción en presupuesto<br>• Técnicas de cierre directo sin fricción</td></tr>
+      </table>
     </div>
   </div>
 
   <div class="cover-footer">
-    <span><b>Autor:</b> Equipo de Desarrollo & Consultoría Lefacturamos PH</span>
+    <span><b>Publicación Oficial:</b> Lefacturamos PH Software</span>
     <span><b>Vigencia:</b> 2026 - 2027</span>
-    <span><b>Normativa:</b> Ley 675 de 2001 & Ley 1581 de 2012</span>
+    <span><b>Marco Jurídico:</b> Ley 675 de 2001, Ley 1581 de 2012 & Código General del Proceso</span>
   </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- MÓDULO 1: SUPERADMINISTRADOR                                              -->
+<!-- CAPÍTULO 1: SUPERADMINISTRADOR                                            -->
 <!-- ========================================================================= -->
 <div class="page-break"></div>
-<h2>1. Manual Paso a Paso del Superadministrador</h2>
-<p>El rol de <b>Superadministrador</b> es la máxima autoridad del sistema en Lefacturamos. Tiene la facultad exclusiva de registrar nuevas copropiedades, configurar entidades financieras bancarias, asignar credenciales maestras y auditar el funcionamiento general de la plataforma.</p>
+<h2>Capítulo 1: Manual Detallado del Superadministrador</h2>
+<p>El <b>Superadministrador</b> es el custodio del ecosistema Lefacturamos. Su responsabilidad abarca el aprovisionamiento de copropiedades, la parametrización de cuentas bancarias institucionales, la asignación de claves de seguridad y la auditoría global del sistema.</p>
 
+<h3>1.1. Acceso al Panel Global Multi-Conjunto</h3>
 <div class="step-card">
-  <span class="step-num">Paso 1</span> <b>Acceso a la Pestaña Superadmin</b>
-  <p>En la pantalla de inicio de Lefacturamos, haga clic en el botón superior derecho <b>«Superadmin»</b>. Ingrese el ID de superadministrador y la contraseña maestra asignada. Al hacer clic en <i>«Ingresar como Superadministrador»</i>, el sistema abrirá el <b>Panel Global Multi-Conjunto</b>.</p>
+  <span class="step-num">Paso 1.1</span> <b>Ruta de Acceso y Credenciales Maestras</b><br>
+  En la pantalla principal de Lefacturamos, diríjase a la barra de perfiles superior y haga clic en la pestaña <b>«Superadmin»</b>. Introduzca su ID maestro y su contraseña de alta seguridad. Al presionar <i>«Ingresar como Superadministrador»</i>, el sistema cargará el entorno multi-edificio.
 </div>
-
 <div class="step-card">
-  <span class="step-num">Paso 2</span> <b>Creación de una Nueva Copropiedad</b>
-  <p>En el encabezado del panel global, localice el botón violeta <b>«+ Crear Nueva Copropiedad»</b>. Se desplegará el modal oficial de registro donde debe diligenciar:</p>
+  <span class="step-num">Paso 1.2</span> <b>Estructura Visual del Panel Global</b><br>
+  El panel muestra una tabla consolidada con todas las copropiedades bajo su gestión. Cada fila incluye:
   <ul>
-    <li><b>Nombre del Edificio o Conjunto:</b> Ej: <i>Edificio Mirador del Poblado P.H.</i></li>
-    <li><b>Código de Copropiedad:</b> Código numérico único de 4 dígitos (Ej: <i>8520</i>).</li>
-    <li><b>NIT:</b> Número de Identificación Tributaria con dígito de verificación (Ej: <i>901.458.789-2</i>).</li>
-    <li><b>Dirección y Ciudad:</b> Nomenclatura oficial y municipio (Ej: <i>Calle 10 # 43E-20, Medellín</i>).</li>
-    <li><b>Datos Bancarios:</b> Entidad Bancaria (Bancolombia, Davivienda, etc.), Tipo de Cuenta (Ahorros / Corriente) y Número de Cuenta.</li>
-    <li><b>Saldo Inicial en Banco ($ COP):</b> Monto real con el que inicia la cuenta bancaria de la copropiedad.</li>
-    <li><b>Credenciales del Administrador:</b> Cédula del administrador asignado y contraseña inicial.</li>
-  </ul>
-  <p>Haga clic en <b>«Guardar Copropiedad en la Plataforma»</b>. El edificio quedará activo inmediatamente.</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 3</span> <b>Edición y Configuración de Edificios Existentes</b>
-  <p>En la tabla del panel global, cada edificio cuenta con un botón azul <b>«Editar / Configurar»</b>. Permite:</p>
-  <ul>
-    <li>Actualizar la tasa de interés moratorio (por defecto 2.16% o tasa de usura vigente según Ley 675).</li>
-    <li>Modificar la cuenta bancaria o entidad financiera en caso de cambio de cuenta del conjunto.</li>
-    <li>Restablecer contraseñas de administración en caso de olvido.</li>
+    <li><b>Badge Identificador:</b> Código único del edificio (ej: <code>#0951</code>, <code>#4901</code>, <code>#0361</code>).</li>
+    <li><b>Nombre y NIT:</b> Razón social oficial de la persona jurídica según Personería Jurídica de la Alcaldía.</li>
+    <li><b>Entidad Bancaria & Tipo de Cuenta:</b> Banco custodio (Bancolombia, Davivienda, etc.), tipo (Ahorros o Corriente) y número de cuenta.</li>
+    <li><b>Saldo en Banco Disponible:</b> Saldo inicial parametrizado más recaudos netos menos egresos operacionales.</li>
+    <li><b>Métricas de Auditoría:</b> Número de unidades residenciales/comerciales, cartera vencida y estado contable general.</li>
   </ul>
 </div>
 
-<div class="step-card">
-  <span class="step-num">Paso 4</span> <b>Conmutación Rápida entre Copropiedades</b>
-  <p>En la parte superior izquierda del sistema, el Superadministrador dispone de un selector desplegable con todas las copropiedades registradas. Al seleccionar un edificio, la plataforma conmuta automáticamente el contexto financiero, apartamentos y cartera sin necesidad de cerrar sesión.</p>
-</div>
+<h3>1.2. Módulo de Creación de Nuevas Copropiedades (Paso a Paso)</h3>
+<p>Para ingresar un nuevo edificio o conjunto a la plataforma, haga clic en el botón violeta <b>«+ Crear Nueva Copropiedad»</b>. Diligencie cada uno de los siguientes campos obligatorios:</p>
 
-<div class="box box-tip">
-  <b>Recomendación de Seguridad para el Superadministrador:</b> Nunca comparta la clave maestra de Superadmin con residentes ni proveedores. Asigne a cada administrador su propia cédula para garantizar la trazabilidad de auditoría.
-</div>
-
-<!-- ========================================================================= -->
-<!-- MÓDULO 2: ADMINISTRADOR                                                   -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-<h2>2. Manual Paso a Paso del Administrador</h2>
-<p>El <b>Administrador del Conjunto</b> es el gestor operativo y contable directo de la copropiedad. Desde su panel controla la cartera, los egresos operacionales, la atención a residentes y las asambleas generales.</p>
-
-<div class="step-card">
-  <span class="step-num">Paso 1</span> <b>Ingreso Inteligente con Cédula Formateada</b>
-  <p>En la pantalla de bienvenida, pestaña <b>«Administrador»</b>, digite su cédula. El sistema formatea automáticamente los puntos de miles (ejemplo: <code>22.222.222</code>) y auto-detecta su nombre registrado en el campo adyacente. Digite su contraseña y presione <i>«Ingresar a Ver y Administrar mi Edificio»</i>.</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 2</span> <b>Lectura del Panel Principal (Dashboard Financiero)</b>
-  <p>Al ingresar, la pantalla muestra los indicadores clave del mes:</p>
-  <ul>
-    <li><b>Cuota del Mes:</b> Valor presupuestado a recaudar por concepto de cuotas ordinarias.</li>
-    <li><b>Total del Mes:</b> Recaudos efectivamente recibidos a la fecha.</li>
-    <li><b>Cartera Pendiente:</b> Monto total adeudado por unidades morosas con cálculo de intereses.</li>
-    <li><b>Gráfico Recaudos vs Egresos:</b> Comparativa mensual de flujo de caja.</li>
-    <li><b>Dona de PQRs:</b> Estado de peticiones y quejas (Pendientes, En Proceso, Resueltas).</li>
-  </ul>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 3</span> <b>Gestión de Base de Saldos & Cartera</b>
-  <p>Acceda a <b>«Base de Saldos»</b> en el menú lateral. Aquí se despliega la matriz completa de inmuebles con:</p>
-  <ul>
-    <li>Apartamento, Propietario, Coeficiente y Saldo Anterior.</li>
-    <li>Cálculo automático de intereses de mora bajo Ley 675 (Art. 30).</li>
-    <li>Botón de exportación oficial a Excel para informes de revisoría fiscal o consejo.</li>
-  </ul>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 4</span> <b>Registro de Pagos de Administración (Egresos & Proveedores)</b>
-  <p>En el módulo <b>«Pagos Administración»</b>, el administrador lleva el control de todos los egresos del edificio:</p>
-  <ul>
-    <li><b>Saldo en Banco en Tiempo Real:</b> La tarjeta superior muestra el saldo bancario disponible calculado automáticamente (Saldo Inicial + Recaudos - Egresos).</li>
-    <li><b>Botón «+ Montar Pago de Administración»:</b> Abre el formulario para registrar pagos a empresas proveedoras (Vigilancia, Aseo, Ascensores, Mantenimiento, Servicios Públicos o <b>Caja Menor</b>).</li>
-    <li><b>Garantías Técnicas:</b> Permite registrar la vigencia de garantías de mano de obra y repuestos.</li>
-    <li><b>Botón «Exportar a Excel»:</b> Descarga la planilla oficial en formato <code>.xlsx</code> con encabezados institucionales.</li>
-  </ul>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 5</span> <b>Atención de PQRs y Asambleas Ley 675</b>
-  <p>En <b>«PQR»</b>, el administrador lee las solicitudes de los residentes, responde con fecha y hora oficial y cierra el caso. En <b>«Asamblea Ley 675»</b>, se configuran quórums, votaciones de coeficientes en tiempo real y actas oficiales.</p>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MÓDULO 3: COPROPIETARIO / RESIDENTE                                       -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-<h2>3. Manual Paso a Paso del Copropietario / Residente</h2>
-<p>El portal del <b>Copropietario</b> está diseñado para garantizar la transparencia total, permitiendo a propietarios y arrendatarios consultar su estado de cuenta, descargar facturas oficiales y pagar sin filas.</p>
-
-<div class="step-card">
-  <span class="step-num">Paso 1</span> <b>Ingreso al Portal del Residente</b>
-  <p>En la pantalla de acceso, seleccione la pestaña <b>«Copropietarios»</b>. Digite su número de apartamento (ej: <i>0301</i>) y su clave personal asignada por la administración. Presione <i>«Ingresar a mi Apartamento»</i>.</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 2</span> <b>Consulta de Estado de Cuenta en Tiempo Real</b>
-  <p>En la vista <b>«Mi Inmueble»</b> encontrará:</p>
-  <ul>
-    <li>Estado de pago: <b>A Paz y Salvo</b> (verde) o <b>Saldo Pendiente</b> (rojo con desglose de cuota e intereses).</li>
-    <li>Valor exacto a pagar con descuento de pronto pago antes del día límite (ej: día 10 o 15 del mes).</li>
-  </ul>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 3</span> <b>Descarga de Facturas y Recibos Oficiales desde Google Drive</b>
-  <p>En la pestaña <b>«Documentos»</b>, haga clic en <i>«Factura PDF»</i> o <i>«Recibo de Caja»</i>. Los documentos están sincronizados con la nube segura de Google Drive oficial (<code>LefacturamosPH@lefacturamos.com</code>), listos para descargar o imprimir con plena validez contable.</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 4</span> <b>Pago en Línea con Bre-B / PSE / Bancolombia</b>
-  <p>Haga clic en el botón <b>«Pagar Cuota»</b>. Seleccione su medio preferido: <b>Bre-B</b> (pagos inmediatos interbancarios sin costo), <b>PSE</b> (débito desde cualquier banco de Colombia) o transferencia a la cuenta oficial del edificio. Adjunte su comprobante si paga por transferencia manual.</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 5</span> <b>Reservas de Zonas Comunes y Radicación de PQR</b>
-  <p>En <b>«Reservas»</b>, seleccione el área social (kiosco, salón comunal, cancha), escoja la fecha en el calendario interactivo y solicite la reserva. En <b>«PQR»</b>, redacte peticiones con soporte fotográfico y reciba notificación formal de respuesta.</p>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MÓDULO 4: PORTERÍA / VIGILANCIA 24/7                                      -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-<h2>4. Manual Paso a Paso de Portería / Vigilancia 24/7</h2>
-<p>El perfil de <b>Portería</b> convierte la caseta de vigilancia en un centro de seguridad digitalizado, garantizando control estricto de accesos y cumplimiento estricto de Habeas Data (sin acceso a información financiera privada).</p>
-
-<div class="step-card">
-  <span class="step-num">Paso 1</span> <b>Inicio de Turno en la Minuta Digital</b>
-  <p>El guarda de seguridad ingresa por la pestaña <b>«Portería»</b> con su código de puesto. Registra el nombre del vigilante de turno, la hora de relevo y las novedades de inventario (radios, llaves maestras, citofonía).</p>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 2</span> <b>Control de Acceso de Visitantes y Vehículos</b>
-  <p>Cuando llega una visita o vehículo a la copropiedad:</p>
-  <ul>
-    <li>Si el residente generó un <b>Código QR</b> desde su app, el guarda lo escanea con la cámara o digita el código de 6 dígitos para autorización instantánea.</li>
-    <li>Si es visita imprevista, el guarda digita el apartamento, confirma vía citofonía o WhatsApp y registra nombre, cédula y placa vehicular/moto en el sistema.</li>
-  </ul>
-</div>
-
-<div class="step-card">
-  <span class="step-num">Paso 3</span> <b>Recepción y Entrega de Paquetería</b>
-  <p>En el módulo de paquetería, el guarda registra los paquetes de Servientrega, Coordinadora, Mercado Libre o domicilios. El sistema notifica al residente y al momento de la entrega física, se marca como <i>«Entregado a Residente»</i> con firma digital o registro de hora.</p>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MÓDULO 5: ESTRATEGIA DE VENTA AL CONSEJO DE ADMINISTRACIÓN                -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-<h2>5. Cómo Vender Lefacturamos a un Consejo de Administración</h2>
-<p>El Consejo de Administración está compuesto por copropietarios voluntarios cuya principal preocupación es el <b>cuidado del patrimonio, la transparencia en el uso del dinero y la tranquilidad legal</b>.</p>
-
-<h3>Los 4 Dolores Críticos del Consejo y Cómo los Resuelve Lefacturamos:</h3>
 <table>
   <thead>
     <tr>
-      <th style="width:30%;">Dolor del Consejo</th>
-      <th style="width:35%;">Problema con el Software Tradicional</th>
-      <th style="width:35%;">Solución Definitiva con Lefacturamos</th>
+      <th style="width:25%;">Campo del Sistema</th>
+      <th style="width:30%;">Descripción Técnica</th>
+      <th style="width:45%;">Ejemplo / Formato Exigido</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><b>Falta de Transparencia</b></td>
-      <td>El administrador entrega informes en PDF estáticos 20 días después de cerrado el mes.</td>
-      <td><b>Acceso en Tiempo Real:</b> El consejo y revisor fiscal ven el saldo en banco y los pagos a proveedores actualizados al día.</td>
+      <td><b>Nombre de Copropiedad</b></td>
+      <td>Razón social registrada ante la DIAN y la Alcaldía.</td>
+      <td><i>Edificio Roble Alto P.H.</i> o <i>Conjunto Residencial Los Sauces</i></td>
     </tr>
     <tr>
-      <td><b>Riesgo Legal (Demandas)</b></td>
-      <td>Intereses de mora mal liquidados o cobros sin título ejecutivo según Ley 675.</td>
-      <td><b>Blindaje Ley 675:</b> Algoritmo certificado de cálculo de intereses moratorios exactos sin riesgo de usura.</td>
+      <td><b>Código de Copropiedad</b></td>
+      <td>Identificador alfanumérico o numérico de 4 dígitos. Se usará para login de residentes y carpetas en la nube.</td>
+      <td><code>4901</code> o <code>0951</code> (Único en el sistema)</td>
     </tr>
     <tr>
-      <td><b>Costo Elevado de Software</b></td>
-      <td>Programas antiguos cobran millones por licencias, actualizaciones y soporte técnico.</td>
-      <td><b>Tarifa Justa Todo Incluido:</b> Modelo SaaS en la nube sin costos ocultos de servidores ni mantenimiento.</td>
+      <td><b>NIT del Edificio</b></td>
+      <td>Número de Identificación Tributaria con dígito de verificación.</td>
+      <td><code>901.690.778-9</code></td>
     </tr>
     <tr>
-      <td><b>Quejas de Copropietarios</b></td>
-      <td>Vecinos molestos porque no les llegan las cuentas de cobro o cobranzas confusas.</td>
-      <td><b>Portal Copropietario + Drive:</b> Los residentes descargan sus propios recibos y pagan por PSE/Bre-B desde el celular.</td>
+      <td><b>Dirección y Ciudad</b></td>
+      <td>Ubicación física del inmueble para validez en títulos ejecutivos.</td>
+      <td><i>DG 79A No 76-250 • Medellín, Antioquia</i></td>
+    </tr>
+    <tr>
+      <td><b>Entidad Bancaria</b></td>
+      <td>Banco en el cual la copropiedad tiene su cuenta oficial.</td>
+      <td><i>Bancolombia</i>, <i>Banco de Bogotá</i>, <i>Davivienda</i>, <i>Caja Social</i></td>
+    </tr>
+    <tr>
+      <td><b>Tipo y Número de Cuenta</b></td>
+      <td>Tipo de producto (Ahorros / Corriente) y número de cuenta bancaria.</td>
+      <td><i>Cuenta de Ahorros No. 556-000045-21</i></td>
+    </tr>
+    <tr>
+      <td><b>Saldo en Banco ($ COP)</b></td>
+      <td>Saldo disponible al momento de iniciar la administración en el software.</td>
+      <td><code>$ 57.600.000</code> (Permite iniciar la conciliación automática en tiempo real)</td>
+    </tr>
+    <tr>
+      <td><b>Cédula del Administrador</b></td>
+      <td>Número de identificación del administrador asignado al edificio.</td>
+      <td><code>22.222.222</code> (Habilita el ingreso con autodetección de nombre)</td>
+    </tr>
+    <tr>
+      <td><b>Contraseña Inicial</b></td>
+      <td>Clave temporal para que el administrador acceda a su panel.</td>
+      <td><code>Admin123*</code> (Debe cambiarse en el primer ingreso)</td>
     </tr>
   </tbody>
 </table>
 
-<div class="box box-sale">
-  <b>Pitch de Venta de 3 Minutos para la Reunión del Consejo:</b><br>
-  <i>«Señores miembros del Consejo: Su labor como consejeros es cuidar el patrimonio de todos nosotros y no asumir responsabilidades legales por descuidos ajenos. Hoy les presentamos <b>Lefacturamos</b>, el software que elimina las sospechas y las dudas contables. Con Lefacturamos, el saldo bancario del edificio se concilia automáticamente con cada pago a proveedores; los intereses de mora se liquidan con exactitud matemática según la Ley 675; y los copropietarios pueden pagar desde su celular por Bre-B y PSE sin que el edificio incurra en costos excesivos. Lefacturamos le devuelve la paz al Consejo y asegura que la próxima Asamblea General sea la más transparente y felicitada en la historia de nuestra copropiedad.»</i>
+<div class="box box-legal">
+  <b>Base Legal Ley 675 (Art. 32):</b> La persona jurídica de la propiedad horizontal nace una vez inscrita en la Oficina de Registro de Instrumentos Públicos. Todos los datos de NIT y cuenta bancaria deben estar a nombre de la persona jurídica del edificio y jamás a nombre personal del administrador para evitar sanciones tributarias y penales.
 </div>
 
-<h3>Manejo de Objeciones Comunes del Consejo:</h3>
-<ul>
-  <li><b>Objeción:</b> <i>«Ya tenemos un programa contable viejo que maneja la contadora.»</i><br>
-  <b>Respuesta:</b> <i>«Lefacturamos no reemplaza la labor del contador; la potencia. Nuestro sistema exporta directamente a Excel compatible con cualquier software contable y le da a los propietarios la app móvil y el portal web que los programas antiguos de escritorio jamás podrán ofrecer.»</i></li>
-  <li><b>Objeción:</b> <i>«A los adultos mayores les cuesta la tecnología.»</i><br>
-  <b>Respuesta:</b> <i>«Lefacturamos genera simultáneamente las facturas oficiales en PDF listas para imprimir en portería para quien lo requiera, combinando lo digital con lo tradicional.»</i></li>
-</ul>
+<h3>1.3. Modificación y Configuración de Edificios Existentes</h3>
+<p>Haciendo clic en el botón <b>«Editar / Configurar»</b> en cualquiera de los edificios de la lista, el Superadministrador puede:</p>
+<ol>
+  <li><b>Ajustar Tasa de Interés Moratorio:</b> Configurable entre el 1.0% y el límite máximo de usura certificado mensualmente por la Superintendencia Financiera de Colombia (usualmente 2.16% a 2.30% mensual según Art. 30 Ley 675).</li>
+  <li><b>Actualizar Datos Bancarios:</b> Modificar la cuenta en caso de cambio de entidad financiera aprobada por la Asamblea de Copropietarios.</li>
+  <li><b>Restablecer Credenciales de Administración:</b> Asignar una nueva clave si el administrador la olvidó o si hubo cambio de representante legal.</li>
+</ol>
 
 <!-- ========================================================================= -->
-<!-- MÓDULO 6: ESTRATEGIA DE VENTA AL ADMINISTRADOR DE PH                       -->
+<!-- CAPÍTULO 2: ADMINISTRADOR DE PH                                           -->
 <!-- ========================================================================= -->
 <div class="page-break"></div>
-<h2>6. Cómo Vender Lefacturamos a un Administrador de PH</h2>
-<p>El Administrador de Propiedad Horizontal sufre de <b>sobrecarga de trabajo, estrés por llamadas continuas de residentes solicitando cuentas de cobro y desgaste en el cobro de cartera</b>.</p>
+<h2>Capítulo 2: Manual Detallado del Administrador de Copropiedad</h2>
+<p>El Administrador es el centro operativo del conjunto. Desde Lefacturamos gestiona ingresos, pagos a contratistas, cartera, requerimientos de copropietarios y la seguridad jurídica de la copropiedad.</p>
 
-<h3>La Propuesta de Valor para el Administrador:</h3>
+<h3>2.1. Ingreso al Sistema y Autodetección Inteligente</h3>
+<div class="step-card">
+  <span class="step-num">Paso 2.1</span> <b>Mecanismo de Formateo de Cédula y Validación de Identidad</b><br>
+  En la pantalla de acceso, pestaña <b>«Administrador»</b>:
+  <ul>
+    <li>Digite su número de cédula en el campo <i>«Cédula o Identificación del Administrador»</i>. El software inserta en vivo los puntos decimales correspondientes (ej: si digita <code>22222222</code>, el sistema muestra <code>22.222.222</code>).</li>
+    <li>De manera instantánea, el sistema consulta el registro central y autocompleta el nombre del administrador (ej: <code>YEFFERSON</code>) en la caja contigua con un candado de verificación verde.</li>
+    <li>Introduzca su contraseña personal y haga clic en <b>«Ingresar a Ver y Administrar mi Edificio»</b>.</li>
+  </ul>
+</div>
+
+<h3>2.2. Panel Principal (Dashboard Contable y Operacional)</h3>
+<p>El panel principal de Lefacturamos sintetiza la salud financiera de la copropiedad mediante 5 bloques:</p>
 <ul>
-  <li><b>Ahorro de hasta 25 horas al mes:</b> No más atención manual a solicitudes de recibos de caja. Los propietarios los descargan solos desde su celular.</li>
-  <li><b>Cero discusiones por intereses:</b> El sistema desglosa con exactitud el valor de la cuota ordinaria, extraordinaria y el interés de mora reglamentario.</li>
-  <li><b>Control total de contratistas:</b> El módulo de Pagos de Administración permite registrar garantías técnicas de ascensores, bombas y cubiertas con fecha de vencimiento, protegiendo al administrador ante reclamos del Consejo.</li>
-  <li><b>Imagen de Innovación Profesional:</b> Al ofrecer Lefacturamos, el administrador destaca frente a su competencia y puede licitar y administrar más edificios con el mismo equipo de trabajo.</li>
+  <li><b>Tarjeta Cuota del Mes (Verde):</b> Refleja el monto proyectado de facturación de expensas comunes ordinarias del período (ej: <code>$ 36.000.000</code>).</li>
+  <li><b>Tarjeta Total del Mes (Naranja):</b> Refleja el monto total efectivamente recaudado a la fecha en las cuentas del edificio.</li>
+  <li><b>Tarjeta Cartera Pendiente (Rojo):</b> Suma consolidada de expensas vencidas de meses anteriores más intereses moratorios devengados a la fecha (ej: <code>$ 2.000.000</code>).</li>
+  <li><b>Gráfica Dinámica Recaudos vs Egresos:</b> Histograma de barras comparativo que enfrenta los ingresos por administración (verde) contra los gastos operacionales pagados (naranja) de los últimos 8 meses.</li>
+  <li><b>Gráfica de Dona PQR:</b> Visualización del estado de las solicitudes ciudadanas de la copropiedad (Radicadas, En Proceso, Respondidas y Cerradas).</li>
 </ul>
 
-<div class="box box-tip">
-  <b>Técnica de Cierre Rápido con el Administrador:</b><br>
-  Ofrézcale una demostración guiada de 10 minutos con su edificio más conflictivo. Demuéstrele cómo en 3 clics se genera el reporte de cartera y cómo sus residentes pueden pagar por Bre-B. Cuando el administrador comprueba que no tendrá que contestar 40 mensajes al día pidiendo estados de cuenta, la decisión de compra es inmediata.
+<h3>2.3. Módulo de Pagos de Administración (Proveedores, Egresos y Caja Menor)</h3>
+<p>Ubicado en el menú lateral bajo el botón <b>«Pagos Administración»</b>, es el corazón del control de gastos:</p>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.1</span> <b>Tarjeta Indicadora de Saldo en Banco Automático</b><br>
+  En la esquina superior izquierda se ubica la tarjeta destacada con el ícono bancario oficial. Este valor se calcula y actualiza en tiempo real de forma matemática:
+  <p style="text-align:center; font-weight:bold; font-size:9.5pt; color:#064e3b; margin:6px 0;">
+    Saldo en Banco = Fondos / Recaudos Totales de la Copropiedad - Total Pagos de Administración Realizados
+  </p>
+  No requiere ningún ajuste manual ni conciliación forzada; cada vez que se crea, edita o elimina un pago de administración, la cifra se recalcula en microsegundos.
 </div>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.2</span> <b>Formulario «+ Montar Pago de Administración»</b><br>
+  Al hacer clic en el botón superior derecho <b>«+ Montar Pago de Administración»</b>, se despliega el formulario con los siguientes campos obligatorios:
+  <ul>
+    <li><b>Empresa a la que le va a pagar:</b> Razón social del proveedor o contratista (ej: <i>Ascensores Schindler Colombia S.A.S.</i>, <i>Vigilancia Atlas Ltda.</i>, o <i>Administración - Caja Menor</i>).</li>
+    <li><b>NIT o Identificación Tributaria:</b> Número tributario del beneficiario con dígito.</li>
+    <li><b>Categoría del Gasto:</b> Menú desplegable oficial que incluye:
+      <ol style="margin-top:3px;">
+        <li><i>Mantenimiento</i> (ascensores, motobombas, puertas eléctricas, plantas eléctricas).</li>
+        <li><i>Seguridad</i> (empresa de vigilancia privada con licencia Supervigilancia).</li>
+        <li><i>Obras / Cubiertas</i> (reparaciones locativas, impermeabilizaciones, pintura).</li>
+        <li><i>Servicios Públicos</i> (EPM, Codensa, Acueducto, Gas de zonas comunes).</li>
+        <li><i>Aseo y Limpieza</i> (insumos de aseo y empresa de servicios generales).</li>
+        <li><i>Honorarios Profesionales</i> (contador, revisor fiscal, abogado de cartera).</li>
+        <li><b>Caja Menor</b> (gastos menores de transporte, fotocopias, bombillería urgente).</li>
+        <li><i>Otros Egresos</i> (póliza de áreas comunes, comisiones bancarias).</li>
+      </ol>
+    </li>
+    <li><b>Detalle de lo que hicieron:</b> Descripción minuciosa del servicio prestado para trazabilidad ante el Consejo y Revisor Fiscal.</li>
+    <li><b>Garantía Técnica:</b> Interruptor para marcar si cuenta con póliza o garantía, registrando el tiempo de cobertura (ej: <i>Garantía técnica de 12 meses sobre repuestos hasta Octubre 2027</i>).</li>
+    <li><b>Fecha del Pago y Monto ($ COP):</b> Día en que se ejecuta la transacción y valor exacto girado.</li>
+    <li><b>Forma de Pago:</b> Transferencia Bancaria, Cheque, PSE, Bre-B o Efectivo Caja Menor.</li>
+    <li><b>Comprobante / Factura Recibida:</b> Número de Comprobante de Egreso (CE-2026-XXXX) y Factura Electrónica del proveedor.</li>
+  </ul>
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 2.3.3</span> <b>Exportación a Excel Oficial (.xlsx)</b><br>
+  Haga clic en el botón <b>«Exportar a Excel»</b> con el ícono de hoja de cálculo verde. El sistema genera un archivo <code>.xlsx</code> nativo con título oficial, fecha de corte, entidad bancaria, cuenta, saldo disponible y tabla completa de transacciones, listo para imprimir o enviar al Revisor Fiscal.
+</div>
+
+<h3>2.4. Módulo de Base de Saldos & Cartera</h3>
+<p>Permite visualizar la matriz global de saldos de todos los apartamentos:</p>
+<ul>
+  <li><b>Cálculo Automático de Intereses de Mora:</b> El sistema evalúa diariamente qué unidades presentan saldos impagos al vencimiento del plazo (ej: después del día 15 o último día del mes) y aplica la tasa de interés mensual compuesta sin sobrepasar la tasa de usura.</li>
+  <li><b>Clasificación de Cartera:</b> Cartera Corriente (1 a 30 días), Cartera Vencida (31 a 90 días) y Cobro Jurídico (más de 90 días con mérito ejecutivo según Art. 48 Ley 675).</li>
+</ul>
+
+<!-- ========================================================================= -->
+<!-- CAPÍTULO 3 & 4: COPROPIETARIO Y PORTERÍA                                  -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h2>Capítulo 3: Manual del Copropietario / Residente</h2>
+<p>Diseñado para ser intuitivo, transparente y accesible desde cualquier computador o teléfono móvil con conexión a internet.</p>
+
+<div class="step-card">
+  <span class="step-num">Paso 3.1</span> <b>Acceso a «Mi Inmueble»</b><br>
+  En la pantalla de entrada, seleccione la pestaña <b>«Copropietarios»</b>. Digite el código de 4 dígitos de su edificio, su número de apartamento (ej: <code>0301</code>) y su clave personal. Presione <i>«Ingresar a mi Apartamento»</i>.
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 3.2</span> <b>Consulta de Saldos y Descuento por Pronto Pago</b><br>
+  La vista principal muestra claramente:
+  <ul>
+    <li><b>Monto a Pagar con Descuento:</b> Valor con descuento del 5% o 10% si se cancela dentro de los primeros 10 días del mes calendario.</li>
+    <li><b>Monto Ordinario Pleno:</b> Valor total sin descuento después de la fecha límite.</li>
+    <li><b>Historial de Pagos y Recibos de Caja:</b> Registro de todos los abonos aplicados con fecha, valor y número de recibo.</li>
+  </ul>
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 3.3</span> <b>Descarga de Facturas y Recibos desde Google Drive</b><br>
+  Haga clic en la pestaña <b>«Documentos»</b>. Cada mes, el sistema sincroniza automáticamente su Factura de Cobro y Recibo de Caja en formato PDF alojados en el almacenamiento institucional seguro de Google Drive (<code>LefacturamosPH@lefacturamos.com</code>). Puede descargarlo o imprimirlo sin depender de que el administrador se lo envíe por correo.
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 3.4</span> <b>Pago en Línea con Bre-B y PSE</b><br>
+  Presione el botón <b>«Pagar Cuota»</b>. Seleccione su método preferido:
+  <ul>
+    <li><b>Bre-B (Banco de la República):</b> Transferencia inmediata de cuenta a cuenta sin comisiones bancarias intermedias.</li>
+    <li><b>PSE (Pagos Seguros en Línea):</b> Débito inmediato desde cualquier entidad financiera o billetera digital (Nequi, Daviplata, Bancolombia a la Mano).</li>
+    <li><b>Transferencia Manual:</b> Si transfiere directamente a la cuenta del edificio, adjunte la foto o captura del comprobante bancario para que la administración lo valide.</li>
+  </ul>
+</div>
+
+<hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;">
+
+<h2>Capítulo 4: Manual de Portería / Vigilancia 24/7</h2>
+<p>El perfil de <b>Portería</b> profesionaliza el trabajo del personal de seguridad privada, cumpliendo la Ley de Protección de Datos Personales (Ley 1581 de 2012) al ocultar la información contable y financiera de los residentes.</p>
+
+<div class="step-card">
+  <span class="step-num">Paso 4.1</span> <b>Apertura de Minuta Digital</b><br>
+  El vigilante ingresa por la pestaña <b>«Portería»</b>. Registra su nombre completo, empresa de vigilancia, turno (diurno/nocturno) y el inventario de la caseta (radios, llaves comunales, botones de pánico y citofonía).
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 4.2</span> <b>Validación de Accesos con Código QR</b><br>
+  Cuando un visitante, contratista o vehículo llega a la portería:
+  <ul>
+    <li>Si el residente generó un <b>Pase QR</b> desde su aplicación, el vigilante acerca el código al lector o cámara web de la portería. La pantalla confirmará en color verde los datos del visitante, apartamento de destino y tiempo de permanencia autorizado.</li>
+    <li>Si es visita no anunciada, el guarda digita el número de apartamento, llama por citofonía o envía confirmación y registra nombre, cédula y placa vehicular en el módulo de visitantes.</li>
+  </ul>
+</div>
+
+<div class="step-card">
+  <span class="step-num">Paso 4.3</span> <b>Módulo de Paquetería y Encomiendas</b><br>
+  Permite registrar la llegada de paquetes de Mercado Libre, Servientrega, Amazon o domicilios de alimentos. Al registrar la guía y apartamento, el residente recibe notificación. Al momento de la entrega, se marca como <i>«Entregado»</i> con la firma digital o cédula de quien retira.
+</div>
+
+<!-- ========================================================================= -->
+<!-- CAPÍTULO 5: VENDER AL CONSEJO DE ADMINISTRACIÓN                           -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h2>Capítulo 5: Estrategia de Venta al Consejo de Administración</h2>
+<p>Vender software de propiedad horizontal a un Consejo de Administración requiere entender su psicología: <b>los miembros del Consejo son copropietarios ad-honorem que temen tomar decisiones que perjudiquen su bolsillo o les generen problemas jurídicos con los demás vecinos</b>.</p>
+
+<h3>5.1. Los 5 Dolores Profundos del Consejo de Administración</h3>
+<ol>
+  <li><b>Responsabilidad Solidaria y Miedo a Demandas:</b> Los consejeros responden legal y solidariamente por omisiones o malos manejos en la copropiedad. Temen que un cobro mal liquidado desencadene demandas contra el conjunto.</li>
+  <li><b>Informes Tardíos y Desactualizados:</b> Esperar 15 o 20 días después de cerrado el mes para que el administrador entregue estados financieros es inaceptable en una gestión moderna.</li>
+  <li><b>Sospechas de Desfalco en la Caja Menor y Contratos:</b> La falta de soportes claros y garantías en los pagos a proveedores genera desconfianza y tensiones entre el Consejo y la Administración.</li>
+  <li><b>Desgaste en Asambleas Generales:</b> Propietarios que reclaman que nunca les llegaron las cuentas de cobro o que los intereses de mora fueron cobrados de manera abusiva.</li>
+  <li><b>Presupuestos Ajustados:</b> Los copropietarios rechazan cualquier incremento en la cuota de administración si consideran que es para "software costoso".</li>
+</ol>
+
+<h3>5.2. Los 4 Pilares de la Propuesta de Valor de Lefacturamos</h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width:25%;">Pilar Comercial</th>
+      <th style="width:35%;">Lo que Dice la Competencia</th>
+      <th style="width:40%;">Lo que Demuestra Lefacturamos</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Transparencia Bancaria</b></td>
+      <td>"Le mandamos el extracto cuando el banco lo expida a fin de mes."</td>
+      <td><b>Saldo en Banco en Tiempo Real:</b> El Consejo puede ver en cualquier momento cómo cada egreso registrado afecta el saldo real disponible.</td>
+    </tr>
+    <tr>
+      <td><b>Blindaje Ley 675</b></td>
+      <td>"El contador aplica la fórmula que tiene en un Excel propio."</td>
+      <td><b>Algoritmo Certificado:</b> Intereses liquidados estrictamente bajo el Art. 30 de la Ley 675, garantizando plena exigibilidad jurídica en cobro ejecutivo (Art. 48).</td>
+    </tr>
+    <tr>
+      <td><b>Control de Contratistas</b></td>
+      <td>"Guardamos las facturas en carpetas de cartón en la oficina."</td>
+      <td><b>Módulo de Garantías Técnicas:</b> Cada pago a proveedores queda vinculado con la vigencia de garantía de repuestos y mano de obra.</td>
+    </tr>
+    <tr>
+      <td><b>Ahorro Económico</b></td>
+      <td>"Cobramos licencias por equipo, más soporte técnico, más servidores."</td>
+      <td><b>Tarifa Plana en la Nube:</b> Sin servidores locales, sin instalaciones complicadas y con repositorio Google Drive incluido.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>5.3. Manejo Maestro de las 8 Objeciones Más Duras del Consejo</h3>
+<ul>
+  <li><b>Objeción 1:</b> <i>«El edificio ya tiene un software contable que usa la contadora desde hace 10 años.»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«Excelente. Lefacturamos no viene a reemplazar la contabilidad tributaria de la contadora; viene a resolver lo que ningún software contable hace: darle al Consejo la visualización en vivo de los bancos, darle a los propietarios la app móvil para pagar por PSE y descargar sus recibos solos, y darle a portería el control digital de accesos. Además, Lefacturamos exporta todo a Excel en formato universal para que la contadora cargue los datos en 1 minuto.»</i></li>
+
+  <li><b>Objeción 2:</b> <i>«No tenemos presupuesto aprobado en la asamblea para contratar un software nuevo.»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«Lefacturamos no requiere una cuota extraordinaria ni ampliación de presupuesto. El ahorro que genera en fotocopias, resmas de papel, tóner y desplazamientos de correspondencia paga el 100% de la plataforma. De hecho, reduce los costos operativos desde el primer mes.»</i></li>
+
+  <li><b>Objeción 3:</b> <i>«En este edificio la mayoría son adultos mayores que no manejan computadores.»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«Pensamos exactamente en ellos. Lefacturamos genera con un clic la factura oficial en PDF de cada apartamento lista para imprimir en portería para quien lo prefiera en papel. La diferencia es que el residente que sí tiene celular ya no hace filas y paga por Bre-B o PSE, reduciendo la mora del conjunto en más de un 40%.»</i></li>
+
+  <li><b>Objeción 4:</b> <i>«¿Qué pasa si el administrador renuncia o se va? ¿Se pierde la información?»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«Esa es la mayor ventaja para el Consejo. La información no reposa en el computador personal del administrador, sino en la nube institucional de la copropiedad protegida bajo contraseña maestra del Consejo. Si el administrador cambia, el nuevo ingresa con su cédula y encuentra el edificio al día en 5 minutos.»</i></li>
+
+  <li><b>Objeción 5:</b> <i>«¿Cómo sabemos que no van a cobrar intereses por encima de la tasa de usura?»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«El sistema tiene parametrizado el tope legal certificado mensualmente por la Superintendencia Financiera. El administrador no puede digitar tasas abusivas por error humano. Su Consejo queda 100% blindado contra tutelas o demandas por cobro indebido.»</i></li>
+
+  <li><b>Objeción 6:</b> <i>«¿Es seguro contra hackers o pérdidas de datos?»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«La plataforma corre sobre infraestructura en la nube con encriptación SSL de 256 bits (la misma utilizada por la banca colombiana) y respaldos automáticos en Google Drive oficial con certificación SOC-2.»</i></li>
+
+  <li><b>Objeción 7:</b> <i>«El proceso de migración de datos debe ser muy traumático y demorado.»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«El equipo técnico de Lefacturamos realiza la carga inicial de los coeficientes, apartamentos y cartera en menos de 24 horas. El Consejo no tiene que digitar nada. Mañana mismo pueden tener el sistema funcionando.»</i></li>
+
+  <li><b>Objeción 8:</b> <i>«¿Por qué deberíamos confiar en ustedes y no en las empresas grandes tradicionales?»</i><br>
+  <b>Respuesta de Cierre:</b> <i>«Porque las empresas tradicionales le venden una licencia y luego le cobran por cada llamada de soporte técnico o actualización. Nosotros ofrecemos soporte directo, acompañamiento en asamblea y una herramienta creada exclusivamente para la realidad de la Propiedad Horizontal colombiana.»</i></li>
+</ul>
+
+<div class="box box-sale">
+  <b>Guión Maestro de 5 Minutos para la Reunión con el Consejo:</b><br>
+  <i>«Buenas noches, señores miembros del Consejo de Administración. Sé que su tiempo es valioso y que ustedes están aquí esta noche por una sola razón: cuidar el patrimonio y la valorización de sus hogares.<br><br>
+  Permítanme hacerles una pregunta directa: ¿Cuánto tiempo tardan hoy en saber con exactitud matemática cuánta plata hay en la cuenta del banco después de pagar los servicios, la vigilancia y las reparaciones? ¿Tienen la certeza absoluta de que ningún recibo de mora fue mal calculado?<br><br>
+  Hoy les presento <b>Lefacturamos</b>. Una plataforma web y móvil creada específicamente para eliminar la incertidumbre contable en los edificios de Colombia. Con Lefacturamos, el saldo bancario del conjunto se recalcula en tiempo real con cada pago registrado; los intereses de mora están blindados bajo la Ley 675; y los copropietarios descargan sus recibos desde su celular y pagan por Bre-B y PSE sin filas.<br><br>
+  Adoptar Lefacturamos cuesta menos de lo que el edificio gasta actualmente en papelería e impresiones. Les propongo lo siguiente: permítannos configurar su edificio en modo piloto durante este mes; si el Consejo no experimenta una transparencia y tranquilidad total desde la primera semana, no asumen ningún compromiso. ¿Empezamos esta misma semana?»</i>
+</div>
+
+<!-- ========================================================================= -->
+<!-- CAPÍTULO 6: VENDER AL ADMINISTRADOR DE PH                                 -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<h2>Capítulo 6: Estrategia de Venta al Administrador de PH</h2>
+<p>El Administrador de Propiedad Horizontal es un profesional agotado: gestiona presupuestos millonarios mientras atiende decenas de mensajes diarios por WhatsApp pidiendo cuentas de cobro, quejas de convivencia y reclamos de asambleas.</p>
+
+<h3>6.1. La Ecuación de Rentabilidad para el Administrador</h3>
+<div class="box box-tip">
+  <b>El Administrador que no automatiza, no puede crecer:</b><br>
+  Si un administrador maneja 5 edificios de forma manual o con software tradicional rígido, dedica un promedio de <b>32 horas mensuales</b> únicamente a atender copropietarios que piden estados de cuenta, liquidar intereses en Excel y redactar comprobantes de egreso.<br>
+  Con <b>Lefacturamos</b>, el administrador recupera esas 32 horas mensuales porque el residente se autogestiona desde su portal y los cálculos financieros son automáticos. Esas 32 horas liberadas le permiten cotizar y tomar <b>2 o 3 edificios adicionales</b>, incrementando sus ingresos profesionales sin contratar más personal.
+</div>
+
+<h3>6.2. Las 4 Ventajas que Enamoran al Administrador</h3>
+<ol>
+  <li><b>Fin a las Llamadas y Mensajes de "Mándeme mi Cuenta de Cobro":</b> Los propietarios descargan sus facturas y recibos de caja en PDF directamente desde Google Drive en cualquier momento del día.</li>
+  <li><b>Ingreso Ultrarrápido con Autodetección:</b> Al ingresar su cédula con formato de puntos automático, el sistema lo reconoce y le abre el panel al instante.</li>
+  <li><b>Blindaje Total ante el Consejo de Administración:</b> Cuando el Consejo le pida cuentas de qué se le pagó a los contratistas de ascensores o bombas, el administrador genera en 3 segundos el informe oficial en Excel con detalle de garantías técnicas vigentes y montos conciliados.</li>
+  <li><b>Soporte para Caja Menor y Egresos:</b> Registro limpio de comprobantes de caja menor con soporte documental, evitando sospechas de descuadres en los arqueos.</li>
+</ol>
+
+<h3>6.3. Cómo Ayudar al Administrador a Vender el Software a sus Edificios</h3>
+<p>Muchos administradores quieren Lefacturamos pero no saben cómo plantearle el costo al Consejo. La estrategia consiste en entregarle la propuesta prediseñada:</p>
+<ul>
+  <li><b>Propuesta de "Gasto Operacional Cero":</b> Se le enseña al administrador a mostrar cómo el software se paga solo al eliminar las fotocopias de recibos, la mensajería y el envío físico de cuentas de cobro.</li>
+  <li><b>Presentación Conjunta:</b> El equipo comercial de Lefacturamos acompaña al administrador a la reunión de Consejo (presencial o virtual) para responder las dudas técnicas, dejando al administrador en una posición de liderazgo e innovación tecnológica ante sus copropietarios.</li>
+</ul>
 
 </body>
 </html>
