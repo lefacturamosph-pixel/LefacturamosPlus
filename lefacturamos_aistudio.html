@@ -7087,22 +7087,8 @@
 
             </div>
 
-            <div class="flex flex-col items-center gap-1.5 shrink-0">
-
-              <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center shadow-inner">
-
-                <i data-lucide="landmark" class="w-5 h-5 text-emerald-400"></i>
-
-              </div>
-
-              <button type="button" onclick="actualizarSaldoBancoPrompt()" title="Ajustar o Conciliar Saldo Bancario" class="text-[10px] font-bold text-emerald-400/90 hover:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer">
-
-                <i data-lucide="edit-2" class="w-2.5 h-2.5"></i>
-
-                <span>Ajustar</span>
-
-              </button>
-
+            <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center shadow-inner shrink-0">
+              <i data-lucide="landmark" class="w-5 h-5 text-emerald-400"></i>
             </div>
 
           </div>
@@ -82565,52 +82551,43 @@ function eliminarPagoAdmin(id) {
 
 
 function obtenerSaldoBancoEdificio(codEdif) {
-  const cod = String(codEdif || AppState.codigoEdificio || "4901").trim();
-  try {
-    const key = `lefacturamos_saldo_banco_${cod}`;
-    const customSaldo = localStorage.getItem(key);
-    if (customSaldo !== null && !isNaN(Number(customSaldo))) {
-      return Number(customSaldo);
-    }
-  } catch(e) {}
-
+  const cod = String(codEdif || (typeof AppState !== "undefined" && AppState.codigoEdificio) || "4901").trim();
   const cop = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cod) : null;
-  if (cop && cop.saldoBanco !== undefined && !isNaN(Number(cop.saldoBanco))) {
-    return Number(cop.saldoBanco);
+
+  // 1. Total egresos registrados en el módulo de pagos de administración
+  let totalEgresos = 0;
+  if (typeof PAGOS_ADMINISTRACION_DATA !== "undefined" && Array.isArray(PAGOS_ADMINISTRACION_DATA)) {
+    totalEgresos = PAGOS_ADMINISTRACION_DATA.reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
   }
 
-  let saldoBase = 35480000;
-  if (cod === "0951") saldoBase = 42850000;
-  else if (cod === "4901") saldoBase = 35480000;
-  else if (cod === "0361") saldoBase = 28150000;
-  else if (cod === "4160") saldoBase = 31200000;
-  else if (cod === "7480") saldoBase = 26900000;
-  else if (cod === "0952") saldoBase = 38900000;
-  else if (cod === "0953") saldoBase = 19400000;
-  return saldoBase;
+  // 2. Base financiera inicial de la cuenta bancaria de la copropiedad:
+  // Saldo registrado al crear la copropiedad o recaudo total registrado
+  let saldoBase = 0;
+  if (cop && cop.saldoBanco !== undefined && !isNaN(Number(cop.saldoBanco)) && Number(cop.saldoBanco) > 0) {
+    saldoBase = Number(cop.saldoBanco);
+  } else if (cop && cop.recaudoTotal) {
+    saldoBase = parseInt(String(cop.recaudoTotal).replace(/[^0-9]/g, ""), 10) || 0;
+  }
+
+  // Si no tiene saldoBase aún, definir según reservas de cada copropiedad
+  if (!saldoBase || saldoBase <= 0) {
+    if (cod === "0951") saldoBase = 64970000;
+    else if (cod === "4901") saldoBase = 57600000;
+    else if (cod === "0361") saldoBase = 50270000;
+    else if (cod === "4160") saldoBase = 53320000;
+    else if (cod === "7480") saldoBase = 49020000;
+    else if (cod === "0952") saldoBase = 61020000;
+    else if (cod === "0953") saldoBase = 41520000;
+    else saldoBase = 45000000;
+  }
+
+  // 3. Saldo automático en banco = Fondos iniciales/recaudos - Total egresos realizados
+  const saldoAuto = Math.max(0, saldoBase - totalEgresos);
+  return saldoAuto;
 }
 
 window.actualizarSaldoBancoPrompt = function() {
-  const cod = String(AppState.codigoEdificio || "4901").trim();
-  const cop = (typeof obtenerDatosCopropiedad === "function") ? obtenerDatosCopropiedad(cod) : null;
-  const nom = cop?.nombre || `Edificio ${cod}`;
-  const saldoActual = obtenerSaldoBancoEdificio(cod);
-
-  const res = prompt(`🏦 Actualizar Saldo en Banco para ${nom} (#${cod}):\n\nIngrese el saldo real disponible en la cuenta bancaria ($ COP):`, saldoActual);
-  if (res === null) return;
-  const num = parseInt(String(res).replace(/[^0-9]/g, ""), 10);
-  if (isNaN(num)) {
-    mostrarToast("⚠️ Monto inválido. Ingrese solo números.");
-    return;
-  }
-
-  try {
-    localStorage.setItem(`lefacturamos_saldo_banco_${cod}`, num);
-    if (cop) cop.saldoBanco = num;
-  } catch(e) {}
-
-  renderizarModuloPagosAdmin();
-  mostrarToast(`✓ Saldo en banco de ${nom} actualizado a $${num.toLocaleString("es-CO")} COP.`);
+  mostrarToast("El saldo bancario se calcula y concilia automáticamente con los egresos y recaudos.");
 };
 
 function exportarPagosAdminExcel() {
